@@ -1,0 +1,36 @@
+﻿// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "UObject/Object.h"
+#include "FriendDataObject.generated.h"
+
+class UServerDataObject;
+class UPlayerDataObject;
+/**
+ * 
+ */
+UCLASS()
+class NODECRAFTDISCOVERY_API UFriendDataObject : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	static UFriendDataObject* FromJson(const TSharedRef<FJsonObject> Json);
+
+	UPlayerDataObject* GetPlayer() const;
+	UServerDataObject* GetServer() const;
+	FText GetStatus() const;
+	FText GetDateActive() const;
+
+protected:
+	UPROPERTY()
+	UPlayerDataObject* Player;
+
+	UPROPERTY()
+	UServerDataObject* ServerDataObject;
+	
+	FString Status;
+	FString DateActive;
+};
