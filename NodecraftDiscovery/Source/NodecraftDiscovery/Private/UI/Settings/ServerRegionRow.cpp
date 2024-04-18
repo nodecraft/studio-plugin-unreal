@@ -1,10 +1,10 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/Settings/ServerRegionRow.h"
 
 #include "CommonTextBlock.h"
-#include "API/DiscoverySessionManagerSubsystem.h"
+#include "API/NodecraftStudioSessionManagerSubsystem.h"
 #include "Components/Image.h"
 #include "Models/ServerRegionDataObject.h"
 #include "Subsystems/AssetStreamerSubsystem.h"
@@ -18,7 +18,7 @@ void UServerRegionRow::Configure(UServerRegionDataObject* RegionDataObject, bool
 	
 	RegionID = RegionDataObject->GetID();
 	
-	if (FPlayerSession PlayerSession = UDiscoverySessionManager::Get().GetPlayerSession(); PlayerSession.IsValid())
+	if (FPlayerSession PlayerSession = UNodecraftStudioSessionManager::Get().GetPlayerSession(); PlayerSession.IsValid())
 	{
 		CurrentRegion->SetVisibility(PlayerSession.ServerRegionId == RegionID ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	}
@@ -29,6 +29,7 @@ void UServerRegionRow::Configure(UServerRegionDataObject* RegionDataObject, bool
 	ButtonStateImage->SetVisibility(bIsSelectedRegion ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	EmptyCircle->SetVisibility(bIsSelectedRegion ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
 
+	Button->OnClicked().Clear();
 	Button->OnClicked().AddWeakLambda(this, [this]()
 	{
 		OnServerRegionButtonClicked.ExecuteIfBound(RegionID);

@@ -1,12 +1,14 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "CommonActivatableWidget.h"
 #include "CommonButtonBase.h"
+#include "CommonTextBlock.h"
 #include "NotificationList.h"
 #include "Stores/NotificationsStore.h"
+#include "UI/Common/NodecraftLoadGuard.h"
 #include "UI/Foundation/NodecraftButtonBase.h"
 #include "NotificationsDrawerWidget.generated.h"
 

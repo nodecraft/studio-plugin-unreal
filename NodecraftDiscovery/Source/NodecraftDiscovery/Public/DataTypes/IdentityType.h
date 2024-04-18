@@ -11,6 +11,7 @@ enum class EIdentityType : uint8
 	Apple,
 	SMS,
 	Email,
+	MULTIPLE, // This is used when we want to signify multiple identity types in the UI
 	UNDEFINED,
 	COUNT UMETA(Hidden)
 };

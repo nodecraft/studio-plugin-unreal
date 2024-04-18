@@ -1,48 +1,75 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Services/ServerQueueService.h"
 
 #include "JsonObjectWrapper.h"
-#include "API/DiscoveryAPI.h"
+#include "Api/NodecraftStudioApi.h"
 #include "Interfaces/IHttpResponse.h"
+#include "Models/ServerDataObject.h"
 #include "Models/ServerSessionDataObject.h"
 #include "Models/ServerQueueDataObject.h"
 #include "Models/ServerQueueTokenDataObject.h"
+#include "Subsystems/MenuManagerSubsystem.h"
+#include "Subsystems/MessageRouterSubsystem.h"
 #include "Utility/NodecraftUtility.h"
 
 class UServerPasswordModal;
 
-void UServerQueueService::CreateJoinServerDelegate(const FJoinServerDelegate& OnComplete,
-                                                   FHttpRequestCompleteDelegate& ReqCallbackOut)
+void UServerQueueService::CreateJoinServerDelegate(FHttpRequestCompleteDelegate& ReqCallbackOut, UServerDataObject* Server)
 {
-	ReqCallbackOut.BindWeakLambda(this, [OnComplete](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bConnectedSuccessfully)
+	ReqCallbackOut.BindWeakLambda(this, [this, Server](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bConnectedSuccessfully)
 	{
 		if (bConnectedSuccessfully)
 		{
-			if (EHttpResponseCodes::IsOk(Res.Get()->GetResponseCode()))
+			int32 ResponseCode = Res.Get()->GetResponseCode();
+			if (EHttpResponseCodes::IsOk(ResponseCode))
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
 				if (const TSharedPtr<FJsonObject> Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
 				{
-					UServerQueueTokenDataObject* ServerQueueToken = UServerQueueTokenDataObject::FromJson(Data.ToSharedRef());
-					OnComplete.ExecuteIfBound(ServerQueueToken, true, TOptional<FText>());
+					const UServerQueueTokenDataObject* ServerQueueToken = UServerQueueTokenDataObject::FromJson(Data.ToSharedRef());
+					// Once we have the server queue token, we can start polling the server queue
+					ServerQueueTokenDataObject = ServerQueueToken;
+					StartPollingServerQueue();
+					
+					// OnComplete.ExecuteIfBound(ServerQueueToken, true, TOptional<FText>());
 				}
 				else
 				{
-					OnComplete.ExecuteIfBound(nullptr, false, FText::FromString("UServersService::CreateJoinServerDelegate: Error while grabbing data from response"));
+					// OnComplete.ExecuteIfBound(nullptr, false, FText::FromString("UServersService::CreateJoinServerDelegate: Error while grabbing data from response"));
 				}
 			}
 			else
 			{
-				const FText ErrorMsg = UNodecraftUtility::ParseError(Res, __FUNCTION__);
-				OnComplete.ExecuteIfBound(nullptr, false, ErrorMsg);
+				const FText ErrorMsg = UNodecraftUtility::ParseMessage(Res, __FUNCTION__);
+				if (ResponseCode == 400)
+				{
+					FJsonObjectWrapper ResJson;
+					ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
+					
+					if (FString Code; ResJson.JsonObject->TryGetStringField("code", Code))
+					{
+						if (Code == "server_password_required" || Code == "discovery.server.invalid_password")
+						{
+							OnPasswordIncorrect.Broadcast();
+						}
+					}
+				}
+				// TODO: Adapt this to use the new message router
+				else if (ResponseCode == 409)
+				{
+					FString ErrorCode = UNodecraftUtility::ParseMessageResultCode(Res);
+					OnUserMustAcceptServerConsents.Broadcast(Server, ErrorMsg);
+				}
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
-			OnComplete.ExecuteIfBound(nullptr, false, FText::FromString("UServersService::CreateJoinServerDelegate: Could not connect to the server."));
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
+			// OnComplete.ExecuteIfBound(nullptr, false, FText::FromString("UServersService::CreateJoinServerDelegate: Could not connect to the server."));
 		}
 	});
 }
@@ -50,7 +77,7 @@ void UServerQueueService::CreateJoinServerDelegate(const FJoinServerDelegate& On
 void UServerQueueService::CreateGetServerQueueDelegate(const FGetServerQueueDelegate& OnComplete,
 	FHttpRequestCompleteDelegate& ReqCallbackOut)
 {
-	ReqCallbackOut.BindWeakLambda(this, [OnComplete](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bConnectedSuccessfully)
+	ReqCallbackOut.BindWeakLambda(this, [OnComplete, this](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bConnectedSuccessfully)
 	{
 		if (bConnectedSuccessfully)
 		{
@@ -61,6 +88,7 @@ void UServerQueueService::CreateGetServerQueueDelegate(const FGetServerQueueDele
 				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
 				{
 					UServerQueueDataObject* ServerQueueDataObject = UServerQueueDataObject::FromJson(Data.ToSharedRef());
+					OnGetServerQueue.ExecuteIfBound(ServerQueueDataObject, true, TOptional<FText>());
 					OnComplete.ExecuteIfBound(ServerQueueDataObject, true, TOptional<FText>());
 				}
 				else
@@ -71,21 +99,22 @@ void UServerQueueService::CreateGetServerQueueDelegate(const FGetServerQueueDele
 			}
 			else
 			{
-				const FText ErrorMsg = UNodecraftUtility::ParseError(Res, __FUNCTION__);
+				const FText ErrorMsg = UNodecraftUtility::ParseMessage(Res, __FUNCTION__);
 				OnComplete.ExecuteIfBound(nullptr, false, ErrorMsg);
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
 			OnComplete.ExecuteIfBound(nullptr, false, FText::FromString("UServersService::CreateGetServerQueueDelegate: could not connect to server."));
 		}
 	});
 }
 
-void UServerQueueService::CreateRenewServerQueueDelegate(const FJoinServerDelegate& OnComplete,
-	FHttpRequestCompleteDelegate& ReqCallbackOut)
+void UServerQueueService::CreateRenewServerQueueDelegate(FHttpRequestCompleteDelegate& ReqCallbackOut)
 {
-	ReqCallbackOut.BindWeakLambda(this, [OnComplete](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bConnectedSuccessfully)
+	ReqCallbackOut.BindWeakLambda(this, [this](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bConnectedSuccessfully)
 	{
 		if (bConnectedSuccessfully)
 		{
@@ -95,24 +124,27 @@ void UServerQueueService::CreateRenewServerQueueDelegate(const FJoinServerDelega
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
 				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
 				{
-					UServerQueueTokenDataObject* TokenDataObject = UServerQueueTokenDataObject::FromJson(Data.ToSharedRef());
-					OnComplete.ExecuteIfBound(TokenDataObject, true, TOptional<FText>());
+					const UServerQueueTokenDataObject* TokenDataObject = UServerQueueTokenDataObject::FromJson(Data.ToSharedRef());
+					ServerQueueTokenDataObject = TokenDataObject;
 				}
 				else
 				{
 					const FText ErrorMsg = FText::FromString("UServersService::CreateRenewServerQueueDelegate: error while grabbing data from response");
-					OnComplete.ExecuteIfBound(nullptr, false, ErrorMsg);
+					// TODO: Handle errors in renewal in UI
+					// Probably we should broadcast this error to the UI
 				}
 			}
 			else
 			{
-				const FText ErrorMsg = UNodecraftUtility::ParseError(Res, __FUNCTION__);
-				OnComplete.ExecuteIfBound(nullptr, false, ErrorMsg);
+				const FText ErrorMsg = UNodecraftUtility::ParseMessage(Res, __FUNCTION__);
+				// TODO: Broadcast / handle error here
+				// Probably we should broadcast this error to the UI
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
-			OnComplete.ExecuteIfBound(nullptr, false, FText::FromString("UServersService::CreateRenewServerQueueDelegate: could not connect to server."));
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
 		}
 	});
 }
@@ -120,7 +152,7 @@ void UServerQueueService::CreateRenewServerQueueDelegate(const FJoinServerDelega
 void UServerQueueService::CreateCancelServerQueueDelegate(const FSimpleServiceResponseDelegate& OnComplete,
 	FHttpRequestCompleteDelegate& ReqCallbackOut)
 {
-	ReqCallbackOut.BindWeakLambda(this, [OnComplete](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bConnectedSuccessfully)
+	ReqCallbackOut.BindWeakLambda(this, [OnComplete, this](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bConnectedSuccessfully)
 	{
 		if (bConnectedSuccessfully)
 		{
@@ -137,65 +169,97 @@ void UServerQueueService::CreateCancelServerQueueDelegate(const FSimpleServiceRe
 					const FText ErrorMsg = FText::FromString("UServersService::CreateCancelServerQueueDelegate: error while grabbing data from response");
 					OnComplete.ExecuteIfBound(false, ErrorMsg);
 				}
+				StopPollingServerQueue();
+				OnServerQueueCancelled.Broadcast();
 			}
 			else
 			{
-				const FText ErrorMsg = UNodecraftUtility::ParseError(Res, __FUNCTION__);
+				const FText ErrorMsg = UNodecraftUtility::ParseMessage(Res, __FUNCTION__);
 				OnComplete.ExecuteIfBound(false, ErrorMsg);
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
 			OnComplete.ExecuteIfBound(false, FText::FromString("UServersService::CreateCancelServerQueueDelegate: could not connect to server."));
 		}
 	});
 }
 
-bool UServerQueueService::JoinServer(const FString& ServerId, const TOptional<FString>& ServerPassword, FJoinServerDelegate& OnComplete)
+bool UServerQueueService::JoinServer(UServerDataObject* Server, const TOptional<FString>& ServerPassword)
 {
 	FHttpRequestCompleteDelegate ReqCallback;
-	CreateJoinServerDelegate(OnComplete, ReqCallback);
-	return UDiscoveryAPI::JoinServer(this, ServerId, ServerPassword, ReqCallback)->ProcessRequest();
+	CreateJoinServerDelegate(ReqCallback, Server);
+	return UNodecraftStudioApi::JoinServer(this, Server->GetId(), ServerPassword, ReqCallback)->ProcessRequest();
 }
 
-bool UServerQueueService::GetServerQueue(const FString& Token, FGetServerQueueDelegate& OnComplete)
+bool UServerQueueService::GetServerQueue(FGetServerQueueDelegate& OnComplete)
 {
+	if (ServerQueueTokenDataObject == nullptr)
+	{
+		OnComplete.ExecuteIfBound(nullptr, false, FText::FromString("UServerQueueService::GetServerQueue: ServerQueueTokenDataObject is null"));
+		return false;
+	}
 	FHttpRequestCompleteDelegate ReqCallback;
 	CreateGetServerQueueDelegate(OnComplete, ReqCallback);
-	return UDiscoveryAPI::GetServerQueue(this, Token, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::GetServerQueue(this, ServerQueueTokenDataObject->GetToken(), ReqCallback)->ProcessRequest();
 }
 
-bool UServerQueueService::RenewServerQueue(const FString& Token, FJoinServerDelegate& OnComplete)
+bool UServerQueueService::RenewServerQueue()
 {
+	if (ServerQueueTokenDataObject == nullptr)
+	{
+		return false;
+	}
 	FHttpRequestCompleteDelegate ReqCallback;
-	CreateRenewServerQueueDelegate(OnComplete, ReqCallback);
-	return UDiscoveryAPI::RenewServerQueue(this, Token, ReqCallback)->ProcessRequest();
+	CreateRenewServerQueueDelegate(ReqCallback);
+	return UNodecraftStudioApi::RenewServerQueue(this, ServerQueueTokenDataObject->GetToken(), ReqCallback)->ProcessRequest();
 }
 
-bool UServerQueueService::CancelServerQueue(const FString& Token, FSimpleServiceResponseDelegate& OnComplete)
+bool UServerQueueService::CancelServerQueue()
 {
-	StopPollingServerQueue();
+	auto EmptyComplete = FSimpleServiceResponseDelegate::CreateWeakLambda(this, [](bool bSuccess, TOptional<FText> Error) {});
+	return CancelServerQueue(EmptyComplete);
+}
+
+bool UServerQueueService::CancelServerQueue(FSimpleServiceResponseDelegate& OnComplete)
+{
+	if (ServerQueueTokenDataObject == nullptr)
+	{
+		OnComplete.ExecuteIfBound(false, FText::FromString("UServerQueueService::CancelServerQueue: ServerQueueTokenDataObject is null"));
+		return false;
+	}
 	
 	FHttpRequestCompleteDelegate ReqCallback;
 	CreateCancelServerQueueDelegate(OnComplete, ReqCallback);
-	return UDiscoveryAPI::CancelServerQueue(this, Token, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::CancelServerQueue(this, ServerQueueTokenDataObject->GetToken(), ReqCallback)->ProcessRequest();
 }
 
-void UServerQueueService::PollServerQueue(const UServerQueueTokenDataObject* ServerQueueTokenDataObject)
+void UServerQueueService::PollServerQueue()
 {
 	if (IsValid(ServerQueueTokenDataObject))
 	{
 		FGetServerQueueDelegate OnGetServerQueueComplete;
-		OnGetServerQueueComplete.BindWeakLambda(this, [this, ServerQueueTokenDataObject](UServerQueueDataObject* ServerQueueDataObject, bool bSuccess, TOptional<FText> Error)
+		OnGetServerQueueComplete.BindWeakLambda(this, [this](UServerQueueDataObject* RetrievedServerQueueDataObject, bool bSuccess, TOptional<FText> Error)
 		{
 			if (bSuccess)
 			{
-				if (ServerQueueDataObject)
+				ServerQueueDataObject = RetrievedServerQueueDataObject;
+				if (RetrievedServerQueueDataObject)
 				{
-					if (ServerQueueDataObject->GetServerSession())
+					// If we have a server session, it means we are ready to join our match! Otherwise, we need to keep polling.
+					if (RetrievedServerQueueDataObject->GetServerSession())
 					{
-						OnGetServerSession.Broadcast(ServerQueueDataObject->GetServerSession());
+						OnGetServerSession.Broadcast(RetrievedServerQueueDataObject->GetServerSession());
+						FString ConnectionString = RetrievedServerQueueDataObject->GetServerSession()->GetServerConnection() + "?join_token=" + RetrievedServerQueueDataObject->GetServerSession()->GetToken();
+						// TODO: Make this more robust, and test it
+						ConnectionString.ReplaceInline( TEXT( "tcp://" ), TEXT( "" ) );
+						OnGetServerConnectionString.Broadcast(ConnectionString);
+						// Stop polling the server queue
 						StopPollingServerQueue();
+						// Clear any stale data
+						ServerQueueDataObject = nullptr;
 						return;
 					}
 
@@ -206,29 +270,22 @@ void UServerQueueService::PollServerQueue(const UServerQueueTokenDataObject* Ser
 				// renew queue if the queue token expires in <60 seconds
 				if ((ServerQueueTokenDataObject->GetQueueExpires() - FDateTime::UtcNow()).GetTotalSeconds() < 60)
 				{
-					FJoinServerDelegate OnServerQueueRenewed;
-					OnServerQueueRenewed.BindWeakLambda(this, [this](UServerQueueTokenDataObject* TokenDataObject, bool bSuccess, TOptional<FText> Error)
-					{
-						if (bSuccess)
-						{
-							OnRenewServerQueue.ExecuteIfBound(TokenDataObject);
-						}
-					});
-					RenewServerQueue(ServerQueueTokenDataObject->GetToken(), OnServerQueueRenewed);
+					RenewServerQueue();
 				}
 			}
 		});
-		GetServerQueue(ServerQueueTokenDataObject->GetToken(), OnGetServerQueueComplete);
+		GetServerQueue(OnGetServerQueueComplete);
 	}
 }
 
-void UServerQueueService::StartPollingServerQueue(const UServerQueueTokenDataObject* TokenDataObject)
+void UServerQueueService::StartPollingServerQueue()
 {
 	StopPollingServerQueue();
 	
-	ServerQueuePollTimerDelegate.BindUObject(this, &UServerQueueService::PollServerQueue, TokenDataObject);
-	const float PollingInterval = UDiscoveryAPISettings::Get().GetServerJoinPollingInterval();
+	ServerQueuePollTimerDelegate.BindUObject(this, &UServerQueueService::PollServerQueue);
+	const float PollingInterval = UNodecraftStudioApiSettings::Get().GetServerJoinPollingInterval();
 	GetWorld()->GetTimerManager().SetTimer(ServerQueuePollTimerHandle, ServerQueuePollTimerDelegate, PollingInterval, true);
+	OnStartedPollingServerQueue.Broadcast();
 }
 
 void UServerQueueService::StopPollingServerQueue()
@@ -238,4 +295,13 @@ void UServerQueueService::StopPollingServerQueue()
 	{
 		GetWorld()->GetTimerManager().ClearTimer(ServerQueuePollTimerHandle);
 	}
+}
+
+void UServerQueueService::AddGetServerQueueDelegate(FGetServerQueueDelegate Delegate)
+{
+	Delegate.ExecuteIfBound(ServerQueueDataObject, true, TOptional<FText>());
+	OnGetServerQueue.BindWeakLambda(this, [Delegate](UServerQueueDataObject* ServerQueue, bool bSuccess, TOptional<FText> Error)
+	{
+		Delegate.ExecuteIfBound(ServerQueue, bSuccess, Error);
+	});
 }

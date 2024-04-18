@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
@@ -19,6 +19,7 @@ public:
 	TArray<UServerRegionDataObject*> GetServerRegions() const;
 	TArray<EIdentityType> GetSupportedIdentTypes() const;
 	FString GetImageBackgroundURL() const;
+	FString GetGameLogoURL() const;
 
 protected:
 	UPROPERTY()
@@ -28,4 +29,5 @@ protected:
 	TArray<EIdentityType> SupportedIdentTypes;
 
 	FString ImageBackgroundURL;
+	FString GameLogoUrl;
 };

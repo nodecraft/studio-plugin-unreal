@@ -1,11 +1,10 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "CommonActivatableWidget.h"
 #include "CommonButtonBase.h"
-#include "CommonLazyImage.h"
 #include "CommonTextBlock.h"
 #include "Blueprint/IUserObjectListEntry.h"
 #include "Models/ServerDataObject.h"
@@ -25,6 +24,16 @@ class NODECRAFTDISCOVERY_API UServerCard : public UCommonActivatableWidget, publ
 	// IUserObjectListEntry
 
 protected:
+	// The main contents of the card. Mutually exclusive from showing the create server button
+	UPROPERTY(meta=(BindWidget))
+	UPanelWidget* Card;
+
+	// The create server button. Mututally exclusive from showing the Card contents.
+	// Will be shown if we have an empty server entry (which is how we cheaply show the create server button) in
+	// the private server list
+	UPROPERTY(meta=(BindWidget))
+	UUserWidget* CreateServerButton;
+	
 	UPROPERTY(meta=(BindWidget))
 	UCommonTextBlock* ServerNameTextBlock;
 
@@ -45,6 +54,9 @@ protected:
 
 	UPROPERTY(meta=(BindWidget))
 	UUserWidget* PrivateTag;
+
+	UPROPERTY(meta=(BindWidget))
+	UUserWidget* OwnerTag;
 
 	UPROPERTY()
 	UServerDataObject* ServerDataObject = nullptr;

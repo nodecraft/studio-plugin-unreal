@@ -1,14 +1,15 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Services/GameService.h"
 
 #include "JsonObjectWrapper.h"
-#include "API/DiscoveryAPI.h"
+#include "Api/NodecraftStudioApi.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Models/GameDataObject.h"
 #include "Models/ServerRegionDataObject.h"
+#include "Subsystems/MessageRouterSubsystem.h"
 #include "Subsystems/RemoteImageSubsystem.h"
 #include "Utility/NodecraftUtility.h"
 
@@ -38,17 +39,19 @@ bool UGameService::GetGameDetails(FGameDetailsResponseDelegate OnComplete)
 			}
 			else
 			{
-				const FText ErrorMessage = UNodecraftUtility::ParseError(Res, FString(__FUNCTION__));
+				const FText ErrorMessage = UNodecraftUtility::ParseMessage(Res, FString(__FUNCTION__));
 				OnComplete.ExecuteIfBound({}, false, TOptional<FText>(ErrorMessage));
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
 			OnComplete.ExecuteIfBound({}, false, FText::FromString("UGameService::GetGameDetails: Failed to connect to server"));
 		}
 	});
 
-	return UDiscoveryAPI::GameDetails(this, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::GameDetails(this, ReqCallback)->ProcessRequest();
 }
 
 TArray<UServerRegionDataObject*> UGameService::GetCachedServerRegions() const
@@ -64,6 +67,11 @@ TArray<EIdentityType> UGameService::GetCachedIdentTypes() const
 FString UGameService::GetCachedGameBackgroundURL() const
 {
 	return GameDataObject->GetImageBackgroundURL();
+}
+
+FString UGameService::GetCachedGameLogoURL() const
+{
+	return GameDataObject->GetGameLogoURL();
 }
 
 bool UGameService::IsGameDetailsCached() const

@@ -1,12 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Core/Public/Delegates/Delegate.h"
-// #include "Auth_EmailPrompt.h"
-// #include "Auth_TermsOfServicePrompt.h"
-// #include "Auth_TokenPrompt.h"
 #include "CommonActivatableWidgetSwitcher.h"
 #include "CommonLazyImage.h"
 #include "CommonUserWidget.h"
@@ -26,6 +23,9 @@ class NODECRAFTDISCOVERY_API UAuthScreen : public UCommonUserWidget
 	GENERATED_BODY()
 
 	void SetIsLoading(bool bIsLoading);
+	UFUNCTION()
+	void OnAuthComplete_Internal();
+	
 	virtual void NativeConstruct() override;
 	
 	void AttemptAutoAuth();

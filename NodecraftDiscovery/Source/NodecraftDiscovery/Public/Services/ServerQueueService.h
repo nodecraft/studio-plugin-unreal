@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
@@ -17,7 +17,9 @@ DECLARE_DELEGATE_ThreeParams(FJoinServerDelegate, UServerQueueTokenDataObject* /
 DECLARE_DELEGATE_ThreeParams(FGetServerQueueDelegate, UServerQueueDataObject* /*QueueObject*/, bool /*bSuccess*/, TOptional<FText> /*Error*/);
 DECLARE_DELEGATE_OneParam(FRenewServerQueueDelegate, UServerQueueTokenDataObject* /*QueueTokenObject*/);
 DECLARE_DELEGATE_OneParam(FServerQueueErrorDelegate, const FText& /*ErrorText*/);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGetServerConnectionString, const FString&, ConnectionString);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGetServerSessionDelegate, const UServerSessionDataObject*, ServerSession);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnUserMustAcceptServerConsents, UServerDataObject* /*Server*/, FText /*Error*/);
 
 /**
  * 
@@ -37,30 +39,61 @@ public:
 		return nullptr;
 	}
 	
-	void CreateJoinServerDelegate(const FJoinServerDelegate& OnComplete, FHttpRequestCompleteDelegate& ReqCallbackOut);
+	void CreateJoinServerDelegate(FHttpRequestCompleteDelegate& ReqCallbackOut, UServerDataObject* Server);
 	void CreateGetServerQueueDelegate(const FGetServerQueueDelegate& OnComplete, FHttpRequestCompleteDelegate& ReqCallbackOut);
-	void CreateRenewServerQueueDelegate(const FJoinServerDelegate& OnComplete, FHttpRequestCompleteDelegate& ReqCallbackOut);
+	void CreateRenewServerQueueDelegate(FHttpRequestCompleteDelegate& ReqCallbackOut);
 	void CreateCancelServerQueueDelegate(const FSimpleServiceResponseDelegate& OnComplete, FHttpRequestCompleteDelegate& ReqCallbackOut);
 
-	bool JoinServer(const FString& ServerId, const TOptional<FString>& ServerPassword, FJoinServerDelegate& OnComplete);
-	bool GetServerQueue(const FString& Token, FGetServerQueueDelegate& OnComplete);
-	bool RenewServerQueue(const FString& Token, FJoinServerDelegate& OnComplete);
-	bool CancelServerQueue(const FString& Token, FSimpleServiceResponseDelegate& OnComplete);
+	bool JoinServer(UServerDataObject* Server, const TOptional<FString>& ServerPassword = TOptional<FString>());
+	bool GetServerQueue(FGetServerQueueDelegate& OnComplete);
+	bool RenewServerQueue();
+	bool CancelServerQueue();
+	bool CancelServerQueue(FSimpleServiceResponseDelegate& OnComplete);
 
 	UFUNCTION()
-	void PollServerQueue(const UServerQueueTokenDataObject* ServerQueueTokenDataObject);
+	void PollServerQueue();
 
-	void StartPollingServerQueue(const UServerQueueTokenDataObject* TokenDataObject);
+	void StartPollingServerQueue();
 	void StopPollingServerQueue();
-	
+	void AddGetServerQueueDelegate(FGetServerQueueDelegate Delegate);
+
 	FRenewServerQueueDelegate OnRenewServerQueue;
-	FGetServerQueueDelegate OnGetServerQueue;
+	
 	FServerQueueErrorDelegate OnServerQueueError;
 
+	FSimpleMulticastDelegate OnStartedPollingServerQueue;
+
+	FSimpleMulticastDelegate OnServerQueueCancelled;
+
+	FSimpleMulticastDelegate OnPasswordIncorrect;
+
+	// You only need to use either OnGetServerSession or OnGetServerConnectionString.
+	// OnGetServerConnectionString is more convenient for most use cases.
 	UPROPERTY(BlueprintAssignable)
 	FGetServerSessionDelegate OnGetServerSession;
+	
+	UPROPERTY(BlueprintAssignable)
+	FGetServerConnectionString OnGetServerConnectionString;
+
+	FOnUserMustAcceptServerConsents OnUserMustAcceptServerConsents;
 
 protected:
 	FTimerDelegate ServerQueuePollTimerDelegate;
 	FTimerHandle ServerQueuePollTimerHandle;
+
+private:
+	// The current server queue token we are using to poll the server queue
+	UPROPERTY()
+	const UServerQueueTokenDataObject* ServerQueueTokenDataObject;
+
+	// The latest server queue data we've received
+	// Containts info on the queue position, estimated wait time, and server session data, which if present means we are ready to join the server
+	UPROPERTY()
+	UServerQueueDataObject* ServerQueueDataObject;
+
+	// We need to keep this private and use an accessor to make sure that if, by some slim chance,
+	// our UI hangs while we are opening the server queue modal long enough for the server queue to be retrieved,
+	// we want to make sure that as soon as the UI loads it can get whatever the latest data is.
+	FGetServerQueueDelegate OnGetServerQueue;
+
 };

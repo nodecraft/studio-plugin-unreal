@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/ServerDetails/ModerationConsolePlayerSelector.h"
@@ -8,7 +8,10 @@ DEFINE_LOG_CATEGORY_STATIC(LogModerationConsolePlayerSelector, All, All);
 void UModerationConsolePlayerSelector::SetOwner(UPlayerServerDetailsDataObject* Owner)
 {
 	TArray<UPlayerServerDetailsDataObject*> OwnerArray;
-	OwnerArray.Add(Owner);
+	if (Owner)
+	{
+		OwnerArray.Add(Owner);
+	}
 	OwnerSection->SetPlayers(OwnerArray);
 }
 
@@ -66,6 +69,17 @@ void UModerationConsolePlayerSelector::SelectAllPlayers()
 	}
 }
 
+void UModerationConsolePlayerSelector::ClearSelection()
+{
+	OwnerSection->ClearSelection();
+	ModeratorsSection->ClearSelection();
+	OnlinePlayersSection->ClearSelection();
+	OfflinePlayersSection->ClearSelection();
+	BannedPlayersSection->ClearSelection();
+	SelectedPlayers.Empty();
+	OnSelectedPlayersChanged.Broadcast(SelectedPlayers);
+}
+
 void UModerationConsolePlayerSelector::OnHeaderCheckboxStateChanged(bool bIsChecked)
 {
 	if (bIsChecked)
@@ -87,7 +101,7 @@ void UModerationConsolePlayerSelector::NativeOnInitialized()
 	{
 		if (Selected)
 		{
-			SelectedPlayers.Add(Player);
+			SelectedPlayers.AddUnique(Player);
 		}
 		else
 		{

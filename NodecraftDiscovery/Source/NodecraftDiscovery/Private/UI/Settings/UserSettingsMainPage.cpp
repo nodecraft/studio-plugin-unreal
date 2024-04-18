@@ -1,11 +1,11 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/Settings/UserSettingsMainPage.h"
 
 #include "CommonTextBlock.h"
-#include "API/DiscoverySessionManagerSubsystem.h"
-#include "DeveloperSettings/IdentitySettings.h"
+#include "API/NodecraftStudioSessionManagerSubsystem.h"
+#include "DeveloperSettings/NodecraftStudioIdentitySettings.h"
 #include "Services/IdentService.h"
 #include "UI/Common/AsyncImage.h"
 #include "UI/Foundation/NodecraftButtonBase.h"
@@ -33,11 +33,11 @@ void UUserSettingsMainPage::NativeConstruct()
 	});
 
 	// get player name, avatar and ident type
-	const FPlayerSession PlayerSession = UDiscoverySessionManager::Get().GetPlayerSession();
+	const FPlayerSession PlayerSession = UNodecraftStudioSessionManager::Get().GetPlayerSession();
 	const FText User = FText::FromString(PlayerSession.PlayerData->GetUsername().IsEmpty() ?
 		PlayerSession.PlayerData->GetIdent() : PlayerSession.PlayerData->GetUsername());
     Username->SetText(User);
     PlayerImage->LoadPlayerAvatarAsync(PlayerSession.PlayerData);
-	UTexture2D* IdentTexture = UIdentitySettings::Get().GetIconForType(PlayerSession.PlayerData->GetIdentType());
+	UTexture2D* IdentTexture = UNodecraftStudioIdentitySettings::Get().GetIconForType(PlayerSession.PlayerData->GetIdentType());
 	IdentTypeImage->SetBrushFromTexture(IdentTexture);
 }

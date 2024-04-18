@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Models/AllowsDataObject.h"
@@ -43,6 +43,12 @@ UAllowsDataObject* UAllowsDataObject::FromJson(const TSharedRef<FJsonObject>& Js
 	AllowsDataObject->Server = UServerDataObject::FromJson(Json->GetObjectField("server").ToSharedRef());
 	AllowsDataObject->Sender = UPlayerDataObject::FromJson(Json->GetObjectField("sender").ToSharedRef());
 
+	const TSharedPtr<FJsonObject>* OutReceiver;
+	if (Json->TryGetObjectField("player", OutReceiver))
+	{
+		AllowsDataObject->Receiver = UPlayerDataObject::FromJson(OutReceiver->ToSharedRef());
+	}
+
 	return AllowsDataObject;
 }
 
@@ -64,6 +70,11 @@ FDateTime UAllowsDataObject::GetDateExpires() const
 UPlayerDataObject* UAllowsDataObject::GetSender() const
 {
 	return Sender;
+}
+
+UPlayerDataObject* UAllowsDataObject::GetReceiver() const
+{
+	return Receiver;
 }
 
 UServerDataObject* UAllowsDataObject::GetServer() const

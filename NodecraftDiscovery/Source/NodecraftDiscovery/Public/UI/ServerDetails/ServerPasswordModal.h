@@ -1,9 +1,10 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "CommonActivatableWidget.h"
+#include "Services/ServerQueueService.h"
 #include "ServerPasswordModal.generated.h"
 
 class UServerSessionDataObject;
@@ -20,11 +21,12 @@ class NODECRAFTDISCOVERY_API UServerPasswordModal : public UCommonActivatableWid
 	GENERATED_BODY()
 
 public:
-	void Configure(const UServerDataObject* ServerDataObject, FSimpleDelegate InOnClosed);
+	void Configure(UServerDataObject* ServerDataObject, FSimpleDelegate InOnClosed);
 
 protected:
 	virtual void NativeConstruct() override;
 
+	virtual void NativeOnActivated() override;
 	virtual void NativeOnDeactivated() override;
 	
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
@@ -41,6 +43,8 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UAlertMessage* AlertMessage;
+	
+	FDelegateHandle TransitionToJoiningServerQueueHandle;
 
 private:
 	UFUNCTION()

@@ -1,13 +1,14 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Services/PlayerReputationService.h"
 
 #include "JsonObjectWrapper.h"
-#include "API/DiscoveryAPI.h"
+#include "Api/NodecraftStudioApi.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Models/AccountReputationEntryDataObject.h"
+#include "Subsystems/MessageRouterSubsystem.h"
 #include "Utility/NodecraftUtility.h"
 
 bool UPlayerReputationService::GetPlayerReputation(FGetPlayerReputationDelegate& OnComplete)
@@ -39,15 +40,17 @@ bool UPlayerReputationService::GetPlayerReputation(FGetPlayerReputationDelegate&
 			}
 			else
 			{
-				const FText ErrorMsg = UNodecraftUtility::ParseError(Res, __FUNCTION__);
+				const FText ErrorMsg = UNodecraftUtility::ParseMessage(Res, __FUNCTION__);
 				OnComplete.ExecuteIfBound({}, false, ErrorMsg);
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
 			OnComplete.ExecuteIfBound({}, false, FText::FromString("UPlayerReputationService::GetPlayerReputation: Failed to connect to server"));
 		}
 	});
 
-	return UDiscoveryAPI::GetPlayerReputation(this, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::GetPlayerReputation(this, ReqCallback)->ProcessRequest();
 }

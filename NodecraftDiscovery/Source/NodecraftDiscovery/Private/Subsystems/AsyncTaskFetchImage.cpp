@@ -1,10 +1,7 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Subsystems/AsyncTaskFetchImage.h"
-
-
-// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Blueprint/AsyncTaskDownloadImage.h"
 #include "Modules/ModuleManager.h"

@@ -1,14 +1,14 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/ServerDetails/TabbedSections/ServerDetailsAboutSection.h"
 
 #include "CommonListView.h"
-#include "CommonLoadGuard.h"
 #include "CommonTextBlock.h"
 #include "Components/WrapBox.h"
 #include "UI/SocialLinks/SocialLinksList.h"
-#include "Models/SocialLinkDataObject.h"
+// #include "Models/SocialLinkDataObject.h"
+#include "UI/Common/NodecraftLoadGuard.h"
 #include "UI/Foundation/NodecraftButtonBase.h"
 
 #define LOCTEXT_NAMESPACE "ServerDetailsAboutSection"

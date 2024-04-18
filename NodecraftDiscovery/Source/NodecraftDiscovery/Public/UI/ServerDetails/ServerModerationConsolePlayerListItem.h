@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
@@ -13,6 +13,8 @@
 #include "Models/PlayerServerDetails.h"
 #include "UI/Foundation/NodecraftButtonBase.h"
 #include "ServerModerationConsolePlayerListItem.generated.h"
+
+class UAsyncImage;
 
 UENUM()
 enum class EPlayerServerStatus : uint8
@@ -89,6 +91,9 @@ protected:
 
 	// Player Section
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UAsyncImage* PlayerProfileImage;
+	
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UCommonTextBlock* PlayerNameTextBlock;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
@@ -143,4 +148,6 @@ public:
 	void ClearSelection();
 	void Select();
 	void SetSelected(bool bSelected);
+
+	void NativeDestruct() override;
 };

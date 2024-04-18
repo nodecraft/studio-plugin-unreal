@@ -1,16 +1,16 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "PlayerPlatformIcon.h"
 #include "Components/Image.h"
-#include "DeveloperSettings/IdentitySettings.h"
+#include "..\Public\DeveloperSettings\NodecraftStudioIdentitySettings.h"
 #include "Engine/DataTable.h"
 
 void UPlayerPlatformIcon::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 	
-	const UIdentitySettings* IdentitySettings = GetDefault<UIdentitySettings>();
+	const UNodecraftStudioIdentitySettings* IdentitySettings = GetDefault<UNodecraftStudioIdentitySettings>();
 	UTexture2D* IdentityIconTexture = *IdentitySettings->IconMapWrapper.IconMap.Find(Identity);
 	IconImage->SetBrushFromTexture(IdentityIconTexture, false);
 }
@@ -18,7 +18,7 @@ void UPlayerPlatformIcon::NativeOnInitialized()
 void UPlayerPlatformIcon::SetIdentity(EIdentityType Ident)
 {
 	Identity = Ident;
-	const UIdentitySettings* IdentitySettings = GetDefault<UIdentitySettings>();
+	const UNodecraftStudioIdentitySettings* IdentitySettings = GetDefault<UNodecraftStudioIdentitySettings>();
 	UTexture2D* IdentityIconTexture = *IdentitySettings->IconMapWrapper.IconMap.Find(Identity);
 	IconImage->SetBrushFromTexture(IdentityIconTexture, false);
 }

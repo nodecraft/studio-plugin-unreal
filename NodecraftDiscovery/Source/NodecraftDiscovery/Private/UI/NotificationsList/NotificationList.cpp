@@ -1,8 +1,12 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/NotificationsList/NotificationList.h"
+
+#include "API/NodecraftMessageCodes.h"
+#include "Components/NamedSlot.h"
 #include "Services/NotificationsService.h"
+#include "Subsystems/MessageRouterSubsystem.h"
 
 #define LOCTEXT_NAMESPACE "NotificationList"
 
@@ -58,8 +62,35 @@ void UNotificationList::SetListItems(const TArray<UNotificationDataObject*>& Not
 void UNotificationList::NativeConstruct()
 {
 	Super::NativeConstruct();
-	NoNotificationsSlot->SetVisibility(ESlateVisibility::Collapsed);
 	AlertMessageWidget->Hide();
+	NoNotificationsSlot->SetVisibility(ESlateVisibility::Collapsed);
+
+	const TArray<FString> MessageCodes = {
+		ALLOWS_UPDATE_SUCCESS, ALLOWS_UPDATE_STATUS_MISMATCH_FAILURE,ALLOWS_UPDATE_FAILED,
+		PLAYER_ACCESS_TOKEN_INVALID_TOKEN_FAILURE,
+		INVITES_UPDATE_SUCCESS, INVITES_UPDATE_FAILED, INVITES_UPDATE_STATUS_MISMATCH_FAILURE,
+		NOTIFICATIONS_DISMISSED_SUCCESS, NOTIFICATIONS_DISMISSED_MULTI_SUCCESS
+	};
+	
+	FOnRoutedMessageReceived OnMessageReceived;
+	OnMessageReceived.BindWeakLambda(this, [this](const FString& MessageCode, const FText& Message, EAlertType AlertType)
+	{
+		if (AlertType == EAlertType::Error)
+		{
+			AlertMessageWidget->Show(Message, AlertType);
+		}
+		else if (AlertType == EAlertType::Success)
+		{
+			AlertMessageWidget->Hide();
+		}
+	});
+	UMessageRouterSubsystem::Get().AddMessageReceiver("NotificationList", MessageCodes, OnMessageReceived);
+}
+
+void UNotificationList::NativeDestruct()
+{
+	Super::NativeDestruct();
+	UMessageRouterSubsystem::Get().RemoveMessageReceiver("NotificationList");
 }
 
 #undef LOCTEXT_NAMESPACE

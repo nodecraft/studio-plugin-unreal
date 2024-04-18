@@ -1,18 +1,18 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Subsystems/MenuManagerSubsystem.h"
 
-#include "DeveloperSettings/DiscoveryWidgetSettings.h"
+#include "DeveloperSettings/NodecraftStudioWidgetSettings.h"
 #include "Models/ServerQueueTokenDataObject.h"
 #include "Services/ServerQueueService.h"
 #include "Subsystems/AssetStreamerSubsystem.h"
 #include "UI/ServerDetails/ServerDetailsModal.h"
 #include "UI/ServerDetails/ServerPasswordModal.h"
 
-void UMenuManagerSubsystem::ShowServerDetails(UServerDataObject* ServerDataObject)
+void UMenuManagerSubsystem::ShowServerDetails(UServerDataObject* ServerDataObject, TOptional<FText> RulesError)
 {
-	OnRequestShowServerDetailsModal.ExecuteIfBound(ServerDataObject);
+	OnRequestShowServerDetailsModal.ExecuteIfBound(ServerDataObject, RulesError);
 }
 
 void UMenuManagerSubsystem::ShowPlayerConsents(TSubclassOf<UCommonActivatableWidget> Modal, const FPlayerConsents& Consents)
@@ -25,39 +25,68 @@ void UMenuManagerSubsystem::ShowServerInvites(TSubclassOf<UCommonActivatableWidg
 	OnPushServerInvitesPopupDelegate.ExecuteIfBound(Modal, Servers, Invitee);
 }
 
-void UMenuManagerSubsystem::ShowJoiningServerQueue(const UWorld* World, const UServerDataObject* ServerDataObject, FString Password)
+void UMenuManagerSubsystem::ShowJoiningServerQueue()
 {
-	FJoinServerDelegate OnJoinServerComplete;
-	OnJoinServerComplete.BindWeakLambda(this, [this, World]
-		(UServerQueueTokenDataObject* QueueTokenDataObject, bool bSuccess, TOptional<FText> Error)
-	{
-		if (bSuccess && QueueTokenDataObject)
-		{
-			FGetServerQueueDelegate OnGetServerQueueComplete;
-			OnGetServerQueueComplete.BindWeakLambda(this, [this, QueueTokenDataObject](UServerQueueDataObject* ServerQueueDataObject, bool bSuccess, TOptional<FText> Error)
-			{
-				if (bSuccess)
-				{
-					UAssetStreamerSubsystem::Get().LoadAssetAsync(UDiscoveryWidgetSettings::Get().GetJoiningServerQueueModal().ToSoftObjectPath(),
-						FStreamableDelegate::CreateWeakLambda(this, [this, ServerQueueDataObject, QueueTokenDataObject]
-					{
-						OnPushJoiningServerQueuePopupDelegate.ExecuteIfBound(ServerQueueDataObject, QueueTokenDataObject);
-					}));
-				}
-			});
-			UServerQueueService::Get(World)->GetServerQueue(QueueTokenDataObject->GetToken(), OnGetServerQueueComplete);
-		}
-		else
-		{
-			OnServerQueueError.ExecuteIfBound(Error.GetValue());
-		}
-	});
-	UServerQueueService::Get(World)->JoinServer(ServerDataObject->GetId(), Password, OnJoinServerComplete);
-	
+	OnPushJoiningServerQueuePopupDelegate.ExecuteIfBound();
 }
 
-void UMenuManagerSubsystem::ShowServerPasswordModal(const UServerDataObject* ServerDataObject)
+void UMenuManagerSubsystem::ShowServerPasswordModal(UServerDataObject* ServerDataObject)
 {
 	OnPushServerPasswordPopupDelegate.ExecuteIfBound(ServerDataObject);
 }
+
+void UMenuManagerSubsystem::ShowCreateServerModal(TSoftClassPtr<UCommonActivatableWidget> ModalClass)
+{
+	if (ModalClass.IsNull() == false)
+	{
+		FStreamableDelegate OnLoaded;
+		OnLoaded.BindWeakLambda(this, [this, ModalClass]
+		{
+			OnPushCreateServerPopupDelegate.ExecuteIfBound(ModalClass.Get());
+		});
+		UAssetStreamerSubsystem::Get().LoadAssetAsync(ModalClass.ToSoftObjectPath(), OnLoaded);
+	}
+}
+
+void UMenuManagerSubsystem::ShowRedirectModal(FString QrCodeUrl, ELinkType LinkType)
+{
+	if (UNodecraftStudioWidgetSettings::Get().GetExternalRedirectModal().IsNull() == false)
+	{
+		FStreamableDelegate OnLoaded;
+		OnLoaded.BindWeakLambda(this, [this, QrCodeUrl, LinkType]
+		{
+			OnPushExternalRedirectModalDelegate.ExecuteIfBound(UNodecraftStudioWidgetSettings::Get().GetExternalRedirectModal().Get(), QrCodeUrl, LinkType);
+		});
+		UAssetStreamerSubsystem::Get().LoadAssetAsync(UNodecraftStudioWidgetSettings::Get().GetExternalRedirectModal().ToSoftObjectPath(), OnLoaded);
+	}
+}
+
+
+void UMenuManagerSubsystem::ShowInternalRedirectModal(EPlayerConnectionSubject Subject)
+{
+	if (UNodecraftStudioWidgetSettings::Get().GetInternalRedirectModal().IsNull() == false)
+	{
+		FStreamableDelegate OnLoaded;
+		OnLoaded.BindWeakLambda(this, [this, Subject]
+		{
+			OnPushInternalRedirectPopupDelegate.ExecuteIfBound(UNodecraftStudioWidgetSettings::Get().GetInternalRedirectModal().Get(), Subject, TOptional<FString>());
+		});
+		UAssetStreamerSubsystem::Get().LoadAssetAsync(UNodecraftStudioWidgetSettings::Get().GetInternalRedirectModal().ToSoftObjectPath(), OnLoaded);
+	}
+}
+
+void UMenuManagerSubsystem::ShowServerSettingsRedirectModal(const FString& ServerId)
+{
+	if (UNodecraftStudioWidgetSettings::Get().GetInternalRedirectModal().IsNull() == false)
+	{
+		FStreamableDelegate OnLoaded;
+		OnLoaded.BindWeakLambda(this, [this, ServerId]
+		{
+			OnPushInternalRedirectPopupDelegate.ExecuteIfBound(UNodecraftStudioWidgetSettings::Get().GetInternalRedirectModal().Get(), EPlayerConnectionSubject::ServerSettings, ServerId);
+		});
+		UAssetStreamerSubsystem::Get().LoadAssetAsync(UNodecraftStudioWidgetSettings::Get().GetInternalRedirectModal().ToSoftObjectPath(), OnLoaded);
+	}
+}
+
+
 

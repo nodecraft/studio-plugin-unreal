@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
@@ -23,6 +23,7 @@ public:
 	EAllowStatus GetStatus() const;
 	FDateTime GetDateExpires() const;
 	UPlayerDataObject* GetSender() const;
+	UPlayerDataObject* GetReceiver() const;
 	UServerDataObject* GetServer() const;
 
 	void SetStatus(const EAllowStatus Status);
@@ -37,4 +38,7 @@ protected:
 
 	UPROPERTY()
 	UPlayerDataObject* Sender;
+
+	UPROPERTY()
+	UPlayerDataObject* Receiver;
 };

@@ -1,11 +1,12 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Services/FriendsService.h"
 
-#include "API/DiscoveryAPI.h"
+#include "API/NodecraftStudioApi.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Models/FriendDataObject.h"
+#include "Subsystems/MessageRouterSubsystem.h"
 
 void UFriendsService::CreateFriendsListDelegate(const FGetFriendsListDelegate& OnComplete,
                                                 FHttpRequestCompleteDelegate& ReqCallbackOut)
@@ -48,9 +49,11 @@ void UFriendsService::CreateFriendsListDelegate(const FGetFriendsListDelegate& O
 					OnComplete.ExecuteIfBound({}, false, TOptional<FText>(FText::FromString(ErrorText)));
 				}
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
 			OnComplete.ExecuteIfBound({}, false, FText::FromString("UFriendsService::CreateFriendsListDelegate: Failed to connect to server"));
 		}
 	});
@@ -61,5 +64,5 @@ bool UFriendsService::GetFriends(FGetFriendsListDelegate& OnComplete)
 {
 	FHttpRequestCompleteDelegate ReqCallback;
 	CreateFriendsListDelegate(OnComplete, ReqCallback);
-	return UDiscoveryAPI::ListFriends(this, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::ListFriends(this, ReqCallback)->ProcessRequest();
 }

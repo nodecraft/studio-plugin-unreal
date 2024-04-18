@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/Common/ConsentLabelButton.h"
@@ -29,7 +29,7 @@ void UConsentLabelButton::SetIsEnabled(const bool bInIsEnabled)
 	}
 	else
 	{
-		UAssetStreamerSubsystem::Get().LoadAssetAsync(TextDecorator.ToSoftObjectPath(), FStreamableDelegate::CreateLambda([this, TextDecorator]
+		UAssetStreamerSubsystem::Get().LoadAssetAsync(TextDecorator.ToSoftObjectPath(), FStreamableDelegate::CreateWeakLambda(this, [this, TextDecorator]
 		{
 			ShowTextDecoration(true);
 			TextIconDecorator->SetBrushFromTexture(TextDecorator.Get());

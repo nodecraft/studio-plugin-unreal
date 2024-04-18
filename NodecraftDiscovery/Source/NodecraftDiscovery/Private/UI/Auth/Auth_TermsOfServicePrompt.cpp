@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/Auth/Auth_TermsOfServicePrompt.h"
@@ -14,8 +14,6 @@ void UAuth_TermsOfServicePrompt::NativeConstruct()
 
 	CancelButton->OnPressed().AddUObject(this, &UAuth_TermsOfServicePrompt::Cancel);
 	BackButton->OnPressed().AddUObject(this, &UAuth_TermsOfServicePrompt::Cancel);
-
-	ErrorTextBlock->SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UAuth_TermsOfServicePrompt::NativeOnActivated()

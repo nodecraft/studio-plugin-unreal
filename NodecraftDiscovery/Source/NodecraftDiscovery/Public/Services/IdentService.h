@@ -1,10 +1,11 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "IdentityCommon.h"
 #include "JsonObjectWrapper.h"
+#include "Interfaces/IHttpRequest.h"
 #include "Models/Consents.h"
 #include "Models/PlayerSession.h"
 #include "UI/Auth/Auth_TermsOfServicePrompt.h"
@@ -41,6 +42,12 @@ public:
 	bool ResendPreviousTokenWithConsents(const FSendIdentTokenResponseDelegate& Delegate,
 	                                     const FGameConsents& InConsents);
 
+	// For use in other subsystems
+	FSimpleDelegate OnPlayerLoggedIn;
+	// TODO: THIS STILL NEEDS TO BE IMPLEMENTED FOR UI TO WORK
+	FSimpleDelegate OnPlayerLoggedOut;
+	// End of use in other subsystems
+	
 	FSimpleDelegate OnAutoAuthSuccess;
 	FOnAuthRequiresConsentsDelegate OnAutoAuthRequiresConsent;
 	FSimpleDelegate OnAutoAuthFailure;

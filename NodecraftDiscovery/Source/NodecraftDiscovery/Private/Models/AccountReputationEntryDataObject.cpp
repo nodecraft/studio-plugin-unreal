@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Models/AccountReputationEntryDataObject.h"
@@ -22,8 +22,11 @@ UAccountReputationEntryDataObject* UAccountReputationEntryDataObject::FromJson(c
 		AccountReputationEntryDataObject->CommunityDataObject = UCommunityDataObject::FromJson(Community->ToSharedRef());
 	}
 	
-	const FString DateCreatedString = Json->GetStringField("date_created");
-	FDateTime::ParseIso8601(*DateCreatedString, AccountReputationEntryDataObject->DateCreated);
+	FString DateCreatedString;
+	if (Json->TryGetStringField("date_created", DateCreatedString))
+	{
+		FDateTime::ParseIso8601(*DateCreatedString, AccountReputationEntryDataObject->DateCreated);
+	}
 
 	FString DateExpiresString;
 	if (Json->TryGetStringField("date_expires", DateExpiresString))

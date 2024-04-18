@@ -9,7 +9,7 @@ public class NodecraftDiscovery : ModuleRules
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
 		// TODO: Find a way to make this dependent on target 
-		const bool bIsSteamAuthEnabled = true;
+		const bool bIsSteamAuthEnabled = false;
 		PublicDefinitions.Add("NC_AUTH_STEAM_ENABLED=" + (bIsSteamAuthEnabled ? "1" : "0")); 
 
 		PublicDependencyModuleNames.AddRange(
@@ -22,14 +22,15 @@ public class NodecraftDiscovery : ModuleRules
 				"Json",
 				"JsonUtilities",
 				"HTTP",
-				"NodecraftCommon",
+				"NodecraftCommon", 
+				"NodecraftAuthCommon",
 				// ... add other public dependencies that you statically link with here ...
 			}
 		);
 
 		if (bIsSteamAuthEnabled)
 		{
-			PublicDependencyModuleNames.Add("SteamAuth");
+			PublicDependencyModuleNames.Add("NodecraftSteamAuth");
 		}
 
 

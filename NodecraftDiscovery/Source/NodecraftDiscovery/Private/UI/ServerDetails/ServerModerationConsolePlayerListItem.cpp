@@ -1,9 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/ServerDetails/ServerModerationConsolePlayerListItem.h"
 
-#include "API/DiscoverySessionManagerSubsystem.h"
+#include "API/NodecraftStudioSessionManagerSubsystem.h"
 #include "Models/PlayerServerDetails.h"
 #include "Subsystems/AssetStreamerSubsystem.h"
 #include "Utility/NodecraftUtility.h"
@@ -29,7 +29,6 @@ void UServerModerationConsolePlayerListItem::StyleOnlineStatus(EPlayerServerStat
 	OnlineStatusTextBlock->SetColorAndOpacity(FSlateColor(Style.StatusTextColor));
 	OnlineStatusDateTextBlock->SetColorAndOpacity(FSlateColor(Style.DateTextColor));
 	OnlineIndicator->SetBrushTintColor(FSlateColor(Style.OnlineIndicatorColor));
-	OnlineStatusDateTextBlock->SetVisibility(Status == EPlayerServerStatus::Offline ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
 	// Async load the texture
 	UAssetStreamerSubsystem::Get().LoadAssetAsync(Style.OnlineIndicatorTexture, FStreamableDelegate::CreateWeakLambda(this, [this, Style]()
 	{
@@ -47,11 +46,12 @@ void UServerModerationConsolePlayerListItem::NativeOnListItemObjectSet(UObject* 
 		if (const UPlayerDataObject* Player = ViewModel->GetPlayer())
 		{
 			// Begin Player Section
+			PlayerProfileImage->LoadPlayerAvatarAsync(Player);
 			PlayerNameTextBlock->SetText(FText::FromString(Player->GetUsername()));
 			PlayerIdTextBlock->SetText(FText::FromString(Player->GetIdent()));
 			PlatformIcon->SetIdentity(Player->GetIdentType());
 
-			const bool bIsYou = UDiscoverySessionManager::Get().GetPlayerId() == Player->GetId();
+			const bool bIsYou = UNodecraftStudioSessionManager::Get().GetPlayerId() == Player->GetId();
 			YouIndicator->SetVisibility(bIsYou ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
 			// End Player Section
 
@@ -128,8 +128,8 @@ void UServerModerationConsolePlayerListItem::NativeOnListItemObjectSet(UObject* 
 			if (const UBanDataObject* Ban = ViewModel->GetBan())
 			{
 				BanReasonSection->SetVisibility(ESlateVisibility::Visible);
-				BanReasonTextBlock->SetText(FText::Format(LOCTEXT("BanReason_Reason", "Reason: {0}"),
-							Ban->GetReason()));
+				BanReasonTextBlock->SetText(FText::Format(LOCTEXT("BanReason_Reason", "{0}"),
+							Ban->GetPublicReason()));
 			}
 			else
 			{
@@ -144,7 +144,8 @@ void UServerModerationConsolePlayerListItem::NativeOnListItemObjectSet(UObject* 
 			}
 			else
 			{
-				FirstJoinedTextBlock->SetText(LOCTEXT("HasNeverJoinedServer", "never"));
+				TotalPlaytimeTextBlock->SetText(LOCTEXT("HasNeverPlayed", "never"));
+				// FirstJoinedTextBlock->SetText(LOCTEXT("HasNeverJoinedServer", "never"));
 			}
 
 			if (Player->GetDateFirstJoined().GetTicks() > 0)
@@ -190,6 +191,7 @@ void UServerModerationConsolePlayerListItem::NativeOnListItemObjectSet(UObject* 
 		}
 	}
 
+	Checkbox->OnCheckStateChanged.Clear();
 	Checkbox->OnCheckStateChanged.AddDynamic(this, &UServerModerationConsolePlayerListItem::OnCheckboxStateChanged);
 
 	SelectButton->OnClicked().AddWeakLambda(this, [this]()
@@ -213,6 +215,12 @@ void UServerModerationConsolePlayerListItem::Select()
 void UServerModerationConsolePlayerListItem::SetSelected(const bool bSelected)
 {
 	StyleForCheckedStatus(bSelected);
+}
+
+void UServerModerationConsolePlayerListItem::NativeDestruct()
+{
+	Checkbox->OnCheckStateChanged.RemoveAll(this);
+	Super::NativeDestruct();
 }
 
 #undef LOCTEXT_NAMESPACE

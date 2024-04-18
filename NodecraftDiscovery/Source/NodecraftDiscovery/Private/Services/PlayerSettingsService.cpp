@@ -1,14 +1,15 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Services/PlayerSettingsService.h"
 
 #include "JsonObjectWrapper.h"
-#include "API/DiscoveryAPI.h"
-#include "API/DiscoverySessionManagerSubsystem.h"
+#include "Api/NodecraftStudioApi.h"
+#include "Api/NodecraftStudioSessionManagerSubsystem.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Models/PlayerSettings.h"
+#include "Subsystems/MessageRouterSubsystem.h"
 #include "Utility/NodecraftUtility.h"
 
 bool UPlayerSettingsService::UpdateCurrentPlayerRegion(const FString& RegionID,
@@ -28,7 +29,7 @@ bool UPlayerSettingsService::UpdateCurrentPlayerRegion(const FString& RegionID,
 				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
 				{
 					Session = FPlayerSession::FromJson(Data);
-					UDiscoverySessionManager::Get().SetPlayerSession(Session);					
+					UNodecraftStudioSessionManager::Get().SetPlayerSession(Session);					
 					OnComplete.ExecuteIfBound(Session, true, FText::GetEmpty());
 				}
 				else
@@ -38,16 +39,18 @@ bool UPlayerSettingsService::UpdateCurrentPlayerRegion(const FString& RegionID,
 			}
 			else
 			{
-				const FText ErrorMsg = UNodecraftUtility::ParseError(Res, __FUNCTION__);
+				const FText ErrorMsg = UNodecraftUtility::ParseMessage(Res, __FUNCTION__);
 				OnComplete.ExecuteIfBound(Session, false, ErrorMsg);
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
 			OnComplete.ExecuteIfBound(Session, false, FText::FromString("UIdentService::UpdateCurrentPlayerRegion: Failed to connect to server"));
 		}
 	});
-	return UDiscoveryAPI::UpdateCurrentPlayerRegion(this, RegionID, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::UpdateCurrentPlayerRegion(this, RegionID, ReqCallback)->ProcessRequest();
 }
 
 bool UPlayerSettingsService::GetPlayerSettings(FGetPlayerSettingsDelegate& OnComplete)
@@ -74,17 +77,19 @@ bool UPlayerSettingsService::GetPlayerSettings(FGetPlayerSettingsDelegate& OnCom
 			}
 			else
 			{
-				const FText ErrorMsg = UNodecraftUtility::ParseError(Res, FString(__FUNCTION__));
+				const FText ErrorMsg = UNodecraftUtility::ParseMessage(Res, FString(__FUNCTION__));
 				OnComplete.ExecuteIfBound(nullptr, false, ErrorMsg);
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
 			const FText ErrorText = FText::FromString("UPlayerSettingsService::GetPlayerSettings: Failed to connect to the server.");
 			OnComplete.ExecuteIfBound(nullptr, false, ErrorText);
 		}
 	});
-	return UDiscoveryAPI::GetPlayerSettings(this, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::GetPlayerSettings(this, ReqCallback)->ProcessRequest();
 }
 
 bool UPlayerSettingsService::UpdateDefaultPlayerRegion(const FString& DefaultRegionID,
@@ -113,16 +118,18 @@ bool UPlayerSettingsService::UpdateDefaultPlayerRegion(const FString& DefaultReg
 			}
 			else
 			{
-				const FText ErrorMsg = UNodecraftUtility::ParseError(Res, __FUNCTION__);
+				const FText ErrorMsg = UNodecraftUtility::ParseMessage(Res, __FUNCTION__);
 				OnComplete.ExecuteIfBound(nullptr, false, ErrorMsg);
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
 			OnComplete.ExecuteIfBound(nullptr, false, FText::FromString("UIdentService::UpdateDefaultPlayerRegion: Failed to connect to server"));
 		}
 	});
-	return UDiscoveryAPI::UpdatePlayerSettings(this, TOptional<bool>(), DefaultRegionID, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::UpdatePlayerSettings(this, TOptional<bool>(), DefaultRegionID, ReqCallback)->ProcessRequest();
 }
 
 bool UPlayerSettingsService::UpdatePlayerAnalyticsOptOut(bool AnalyticsOptOut, FGetPlayerSettingsDelegate& OnComplete)
@@ -149,15 +156,17 @@ bool UPlayerSettingsService::UpdatePlayerAnalyticsOptOut(bool AnalyticsOptOut, F
 			}
 			else
 			{
-				const FText ErrorMsg = UNodecraftUtility::ParseError(Res, __FUNCTION__);
+				const FText ErrorMsg = UNodecraftUtility::ParseMessage(Res, __FUNCTION__);
 				OnComplete.ExecuteIfBound(nullptr, false, ErrorMsg);
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
 			OnComplete.ExecuteIfBound(nullptr, false, FText::FromString("UIdentService::UpdatePlayerAnalyticsOptOut: Failed to connect to server"));
 		}
 	});
 
-	return UDiscoveryAPI::UpdatePlayerSettings(this, AnalyticsOptOut, TOptional<FString>(), ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::UpdatePlayerSettings(this, AnalyticsOptOut, TOptional<FString>(), ReqCallback)->ProcessRequest();
 }

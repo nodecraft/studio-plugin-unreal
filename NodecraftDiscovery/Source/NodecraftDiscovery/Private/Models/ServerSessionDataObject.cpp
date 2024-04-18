@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Models/ServerSessionDataObject.h"
@@ -11,8 +11,11 @@ UServerSessionDataObject* UServerSessionDataObject::FromJson(const TSharedPtr<FJ
 	Json->TryGetStringField("server_connection", Session->ServerConnection);
 	Session->PlayerAccessTokenID = Json->GetStringField("player_access_token_id");
 
-	const FString DateString = Json->GetStringField("date_expires");
-	FDateTime::ParseIso8601(*DateString, Session->DateExpires);
+	FString DateString;
+	if (Json->TryGetStringField("date_expires", DateString))
+	{
+		FDateTime::ParseIso8601(*DateString, Session->DateExpires);
+	}
 	
 	return Session;
 }

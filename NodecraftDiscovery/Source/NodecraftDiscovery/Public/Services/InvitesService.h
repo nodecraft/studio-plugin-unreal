@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
@@ -8,8 +8,10 @@
 #include "InvitesService.generated.h"
 
 
+class UInviteDataObject;
 class UServerDataObject;
 DECLARE_DELEGATE_ThreeParams(FOnListInvitableServers, TArray<UServerDataObject*> /*Servers*/, bool /*bSuccess*/, TOptional<FText> /*Error*/);
+DECLARE_DELEGATE_ThreeParams(FOnCreateInvite, const UInviteDataObject* /*Invite*/, bool /*bSuccess*/, TOptional<FText> /*Error*/);
 
 /**
  * 
@@ -25,4 +27,5 @@ public:
 	bool AcceptInvite(const FString& InviteId, FSimpleServiceResponseDelegate OnComplete);
 	bool DeclineInvite(const FString& InviteId, FSimpleServiceResponseDelegate OnComplete);
 	bool ListInvitableServers(const FString& FriendID, FOnListInvitableServers OnComplete);
+	bool CreateInvite(const FString& ServerID, const FString& FriendID, FOnCreateInvite OnComplete);
 };

@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
@@ -42,8 +42,8 @@ public:
 	bool GetOnlinePlayers(const FString& ServerId, const FGetPlayersListDelegate& OnComplete);
 	bool GetRecentPLayers(const FString& ServerId, const FGetPlayersListDelegate& OnComplete);
 
-	bool FavoriteServer(const FString& ServerId, FSimpleServiceResponseDelegate& OnComplete);
-	bool UnfavoriteServer(const FString& ServerId, FSimpleServiceResponseDelegate& OnComplete);
+	bool FavoriteServer(const UServerDataObject* Server, FSimpleServiceResponseDelegate& OnComplete);
+	bool UnfavoriteServer(const UServerDataObject* Server, FSimpleServiceResponseDelegate& OnComplete);
 
 	bool ListPublicServerModeration(const FString& ServerId, FListPublicServerModerationDelegate& OnComplete);
 };

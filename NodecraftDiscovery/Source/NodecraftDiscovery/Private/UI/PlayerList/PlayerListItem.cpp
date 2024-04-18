@@ -1,7 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/PlayerList/PlayerListItem.h"
+
+#include "DeveloperSettings/NodecraftStudioIdentitySettings.h"
 #include "Models/PlayerDataObject.h"
 
 #define LOCTEXT_NAMESPACE "PlayerListItem"
@@ -27,6 +29,9 @@ void UPlayerListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 	{
 		UpdateTimestamp(PlayerDataObject->GetDateEnd(), false);
 	}
+
+	UTexture2D* IdentTexture = UNodecraftStudioIdentitySettings::Get().GetIconForType(PlayerDataObject->GetIdentType());
+	PlatformIcon->SetBrushFromTexture(IdentTexture);
 }
 
 void UPlayerListItem::UpdateTimestamp(const FDateTime& Time, bool bIsStartTime)

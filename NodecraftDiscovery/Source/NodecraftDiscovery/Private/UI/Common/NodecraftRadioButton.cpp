@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/Common/NodecraftRadioButton.h"
@@ -23,6 +23,7 @@ void UNodecraftRadioButton::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	Button->OnClicked().Clear();
 	Button->OnClicked().AddWeakLambda(this, [this]()
 	{
 		SetIsChecked(true);

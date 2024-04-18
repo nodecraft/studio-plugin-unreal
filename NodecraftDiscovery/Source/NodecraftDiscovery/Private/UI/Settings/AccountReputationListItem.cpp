@@ -1,11 +1,11 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/Settings/AccountReputationListItem.h"
 
 #include "CommonTextBlock.h"
 #include "DataTypes/ModerationTypes.h"
-#include "DeveloperSettings/DiscoveryStyleSettings.h"
+#include "DeveloperSettings/NodecraftStudioStyleSettings.h"
 #include "Models/AccountReputationEntryDataObject.h"
 #include "Models/ServerDataObject.h"
 #include "Subsystems/AssetStreamerSubsystem.h"
@@ -49,12 +49,12 @@ void UAccountReputationListItem::NativeOnListItemObjectSet(UObject* ListItemObje
 		ServerOrCommunityName->SetText(Community->GetTitle());
 	}
 	
-	ModerationDate->SetText(FText::FromString(AccountReputationEntryDataObject->GetDateCreated().ToFormattedString(*UDiscoveryStyleSettings::GetDateFormat())));
+	ModerationDate->SetText(FText::FromString(AccountReputationEntryDataObject->GetDateCreated().ToFormattedString(*UNodecraftStudioStyleSettings::GetDateFormat())));
 
 	switch (AccountReputationEntryDataObject->GetModerationDuration())
 	{
 	case EModerationDuration::Temporary:
-		ExpirationText->SetText(FText::FromString(AccountReputationEntryDataObject->GetDateExpires().ToFormattedString(*UDiscoveryStyleSettings::GetDateFormat())));
+		ExpirationText->SetText(FText::FromString(AccountReputationEntryDataObject->GetDateExpires().ToFormattedString(*UNodecraftStudioStyleSettings::GetDateFormat())));
 		break;
 	case EModerationDuration::Permanent:
 		ExpirationText->SetText(LOCTEXT("PermanentBan", "Permanent"));

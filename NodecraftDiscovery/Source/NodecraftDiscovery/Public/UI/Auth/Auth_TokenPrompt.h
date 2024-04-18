@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
@@ -7,6 +7,7 @@
 #include "Components/EditableText.h"
 #include "Auth_TokenPrompt.generated.h"
 
+class UTextBlock;
 /**
  * 
  */

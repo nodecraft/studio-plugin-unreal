@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/ServerDetails/ServerModerationConsolePlayerListSection.h"
@@ -25,7 +25,7 @@ void UServerModerationConsolePlayerListSection::NativePreConstruct()
 
 void UServerModerationConsolePlayerListSection::SetPlayers(const TArray<UPlayerServerDetailsDataObject*>& Players)
 {
-	TArray<UPlayerServerDetailsViewModel*> PlayerViewModels;
+	TArray<UPlayerServerDetailsViewModel*> PlayerViewModels = {};
 	
 	for (UPlayerServerDetailsDataObject* Player : Players)
 	{
@@ -35,10 +35,11 @@ void UServerModerationConsolePlayerListSection::SetPlayers(const TArray<UPlayerS
 		PlayerViewModel->bIsSelectable = bAreChildrenSelectable;
 		PlayerViewModels.Add(PlayerViewModel);
 	}
-	PlayerList->SetListItems(PlayerViewModels);
+	PlayerList->ClearListItems();
 
 	if (Players.Num() > 0)
 	{
+		PlayerList->SetListItems(PlayerViewModels);
 		PlayerListContainer->SetVisibility(ESlateVisibility::Visible);
 		NoPlayersContainer->SetVisibility(ESlateVisibility::Collapsed);
 	}
@@ -57,7 +58,13 @@ void UServerModerationConsolePlayerListSection::ListenForSelectedPlayersChange(
 		for (UObject* ListItem : PlayerList->GetListItems())
 		{
 			const UPlayerServerDetailsViewModel* VM = Cast<UPlayerServerDetailsViewModel>(ListItem);
-			Cast<UServerModerationConsolePlayerListItem>(PlayerList->GetEntryWidgetFromItem(ListItem))->SetSelected(SelectedPlayers.Contains(VM->GetPlayerServerDetails()));
+			if (VM)
+			{
+				if (UServerModerationConsolePlayerListItem* PlayerListItem = Cast<UServerModerationConsolePlayerListItem>(PlayerList->GetEntryWidgetFromItem(ListItem)))
+				{
+					PlayerListItem->SetSelected(SelectedPlayers.Contains(VM->GetPlayerServerDetails()));
+				}
+			}
 		}
 	});
 }
@@ -69,6 +76,17 @@ void UServerModerationConsolePlayerListSection::SelectAllPlayers()
 		for (const UObject* ListItem : PlayerList->GetListItems())
 		{
 			Cast<UServerModerationConsolePlayerListItem>(PlayerList->GetEntryWidgetFromItem(ListItem))->Select();
+		}
+	}
+}
+
+void UServerModerationConsolePlayerListSection::ClearSelection()
+{
+	for (UUserWidget* DisplayedEntryWidget : PlayerList->GetDisplayedEntryWidgets())
+	{
+		if (UServerModerationConsolePlayerListItem* PlayerListItem = Cast<UServerModerationConsolePlayerListItem>(DisplayedEntryWidget))
+		{
+			PlayerListItem->ClearSelection();
 		}
 	}
 }

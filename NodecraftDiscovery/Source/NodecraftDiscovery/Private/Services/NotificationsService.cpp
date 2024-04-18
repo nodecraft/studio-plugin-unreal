@@ -1,10 +1,11 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Services/NotificationsService.h"
 
-#include "API/DiscoveryAPI.h"
+#include "Api/NodecraftStudioApi.h"
 #include "Stores/NotificationsStore.h"
+#include "Subsystems/MessageRouterSubsystem.h"
 
 bool UNotificationsService::GetNotifications(FGetNotificationsResponseDelegate& OnComplete)
 {
@@ -31,7 +32,7 @@ bool UNotificationsService::GetNotifications(FGetNotificationsResponseDelegate& 
 				}
 				else
 				{
-					OnComplete.ExecuteIfBound(Notifications, false, FText::FromString("NotificationsService::GetNotifications: No notifications found in response"));					
+					OnComplete.ExecuteIfBound(Notifications, true, FText::FromString("NotificationsService::GetNotifications: No notifications found in response"));					
 				}
 			}
 			else
@@ -42,14 +43,16 @@ bool UNotificationsService::GetNotifications(FGetNotificationsResponseDelegate& 
 				FString Error = ResJson.JsonObject->GetStringField("error");
 				OnComplete.ExecuteIfBound(Notifications, false, FText::FromString(Error));
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 			OnComplete.ExecuteIfBound(Notifications, false, FText::FromString("NotificationsService::GetNotifications: Failed to connect to server. Please try again."));
 		}
 	});
 	
-	return UDiscoveryAPI::GetNotifications(this, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::GetNotifications(this, ReqCallback)->ProcessRequest();
 }
 
 bool UNotificationsService::GetNotificationsHistory(FGetNotificationsResponseDelegate& OnComplete)
@@ -77,7 +80,7 @@ bool UNotificationsService::GetNotificationsHistory(FGetNotificationsResponseDel
 				}
 				else
 				{
-					OnComplete.ExecuteIfBound(Notifications, false, FText::FromString("NotificationsService::GetNotificationsHistory: No notifications found in response"));					
+					OnComplete.ExecuteIfBound(Notifications, true, FText::FromString("NotificationsService::GetNotificationsHistory: No notifications found in response"));					
 				}
 			}
 			else
@@ -88,14 +91,16 @@ bool UNotificationsService::GetNotificationsHistory(FGetNotificationsResponseDel
 				const FString Error = ResJson.JsonObject->GetStringField("error");
 				OnComplete.ExecuteIfBound(Notifications, false, FText::FromString(Error));
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 			OnComplete.ExecuteIfBound(Notifications, false, FText::FromString("NotificationsService::GetNotificationsHistory: Failed to connect to server. Please try again."));
 		}
 	});
 	
-	return UDiscoveryAPI::GetNotificationsHistory(this, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::GetNotificationsHistory(this, ReqCallback)->ProcessRequest();
 }
 
 bool UNotificationsService::DismissNotification(const UWorld* World, const FString& NotificationId)
@@ -126,14 +131,16 @@ bool UNotificationsService::DismissNotification(const UWorld* World, const FStri
 				const FString Error = ResJson.JsonObject->GetStringField("error");
 				OnComplete.ExecuteIfBound(false, FText::FromString(Error));
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
 			OnComplete.ExecuteIfBound(false, FText::FromString("NotificationsService::DismissNotification: Failed to connect to server. Please try again."));
 		}
 	});
 	
-	return UDiscoveryAPI::DismissNotification(this, NotificationId, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::DismissNotification(this, NotificationId, ReqCallback)->ProcessRequest();
 }
 
 bool UNotificationsService::DismissAllNotifications(UWorld* World, FSimpleServiceResponseDelegate& OnComplete)
@@ -159,12 +166,14 @@ bool UNotificationsService::DismissAllNotifications(UWorld* World, FSimpleServic
 				const FString Error = ResJson.JsonObject->GetStringField("error");
 				OnComplete.ExecuteIfBound(false, FText::FromString(Error));
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
 			OnComplete.ExecuteIfBound(false, FText::FromString("NotificationsService::DismissAllNotifications: Failed to connect to server. Please try again."));
 		}
 	});
 	
-	return UDiscoveryAPI::DismissNotifications(this, NotificationIds, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::DismissNotifications(this, NotificationIds, ReqCallback)->ProcessRequest();
 }

@@ -1,14 +1,17 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Utility/NodecraftUtility.h"
 
 #include "JsonObjectWrapper.h"
+#include "DataTypes/LinkTypes.h"
+#include "DeveloperSettings/NodecraftStudioApiSettings.h"
+#include "GenericPlatform/GenericPlatformHttp.h"
 #include "Interfaces/IHttpResponse.h"
 
 #define LOCTEXT_NAMESPACE "NodecraftUtility"
 
-FText UNodecraftUtility::ParseError(FHttpResponsePtr Response, FString FunctionName)
+FText UNodecraftUtility::ParseMessage(FHttpResponsePtr Response, FString FunctionName)
 {
 	FString ErrorMsg = "Error occurred while parsing JSON";
 	
@@ -28,33 +31,22 @@ FText UNodecraftUtility::ParseError(FHttpResponsePtr Response, FString FunctionN
 #endif
 }
 
-/*
-export function timeLeft(date: Date | null) {
-	if (date === null) {
-		return 'Permanent';
+FString UNodecraftUtility::ParseMessageResultCode(FHttpResponsePtr Response)
+{
+	FString ErrorCode = "Error occurred while trying to parse error code";
+	
+	if (Response.IsValid())
+	{
+		FJsonObjectWrapper ResJson;
+		
+		// Default error message will get used if we don't find 'message' in response
+		ResJson.JsonObjectFromString(Response.Get()->GetContentAsString());
+		ResJson.JsonObject->TryGetStringField("code", ErrorCode);
 	}
-	const now = new Date();
-	const diff = date.getTime() - now.getTime();
-	if (diff < 0) {
-		return 'Expired';
-	}
-	const seconds = Math.floor(diff / 1000);
-	const minutes = Math.floor(seconds / 60);
-	const hours = Math.floor(minutes / 60);
-	const days = Math.floor(hours / 24);
-	if (days > 7) {
-		return date.toLocaleDateString();
-	} else if (days > 0) {
-		return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(days, 'day');
-	} else if (hours > 0) {
-		return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(hours, 'hour');
-	} else if (minutes > 0) {
-		return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(minutes, 'minute');
-	} else if (seconds > 0) {
-		return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(seconds, 'second');
-	}
+
+	return ErrorCode;
 }
-*/
+
 FText UNodecraftUtility::TimeLeft(const FDateTime Expires)
 {
 	if (Expires == FDateTime::MinValue())
@@ -96,6 +88,38 @@ FText UNodecraftUtility::TimeLeft(const FDateTime Expires)
 			return FText::Format(LOCTEXT("TimeLeftSeconds", "{0} {0}|plural(one=second,other=seconds)"), Seconds);
 		}
 	}
+}
+
+FString UNodecraftUtility::GetQrCodeUrl(const FString& URL, const ELinkType UrlType)
+{
+	const FString Root = UNodecraftStudioApiSettings::Get().GetApiRoot();
+
+	FString Type = "";
+	switch (UrlType)
+	{
+	case ELinkType::Internal:
+		Type = "internal";
+		break;
+	case ELinkType::External:
+		Type = "external";
+		break;
+	default: ;
+	}
+	
+	return Root + "link/qr/" + Type + "/" + FGenericPlatformHttp::UrlEncode(*URL) + "?content_format=png";
+}
+
+FString UNodecraftUtility::GetDefaultServerImageUrl(const FString& ServerId)
+{
+	return UNodecraftStudioApiSettings::Get().GetApiRoot() + "server/" + ServerId + "/tile";
+}
+
+FString UNodecraftUtility::JsonObjToString(TSharedPtr<FJsonObject> JsonObj)
+{
+	FString JsonStr;
+	TSharedRef<TJsonWriter<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>> JsonWriter = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&JsonStr, 0);
+	FJsonSerializer::Serialize(MakeShared<FJsonValueObject>(JsonObj), FString(), JsonWriter);
+	return JsonStr;
 }
 
 #undef LOCTEXT_NAMESPACE

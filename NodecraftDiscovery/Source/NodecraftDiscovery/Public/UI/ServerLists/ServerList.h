@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
@@ -24,6 +24,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
 	UCommonTileView* ServerListView;
+
+	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UCommonTileView* LoadingServersListView;
 
 	UPROPERTY(BlueprintReadOnly, EditInstanceOnly)
 	EServerListType ServerListType;

@@ -1,83 +1,144 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/ServerDetails/ServerDetailsModal.h"
 
+#include "CommonBorder.h"
+#include "API/NodecraftStudioSessionManagerSubsystem.h"
 #include "Services/ServersService.h"
 #include "Subsystems/MenuManagerSubsystem.h"
 #include "UI/Alerts/AlertMessage.h"
 
 void UServerDetailsModal::ToggleIsFavorite()
 {
-	UServersService& ServersService = UServersService::Get();
-	FSimpleServiceResponseDelegate SimpleServiceResponseDelegate;
-	SimpleServiceResponseDelegate.BindWeakLambda(this, [this](bool bSuccess, TOptional<FText> Error)
+	if (FavoriteButton->GetIsLoading())
 	{
-		if (bSuccess)
+		return;
+	}
+	
+	if (ServerData)
+	{
+		UServersService& ServersService = UServersService::Get();
+		FSimpleServiceResponseDelegate SimpleServiceResponseDelegate;
+		SimpleServiceResponseDelegate.BindWeakLambda(this, [this](bool bSuccess, TOptional<FText> Error)
 		{
-			ServerData->SetIsFavorite(!ServerData->IsFavorite());
-			FavoriteButton->SetIsSelected(ServerData->IsFavorite());
+			FavoriteButton->SetIsLoading(false);
+			if (bSuccess)
+			{
+				ServerData->SetIsFavorite(!ServerData->IsFavorite());
+				FavoriteButton->SetIsFavorited(ServerData->IsFavorite());
 
-			// todo: UE-253 update server lists in main menu with newly (un)favorited server cards
+				// todo: UE-253 update server lists in main menu with newly (un)favorited server cards
+			}
+		});
+		
+		FavoriteButton->SetIsLoading(true);
+		if (ServerData->IsFavorite())
+		{
+			ServersService.UnfavoriteServer(ServerData, SimpleServiceResponseDelegate);
 		}
-	});
-	if (ServerData->IsFavorite())
-	{
-		ServersService.UnfavoriteServer(ServerData->GetId(), SimpleServiceResponseDelegate);
+		else
+		{
+			ServersService.FavoriteServer(ServerData, SimpleServiceResponseDelegate);
+		}
 	}
-	else
+}
+
+FString UServerDetailsModal::AdjustTabsVisibility(const UServerDataObject* ServerDataObject)
+{
+	/*
+	Players (Allows) - shows if the server is private (subject to change pending discussion)
+	Overview - shows if the server is a Community server
+	Rules - shows if the server is a Community server
+	Moderation (log) - shows if the player is just a normal player
+	Moderation (console) - shows if the player is the owner or a moderator
+	About - Shows if the server is a Community server
+	Settings - shows if the player is the owner
+	*/
+
+	
+	const bool bShowOverview = ServerDataObject->GetType() == EServerType::Community;
+	const bool bShowPlayerAllows = ServerDataObject->GetType() == EServerType::Private;
+	const bool bShowRules = ServerDataObject->GetType() == EServerType::Community;
+	const bool bShowModerationLog = ServerDataObject->GetRole() == EPlayerRole::Player;
+	const bool bShowModerationConsole = ServerDataObject->GetRole() == EPlayerRole::Owner || ServerDataObject->GetRole() == EPlayerRole::Moderator;
+	const bool bShowAbout = ServerDataObject->GetType() == EServerType::Community;
+	const bool bShowSettings = ServerDataObject->GetRole() == EPlayerRole::Owner;
+
+	TabsList->SetTabVisibility("PlayerTab", bShowPlayerAllows ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	TabsList->SetTabVisibility("OverviewTab", bShowOverview ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	TabsList->SetTabVisibility("RulesTab", bShowRules ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	TabsList->SetTabVisibility("ModerationLogTab", bShowModerationLog ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	TabsList->SetTabVisibility("ModerationConsoleTab", bShowModerationConsole ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	TabsList->SetTabVisibility("AboutTab", bShowAbout ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	TabsList->SetTabVisibility("SettingsTab", bShowSettings ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+
+	// First visible tab is either going to be the player tab or the overview tab
+	FString FirstVisibleTabId = "PlayerTab";
+	if (bShowOverview)
 	{
-		ServersService.FavoriteServer(ServerData->GetId(), SimpleServiceResponseDelegate);
+		FirstVisibleTabId = "OverviewTab";
 	}
+
+	return FirstVisibleTabId;
 }
 
 void UServerDetailsModal::OnGetServerDetailsComplete(UServerDataObject* ServerDataObject, bool bSuccess, TOptional<FText> Error)
 {
 	if (bSuccess)
-	{
+	{		
 		ServerData = ServerDataObject;
-		HeaderCard->SetServerData(ServerDataObject);
-		OverviewSection->SetServerData(ServerDataObject);
-		RulesSection->SetServerData(ServerDataObject);
-		ModerationHistorySection->SetServerData(ServerDataObject);
-		AboutSection->SetServerData(ServerDataObject);
+		HeaderCard->SetServerData(ServerData, false);
+		OverviewSection->SetServerData(ServerData);
+		// We are now expecting to have rules
+		RulesSection->SetServerData(ServerData);
+		ModerationHistorySection->SetServerData(ServerData);
+		AboutSection->SetServerData(ServerData);
+		AllowedPlayers->SetServerData(ServerData);
 
 		// sets the style and state of "star" favorite button to (un)selected
-		FavoriteButton->SetIsSelected(ServerDataObject->IsFavorite());
+		FavoriteButton->SetIsLoading(false);
+		FavoriteButton->SetIsFavorited(ServerData->IsFavorite());
 
-		switch (ServerDataObject->GetRole())
-		{
-		case EPlayerRole::Unknown:
-			break;
-		case EPlayerRole::Player:
-			PrivateServerTabList->SetTabVisibility("ModerationLogTab", ESlateVisibility::Visible);
-			break;
-		case EPlayerRole::Moderator:
-			PrivateServerTabList->SetTabVisibility("ModerationConsoleTab", ESlateVisibility::Visible);
-			break;
-		case EPlayerRole::Owner:
-			PrivateServerTabList->SetTabVisibility("ModerationConsoleTab", ESlateVisibility::Visible);
-			PrivateServerTabList->SetTabVisibility("SettingsTab", ESlateVisibility::Visible);
-			break;
-		}
+		PasswordRequiredPill->SetVisibility(ServerData->HasPassword() ? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
 
+		AdjustTabsVisibility(ServerDataObject);
+
+		JoinButton->OnClicked().Clear();
 		JoinButton->OnClicked().AddWeakLambda(this, [this, ServerDataObject]
 		{
-			if (ServerDataObject->HasPassword())
-			{
-				UMenuManagerSubsystem::Get().ShowServerPasswordModal(ServerDataObject);
-			}
-			else
-			{
-				UMenuManagerSubsystem::Get().ShowJoiningServerQueue(GetWorld(), ServerDataObject);
-			}
+			UServersService::Get().JoinServer(ServerDataObject, GetWorld());
 		});
 	}
 }
 
 void UServerDetailsModal::LoadServerDetails(UServerDataObject* ServerDataObject)
 {
+	ServerData = ServerDataObject;
+
+	// We were previously setting server data in OnTabContentCreated
+	// but ServerData will be stale at that point
+	FavoriteButton->SetIsLoading(true);
+	HeaderCard->SetServerData(ServerData, true);
+	OverviewSection->SetServerData(ServerData);
+	// We're not expecting to have rules at this point, but in case API changes in the future, check anyway
+	if (ServerData->GetRules())
+	{
+		RulesSection->SetServerData(ServerData);
+	}
+	ModerationHistorySection->SetServerData(ServerData);
+	AboutSection->SetServerData(ServerData);
+	AllowedPlayers->SetServerData(ServerData);
+	OwnerSettings->SetServerData(ServerData);
+
+	JoinButton->OnClicked().Clear();
+	JoinButton->OnClicked().AddWeakLambda(this, [this, ServerDataObject]
+	{
+		UServersService::Get().JoinServer(ServerDataObject, GetWorld());
+	});
+	
 	const FString ServerID = ServerDataObject->GetId();
+	PlayerDetailsPanel->SetServerId(ServerID);
 	ModerationHistorySection->SetServerId(ServerID);
 	// ModerationSection->LoadData();
 	AboutSection->SetServerId(ServerID);
@@ -96,36 +157,13 @@ void UServerDetailsModal::LoadServerDetails(UServerDataObject* ServerDataObject)
 	RecentPlayersList->LoadData(EPlayerListType::Recent, ServerDataObject);
 	PlayerDetailsPanelContainer->SetVisibility(ESlateVisibility::Collapsed);
 
-	switch (ServerDataObject->GetType())
-	{
-	case EServerType::Community:
-		CommunityServerSection->SetVisibility(ESlateVisibility::Visible);
-		PrivateServerSection->SetVisibility(ESlateVisibility::Collapsed);
-		break;
-	case EServerType::Private:
-		CommunityServerSection->SetVisibility(ESlateVisibility::Collapsed);
-		PrivateServerSection->SetVisibility(ESlateVisibility::Visible);
-		// Hide these until we know what the player's role is
-		PrivateServerTabList->SetTabVisibility("ModerationLogTab", ESlateVisibility::Collapsed);
-		PrivateServerTabList->SetTabVisibility("ModerationConsoleTab", ESlateVisibility::Collapsed);
-		PrivateServerTabList->SetTabVisibility("SettingsTab", ESlateVisibility::Collapsed);
-		if (ModerationConsole)
-		{
-			ModerationConsole->LoadData(ServerID);
-		}
-		break;
-	default:
-		break;
-	}
+	FString FirstVisibleTabId =	AdjustTabsVisibility(ServerDataObject);
+	// Navigate to the first tab that is visible
+	TabsList->SelectTabByID(FName(*FirstVisibleTabId));
 }
 
 void UServerDetailsModal::OnTabContentCreated(FName TabId, UCommonUserWidget* TabWidget)
 {
-	if (TabWidget->Implements<UServerDetailsSection>())
-	{
-		Cast<IServerDetailsSection>(TabWidget)->SetServerData(ServerData);
-	}
-	
 	if (UServerDetailsRulesSection* Rules = Cast<UServerDetailsRulesSection>(TabWidget))
 	{
 		RulesSection = Rules;
@@ -156,13 +194,17 @@ void UServerDetailsModal::OnTabContentCreated(FName TabId, UCommonUserWidget* Ta
 	}
 }
 
-void UServerDetailsModal::OnPrivateTabSelected(FName TabId)
+void UServerDetailsModal::OnSelectedTab(FName TabId)
 {
 	if (TabId == "ModerationConsoleTab")
 	{
 		OnlinePlayersList->SetVisibility(ESlateVisibility::Collapsed);
 		RecentPlayersList->SetVisibility(ESlateVisibility::Collapsed);
 		PlayerDetailsPanelContainer->SetVisibility(ESlateVisibility::Visible);
+		if (ModerationConsole)
+		{
+			ModerationConsole->LoadData(ServerData->GetId());
+		}
 	}
 	else
 	{
@@ -175,20 +217,11 @@ void UServerDetailsModal::OnPrivateTabSelected(FName TabId)
 void UServerDetailsModal::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
-	CommunityServerTabList->SetLinkedSwitcher(CommunityServerTabContentSwitcher);
-	CommunityServerTabList->OnTabContentCreated.AddDynamic(this, &ThisClass::OnTabContentCreated);
-
-	PrivateServerTabList->SetLinkedSwitcher(PrivateServerTabContentSwitcher);
-	PrivateServerTabList->OnTabContentCreated.AddDynamic(this, &ThisClass::OnTabContentCreated);
-
+	TabsList->SetLinkedSwitcher(ServerTabContentSwitcher);
+	TabsList->OnTabContentCreated.AddDynamic(this, &ThisClass::OnTabContentCreated);
+	TabsList->OnTabSelected.AddDynamic(this, &ThisClass::OnSelectedTab);
+	
 	FavoriteButton->OnClicked().AddUObject(this, &ThisClass::ToggleIsFavorite);
-
-	PrivateServerTabList->OnTabSelected.AddDynamic(this, &ThisClass::OnPrivateTabSelected);
-
-	ModerationConsole->OnSelectedPlayersChanged.AddWeakLambda(this, [this](const TArray<UPlayerServerDetailsDataObject*>& SelectedPlayers)
-	{
-		PlayerDetailsPanel->SetSelectedPlayers(SelectedPlayers);
-	});
 }
 
 void UServerDetailsModal::NativeOnActivated()
@@ -201,4 +234,27 @@ void UServerDetailsModal::NativeOnActivated()
 	{
 		AlertMessage->Show(ErrorText, EAlertType::Error);
 	});
+
+	ModerationConsole->OnSelectedPlayersChanged.AddWeakLambda(this, [this](const TArray<UPlayerServerDetailsDataObject*>& SelectedPlayers)
+	{
+		PlayerDetailsPanel->SetSelectedPlayers(SelectedPlayers);
+	});
+
+	PlayerDetailsPanel->OnCompletedModerationActionDelegate.AddWeakLambda(this, [this]()
+	{
+		ModerationConsole->ClearPlayerSelection();
+		ModerationConsole->ReloadData();
+	});
+}
+
+void UServerDetailsModal::SetCloseDelegate(FSimpleDelegate InOnCloseDelegate)
+{
+	CloseButton->OnClicked().Clear();
+	CloseButton->OnClicked().Add(InOnCloseDelegate);
+}
+
+void UServerDetailsModal::NavigateToRulesTabWithError(const FText& ErrorText)
+{
+	TabsList->SelectTabByID("RulesTab");
+	AlertMessage->Show(ErrorText, EAlertType::Error);
 }

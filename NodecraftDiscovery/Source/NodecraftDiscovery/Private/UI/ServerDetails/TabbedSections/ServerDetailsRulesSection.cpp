@@ -1,11 +1,13 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/ServerDetails/TabbedSections/ServerDetailsRulesSection.h"
 
+#include "CommonBorder.h"
 #include "CommonLoadGuard.h"
 #include "CommonTextBlock.h"
 #include "Services/ConsentsService.h"
+#include "UI/Common/NodecraftLoadGuard.h"
 
 #define LOCTEXT_NAMESPACE "ServerDetailsRulesSection"
 
@@ -48,11 +50,9 @@ void UServerDetailsRulesSection::SetServerData(UServerDataObject* InServerDataOb
 		UE_LOG(LogServerDetailsRulesSection, Error, TEXT("UServerDetailsRulesSection::SetServerData(): ServerDataObject is null !"));
 		return;
 	}
-	
+
 	RefreshConsentLabelButton(InServerDataObject->GetRules());
-
 	LoadGuard->SetIsLoading(false);
-
 }
 
 void UServerDetailsRulesSection::SetLoading(const bool bLoading)

@@ -1,17 +1,16 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/Auth/AuthScreen.h"
 
-#include "API/DiscoveryAPI.h"
+#include "NodecraftLogCategories.h"
+#include "API/NodecraftStudioApi.h"
 #include "Models/GameDataObject.h"
 #include "Services/GameService.h"
 #include "Subsystems/RemoteImageSubsystem.h"
 #include "UI/Auth/Auth_EmailPrompt.h"
 #include "UI/Auth/Auth_TermsOfServicePrompt.h"
 #include "UI/Auth/Auth_TokenPrompt.h"
-
-DEFINE_LOG_CATEGORY_STATIC(AuthScreen, Display, All)
 
 void UAuthScreen::NativeConstruct()
 {
@@ -20,7 +19,7 @@ void UAuthScreen::NativeConstruct()
 	SetIsLoading(false);
 
 	// TODO: This ideally would exist in some kind of World Subsystem or GameInstance. Anywhere where it can be initialized once and then used throughout the game.
-	UDiscoverySessionManager::Get().LoadFromDisk();
+	UNodecraftStudioSessionManager::Get().LoadFromDisk();
 
 	EmailPrompt->OnCallEnded.BindUObject(this, &UAuthScreen::OnPromptCallFinished);
 	TokenPrompt->OnCallEnded.BindUObject(this, &UAuthScreen::OnPromptCallFinished);
@@ -36,12 +35,16 @@ void UAuthScreen::NativeConstruct()
 		WidgetSwitcher->SetActiveWidget(TokenPrompt);
 	});
 
-	FPlayerSessionResponseDelegate PlayerSessionCallback = FPlayerSessionResponseDelegate::CreateLambda(
-		[this](FPlayerSession Session, bool bSuccess, FText Error)
+	OnAuthComplete.AddUniqueDynamic(this, &UAuthScreen::OnAuthComplete_Internal);
+
+	FPlayerSessionResponseDelegate PlayerSessionCallback = FPlayerSessionResponseDelegate::CreateWeakLambda(
+		this, [this](FPlayerSession Session, bool bSuccess, FText Error)
 		{
+			UE_LOG(LogNodecraftAuth, Verbose, TEXT("Player session callback received. bSuccess: %d, Error: %s"), bSuccess,
+			       *Error.ToString());
 			if (bSuccess && Session.IsValid())
 			{
-				UE_LOG(AuthScreen, Log, TEXT("Player session is valid"));
+				UE_LOG(LogNodecraftAuth, Verbose, TEXT("Player session is valid"));
 				if (UGameService::Get().IsGameDetailsCached())
 				{
 					OnAuthComplete.Broadcast();
@@ -60,7 +63,7 @@ void UAuthScreen::NativeConstruct()
 							else
 							{
 								SetIsLoading(false);
-								UE_LOG(AuthScreen, Error, TEXT("Verified session but failed to get game details: %s"),
+								UE_LOG(LogNodecraftAuth, Error, TEXT("Verified session but failed to get game details: %s"),
 								       *Error.GetValue().ToString());
 							}
 						});
@@ -69,13 +72,14 @@ void UAuthScreen::NativeConstruct()
 			}
 			else
 			{
+				UE_LOG(LogNodecraftAuth, Log, TEXT("Player session was not valid. Attempting auto auth."));
 				AttemptAutoAuth();
 			}
 		});
 
-	FSimpleDelegate OnLoggedInSuccess = FSimpleDelegate::CreateLambda([this, PlayerSessionCallback]()
+	FSimpleDelegate OnLoggedInSuccess = FSimpleDelegate::CreateWeakLambda(this, [this, PlayerSessionCallback]()
 	{
-		UE_LOG(AuthScreen, Verbose, TEXT("Logged in successfully. Verifying player session."));
+		UE_LOG(LogNodecraftAuth, Verbose, TEXT("Logged in successfully. Verifying player session."));
 		SetIsLoading(true);
 		UIdentService::Get().VerifyPlayerSession(PlayerSessionCallback);
 	});
@@ -84,11 +88,14 @@ void UAuthScreen::NativeConstruct()
 	UIdentService::Get().OnAutoAuthRequiresConsent.BindWeakLambda(
 		this, [this](FAcceptConsentsDelegate AcceptConsentsDelegate, const FString& IdentType)
 		{
+			SetIsLoading(false);
 			WidgetSwitcher->SetActiveWidget(ConsentsPrompt);
 			ConsentsPrompt->RetrieveConsentDetails(IdentType);
 		});
 	UIdentService::Get().OnAutoAuthFailure.BindWeakLambda(this, [this]()
 	{
+		// TODO: I think we want to cap retry attempts here
+		UE_LOG(LogNodecraftAuth, Log, TEXT("Auto Auth failed. Attempting auto auth."));
 		AttemptAutoAuth();
 	});
 
@@ -112,7 +119,7 @@ void UAuthScreen::NativeConstruct()
 	}
 
 	// Actually start auth process
-	if (UDiscoverySessionManager::Get().IsPlayerSessionValid())
+	if (UNodecraftStudioSessionManager::Get().IsPlayerSessionValid())
 	{
 		SetIsLoading(true);
 		UIdentService::Get().VerifyPlayerSession(PlayerSessionCallback);
@@ -153,7 +160,7 @@ void UAuthScreen::AttemptAutoAuth()
 		{
 			// TODO: Better error handling here. Show error message on screen
 			SetIsLoading(false);
-			UE_LOG(AuthScreen, Error, TEXT("Failed to get game details: %s"), *Error.GetValue().ToString());
+			UE_LOG(LogNodecraftAuth, Error, TEXT("Failed to get game details: %s"), *Error.GetValue().ToString());
 		}
 	});
 	SetIsLoading(true);
@@ -174,6 +181,11 @@ void UAuthScreen::SetIsLoading(const bool bIsLoading)
 {
 	LoadingSpinner->SetVisibility(bIsLoading ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 	WidgetSwitcher->SetVisibility(bIsLoading ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
+}
+
+void UAuthScreen::OnAuthComplete_Internal()
+{
+	UIdentService::Get().OnPlayerLoggedIn.ExecuteIfBound();
 }
 
 void UAuthScreen::Cancel()

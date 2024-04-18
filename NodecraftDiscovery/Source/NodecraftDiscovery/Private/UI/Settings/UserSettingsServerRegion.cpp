@@ -1,9 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/Settings/UserSettingsServerRegion.h"
 
-#include "API/DiscoveryAPI.h"
+#include "API/NodecraftStudioApi.h"
 #include "Components/CheckBox.h"
 #include "Components/VerticalBox.h"
 #include "Models/PlayerSettings.h"
@@ -28,7 +28,7 @@ void UUserSettingsServerRegion::NativeConstruct()
 	AlertMessage->Hide();
 
 	// get current server region ID from cache
-	if (FPlayerSession PlayerSession = UDiscoverySessionManager::Get().GetPlayerSession(); PlayerSession.IsValid())
+	if (FPlayerSession PlayerSession = UNodecraftStudioSessionManager::Get().GetPlayerSession(); PlayerSession.IsValid())
 	{
 		CurrentRegion = PlayerSession.ServerRegionId;
 		SelectedRegion = CurrentRegion;
@@ -125,7 +125,7 @@ void UUserSettingsServerRegion::NativeConstruct()
 
 void UUserSettingsServerRegion::CreateServerRegionRows(const TArray<UServerRegionDataObject*>& Regions)
 {
-	UAssetStreamerSubsystem::Get().LoadAssetAsync(RegionRowWidget.ToSoftObjectPath(), FStreamableDelegate::CreateLambda([this, Regions]
+	UAssetStreamerSubsystem::Get().LoadAssetAsync(RegionRowWidget.ToSoftObjectPath(), FStreamableDelegate::CreateWeakLambda(this, [this, Regions]
 	{
 		for (UServerRegionDataObject* Region : Regions)
 		{

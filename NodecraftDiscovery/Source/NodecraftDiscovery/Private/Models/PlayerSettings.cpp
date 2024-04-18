@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Models/PlayerSettings.h"
@@ -7,8 +7,8 @@ UPlayerSettings* UPlayerSettings::FromJson(const TSharedRef<FJsonObject>& Json)
 {
 	UPlayerSettings* PlayerSettings = NewObject<UPlayerSettings>();
 
-	PlayerSettings->AnalyticsOptOut = Json->GetBoolField("analytics_opt_out");
-	PlayerSettings->DefaultServerRegionID = Json->GetStringField("default_server_region_id");
+	Json->TryGetBoolField("analytics_opt_out", PlayerSettings->AnalyticsOptOut);
+	Json->TryGetStringField("default_server_region_id", PlayerSettings->DefaultServerRegionID);
 
 	return PlayerSettings;
 }

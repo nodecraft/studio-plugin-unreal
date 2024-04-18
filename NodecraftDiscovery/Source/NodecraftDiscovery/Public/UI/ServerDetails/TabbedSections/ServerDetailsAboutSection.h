@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
@@ -9,13 +9,13 @@
 #include "UObject/Object.h"
 #include "ServerDetailsAboutSection.generated.h"
 
+class UNodecraftLoadGuard;
 enum class ESocialLinkType : uint8;
 class UWrapBox;
 class USocialLinksList;
 class UCommonListView;
 class UNodecraftButtonBase;
 class UCommonTextBlock;
-class UCommonLoadGuard;
 /**
  * 
  */
@@ -32,7 +32,7 @@ private:
 	
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UCommonLoadGuard* LoadGuard;
+	UNodecraftLoadGuard* LoadGuard;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UCommonTextBlock* SummaryText;

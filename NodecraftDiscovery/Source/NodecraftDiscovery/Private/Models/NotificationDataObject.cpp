@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Models/NotificationDataObject.h"
@@ -113,7 +113,8 @@ UNotificationDataObject* UNotificationDataObject::FromJson(const TSharedRef<FJso
 	UNotificationDataObject* NotificationDataObject = NewObject<UNotificationDataObject>();
 
 	NotificationDataObject->Id = Json->GetStringField("id");
-	NotificationDataObject->DateCreated = Json->GetStringField("date_created");
+	
+	Json->TryGetStringField("date_created", NotificationDataObject->DateCreated);
 	
 	Json->TryGetStringField("subject", NotificationDataObject->Subject);
 

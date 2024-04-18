@@ -1,11 +1,12 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Services/ConsentsService.h"
 #include "Json/Public/Dom/JsonValue.h"
 #include "Json/Public/Dom/JsonObject.h"
-#include "API/DiscoveryAPI.h"
+#include "API/NodecraftStudioApi.h"
 #include "Models/RulesDataObject.h"
+#include "Subsystems/MessageRouterSubsystem.h"
 #include "Utility/NodecraftUtility.h"
 
 bool UConsentsService::GetGameLegalConsents(const FString& IdentType, FConsentsResponseDelegate& OnComplete)
@@ -49,14 +50,16 @@ bool UConsentsService::GetGameLegalConsents(const FString& IdentType, FConsentsR
 			{
 				OnComplete.ExecuteIfBound(FGameConsents(), false, FText::FromString("Response wasn't okay I guess"));
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
 			OnComplete.ExecuteIfBound(FGameConsents(), false, FText::FromString("Failed to connect to server"));
 		}
 	});
 
-	return UDiscoveryAPI::GetGameLegalConsents(this, IdentType, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::GetGameLegalConsents(this, IdentType, ReqCallback)->ProcessRequest();
 }
 
 bool UConsentsService::SignGameRulesConsents(const FGameConsents& Consents, FSignConsentsResponseDelegate& OnComplete)
@@ -87,14 +90,16 @@ bool UConsentsService::SignGameRulesConsents(const FGameConsents& Consents, FSig
 			{
 				OnComplete.ExecuteIfBound(nullptr, false, FText::FromString("Response wasn't okay I guess"));
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
 			OnComplete.ExecuteIfBound(nullptr, false, FText::FromString("Failed to connect to server"));
 		}
 	});
 
-	return UDiscoveryAPI::SignConsents(this, Consents, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::SignConsents(this, Consents, ReqCallback)->ProcessRequest();
 }
 
 bool UConsentsService::GetPlayerLegalConsents(FGetPlayerConsentsResponseDelegate& OnComplete)
@@ -120,17 +125,19 @@ bool UConsentsService::GetPlayerLegalConsents(FGetPlayerConsentsResponseDelegate
 			}
 			else
 			{
-				const FText ErrorMessage = UNodecraftUtility::ParseError(Res, __FUNCTION__);
+				const FText ErrorMessage = UNodecraftUtility::ParseMessage(Res, __FUNCTION__);
 				OnComplete.ExecuteIfBound(FPlayerConsents(), false, ErrorMessage);
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
 			OnComplete.ExecuteIfBound(FPlayerConsents(), false, FText::FromString("UConsentsService::GetPlayerLegalConsents: Failed to connect to the server."));
 		}
 	});
 
-	return UDiscoveryAPI::GetPlayerLegalConsents(this, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::GetPlayerLegalConsents(this, ReqCallback)->ProcessRequest();
 }
 
 bool UConsentsService::GetPlayerRulesConsents(FGetPlayerConsentsResponseDelegate& OnComplete)
@@ -156,15 +163,17 @@ bool UConsentsService::GetPlayerRulesConsents(FGetPlayerConsentsResponseDelegate
 			}
 			else
 			{
-				const FText ErrorMessage = UNodecraftUtility::ParseError(Res, __FUNCTION__);
+				const FText ErrorMessage = UNodecraftUtility::ParseMessage(Res, __FUNCTION__);
 				OnComplete.ExecuteIfBound(FPlayerConsents(), false, ErrorMessage);
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
 			OnComplete.ExecuteIfBound(FPlayerConsents(), false, FText::FromString("UConsentsService::GetPlayerRulesConsents: Failed to connect to the server."));
 		}
 	});
 
-	return UDiscoveryAPI::GetPlayerRulesConsents(this, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::GetPlayerRulesConsents(this, ReqCallback)->ProcessRequest();
 }

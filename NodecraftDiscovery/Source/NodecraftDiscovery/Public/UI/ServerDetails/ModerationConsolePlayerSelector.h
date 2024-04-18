@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
@@ -60,6 +60,7 @@ public:
 	void SetBannedPlayers(const TArray<UPlayerServerDetailsDataObject*>& Players);
 	void SetDisplayMode(EPlayerSelectorMode Mode);
 	void SelectAllPlayers();
+	void ClearSelection();
 
 	UFUNCTION()
 	void OnHeaderCheckboxStateChanged(bool bIsChecked);

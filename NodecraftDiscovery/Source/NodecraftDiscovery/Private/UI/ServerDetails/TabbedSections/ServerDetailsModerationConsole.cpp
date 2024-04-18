@@ -1,15 +1,33 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/ServerDetails/TabbedSections/ServerDetailsModerationConsole.h"
 
+#include "API/NodecraftMessageCodes.h"
 #include "Services/ModerationService.h"
+#include "Stores/ModerationStore.h"
+#include "Subsystems/MessageRouterSubsystem.h"
+
+#define MSG_ROUTE_ID "ServerDetailsModConsole"
 
 DEFINE_LOG_CATEGORY_STATIC(LogServerDetailsModerationConsole, All, All);
 
 void UServerDetailsModerationConsole::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
+
+	UMessageRouterSubsystem::Get().AddMessageReceiver(MSG_ROUTE_ID,
+		{ REPUTATION_WILDCARD, PLAYER_ACCESS_TOKEN_WILDCARD, DISCOVERY_SERVER_WILDCARD, GENERIC_WILDCARD_FAILURE},
+		FOnRoutedMessageReceived::CreateWeakLambda(this, [this](const FString& ErrorIdentifier, const FText& ErrorMessage, EAlertType AlertType)
+	{
+			// We're only interested in errors
+			if (IsActivated() && AlertType == EAlertType::Error)
+			{
+				AlertMessage->Show(ErrorMessage, AlertType);
+			}
+	}));
+
+	AlertMessage->Hide();
 
 	BannedButton->OnClicked().AddWeakLambda(this, [this]()
 	{
@@ -60,6 +78,63 @@ void UServerDetailsModerationConsole::NativeOnInitialized()
 	SelectButton(AllButton);
 }
 
+void UServerDetailsModerationConsole::NativeConstruct()
+{
+	Super::NativeConstruct();
+	if (const UWorld* World = GetWorld())
+	{
+		UModerationStore& ModerationStore = *UModerationStore::Get(World);
+		ModeratorsChangedListenerHandle = ModerationStore.AddModeratorsChangedListener(FOnModeratorsUpdated::FDelegate::CreateWeakLambda(this, [this](const TArray<UPlayerServerDetailsDataObject*>& Moderators)
+		{
+			PlayerSelector->SetModerators(Moderators);
+		}));
+		OnlinePlayersChangedListenerHandle = ModerationStore.AddOnlinePlayersChangedListener(FOnOnlinePlayersUpdated::FDelegate::CreateWeakLambda(this, [this](const TArray<UPlayerServerDetailsDataObject*>& OnlinePlayers)
+		{
+			PlayerSelector->SetOnlinePlayers(OnlinePlayers);
+		}));
+		OfflinePlayersChangedListenerHandle = ModerationStore.AddOfflinePlayersChangedListener(FOnOfflinePlayersUpdated::FDelegate::CreateWeakLambda(this, [this](const TArray<UPlayerServerDetailsDataObject*>& OfflinePlayers)
+		{
+			PlayerSelector->SetOfflinePlayers(OfflinePlayers);
+		}));
+		BannedPlayersChangedListenerHandle = ModerationStore.AddBannedPlayersChangedListener(FOnBannedPlayersUpdated::FDelegate::CreateWeakLambda(this, [this](const TArray<UPlayerServerDetailsDataObject*>& BannedPlayers)
+		{
+			PlayerSelector->SetBannedPlayers(BannedPlayers);
+		}));
+		OwnerChangedListenerHandle = ModerationStore.AddOwnerChangedListener(FOnOwnerUpdated::FDelegate::CreateWeakLambda(this, [this](UPlayerServerDetailsDataObject* Owner)
+		{
+			PlayerSelector->SetOwner(Owner);
+		}));
+	}
+	else
+	{
+		UE_LOG(LogServerDetailsModerationConsole, Error, TEXT("UServerDetailsModerationConsole::NativeConstruct: Failed to get world"));
+	}
+}
+
+void UServerDetailsModerationConsole::NativeDestruct()
+{
+	if (const UWorld* World = GetWorld())
+	{
+		UModerationStore& ModerationStore = *UModerationStore::Get(World);
+		ModerationStore.RemoveModeratorsChangedListener(ModeratorsChangedListenerHandle);
+		ModerationStore.RemoveOnlinePlayersChangedListener(OnlinePlayersChangedListenerHandle);
+		ModerationStore.RemoveOfflinePlayersChangedListener(OfflinePlayersChangedListenerHandle);
+		ModerationStore.RemoveBannedPlayersChangedListener(BannedPlayersChangedListenerHandle);
+		ModerationStore.RemoveOwnerChangedListener(OwnerChangedListenerHandle);
+	}
+	else
+	{
+		UE_LOG(LogServerDetailsModerationConsole, Error, TEXT("UServerDetailsModerationConsole::NativeDestruct: Failed to get world"));
+	}
+	Super::NativeDestruct();
+}
+
+void UServerDetailsModerationConsole::NativeOnActivated()
+{
+	Super::NativeOnActivated();
+	AlertMessage->Hide();
+}
+
 void UServerDetailsModerationConsole::SelectButton(UNodecraftButtonBase* Button)
 {
 	AllButton->ClearSelection();
@@ -76,82 +151,32 @@ void UServerDetailsModerationConsole::SelectButton(UNodecraftButtonBase* Button)
 
 void UServerDetailsModerationConsole::LoadData(const FString& InServerId)
 {
+	ServerId = InServerId;
+	ReloadData();
+}
+
+void UServerDetailsModerationConsole::ReloadData()
+{
+	LoadGuard->SetIsLoading(true);
+	
 	UModerationService &ModerationService = UModerationService::Get();
-	auto Moderators = ModerationService.GetModerators(InServerId, FGetPlayerServerDetailsList::CreateWeakLambda(this, [this](const TArray<UPlayerServerDetailsDataObject*>& Players, bool bSuccess, TOptional<FText> Error)
+	if (const UWorld* World = GetWorld())
 	{
-		if (bSuccess)
+		RequestQueue = MakeShared<FHTTPRequestQueue>();
+		TArray<TSharedRef<IHttpRequest>> Requests;
+		Requests.Add(ModerationService.GetModeratorsRequest(World, ServerId));
+		Requests.Add(ModerationService.GetOnlinePlayersRequest(World, ServerId));
+		Requests.Add(ModerationService.GetOfflinePlayersRequest(World, ServerId));
+		Requests.Add(ModerationService.GetBannedPlayersRequest(World, ServerId));
+		Requests.Add(ModerationService.GetOwnerRequest(World, ServerId));
+		RequestQueue.Get()->RunQueue(this, Requests, FAllRequestsFinishedDelegate::CreateWeakLambda(this, [this](bool bSuccess)
 		{
-			PlayerSelector->SetModerators(Players);
-			UE_LOG(LogServerDetailsModerationConsole, Display, TEXT("GetModerators succeeded"));
-		}
-		else
-		{
-			UE_LOG(LogServerDetailsModerationConsole, Error, TEXT("GetModerators failed: %s"), *Error.GetValue().ToString());
-		}
-	}));
+			LoadGuard->SetIsLoading(false);
+		}));
+	}
+}
 
-	auto Banned = ModerationService.GetBannedPlayers(InServerId, FGetPlayerServerDetailsList::CreateWeakLambda(this, [this](const TArray<UPlayerServerDetailsDataObject*>& Players, bool bSuccess, TOptional<FText> Error)
-	{
-		if (bSuccess)
-		{
-			PlayerSelector->SetBannedPlayers(Players);
-			UE_LOG(LogServerDetailsModerationConsole, Display, TEXT("GetBannedPlayers succeeded"));
-		}
-		else
-		{
-			UE_LOG(LogServerDetailsModerationConsole, Error, TEXT("GetBannedPlayers failed: %s"), *Error.GetValue().ToString());
-		}
-	}));
-
-	auto Online = ModerationService.GetOnlinePlayers(InServerId, FGetPlayerServerDetailsList::CreateWeakLambda(this, [this](const TArray<UPlayerServerDetailsDataObject*>& Players, bool bSuccess, TOptional<FText> Error)
-	{
-		if (bSuccess)
-		{
-			PlayerSelector->SetOnlinePlayers(Players);
-			UE_LOG(LogServerDetailsModerationConsole, Display, TEXT("GetOnlinePlayers succeeded"));
-		}
-		else
-		{
-			UE_LOG(LogServerDetailsModerationConsole, Error, TEXT("GetOnlinePlayers failed: %s"), *Error.GetValue().ToString());
-		}
-	}));
-
-	auto Offline = ModerationService.GetOfflinePlayers(InServerId, FGetPlayerServerDetailsList::CreateWeakLambda(this, [this](const TArray<UPlayerServerDetailsDataObject*>& Players, bool bSuccess, TOptional<FText> Error)
-	{
-		if (bSuccess)
-		{
-			PlayerSelector->SetOfflinePlayers(Players);
-			UE_LOG(LogServerDetailsModerationConsole, Display, TEXT("GetOfflinePlayers succeeded"));
-		}
-		else
-		{
-			UE_LOG(LogServerDetailsModerationConsole, Error, TEXT("GetOfflinePlayers failed: %s"), *Error.GetValue().ToString());
-		}
-	}));
-
-	auto Owner = ModerationService.GetOwner(InServerId, FGetPlayerServerDetails::CreateWeakLambda(this, [this](UPlayerServerDetailsDataObject* Player, bool bSuccess, TOptional<FText> Error)
-	{
-		if (bSuccess)
-		{
-			PlayerSelector->SetOwner(Player);
-			UE_LOG(LogServerDetailsModerationConsole, Display, TEXT("GetOwner succeeded"));
-		}
-		else
-		{
-			UE_LOG(LogServerDetailsModerationConsole, Error, TEXT("GetOwner failed: %s"), *Error.GetValue().ToString());
-		}
-	}));
-
-	TArray<TSharedRef<IHttpRequest>> AllRequests = TArray<TSharedRef<IHttpRequest>>();
-	AllRequests.Add(Moderators);
-	AllRequests.Add(Banned);
-	AllRequests.Add(Online);
-	AllRequests.Add(Offline);
-	AllRequests.Add(Owner);
-
-	RequestQueue = MakeShared<FHTTPRequestQueue>();
-	RequestQueue->RunQueue(this, AllRequests, FAllRequestsFinishedDelegate::CreateWeakLambda(this, [this](bool bSuccess)
-	{
-		UE_LOG(LogServerDetailsModerationConsole, Display, TEXT("All requests completed"));
-	}));
+void UServerDetailsModerationConsole::ClearPlayerSelection()
+{
+	PlayerSelector->ClearSelection();
 }

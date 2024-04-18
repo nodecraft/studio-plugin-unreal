@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/NotificationsList/NotificationsDrawerWidget.h"
@@ -15,7 +15,8 @@ void UNotificationsDrawerWidget::NativeOnInitialized()
 	Super::NativeOnInitialized();
 	// TODO: This should happen every 15 seconds, and should actually happen elsewhere so that we can show a badge in the header
 	// ActiveNotificationsList->LoadData(ENotificationListType::Active);
-	
+
+	SwitchNotifsPageButton->OnClicked().Clear();
 	SwitchNotifsPageButton->OnClicked().AddWeakLambda(this, [this]()
 	{
 		if (ActiveNotificationsList->GetVisibility() == ESlateVisibility::Visible)
@@ -30,8 +31,10 @@ void UNotificationsDrawerWidget::NativeOnInitialized()
 
 	ShowNotifsPage(ENotificationListType::Active);
 
+	ClearAllButton->OnClicked().Clear();
 	ClearAllButton->OnClicked().AddWeakLambda(this, [this]()
 	{
+		LoadGuard->SetIsLoading(true);
 		FSimpleServiceResponseDelegate OnDismissAllComplete = FSimpleServiceResponseDelegate::CreateWeakLambda(this, [this](bool Success, TOptional<FText> Error)
 		{
 			if (Success)
@@ -42,6 +45,7 @@ void UNotificationsDrawerWidget::NativeOnInitialized()
 			{
 				UE_LOG(LogNotificationsDrawerWidget, Error, TEXT("UNotificationsDrawerWidget::NativeOnInitialized: Failed to dismiss all notifications: %s"), *Error.Get(FText::GetEmpty()).ToString());
 			}
+			LoadGuard->SetIsLoading(false);
 		});
 		UNotificationsService::Get().DismissAllNotifications(GetWorld(), OnDismissAllComplete);
 	});

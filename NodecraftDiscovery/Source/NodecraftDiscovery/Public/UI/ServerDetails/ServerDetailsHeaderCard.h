@@ -1,9 +1,10 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "CommonUserWidget.h"
+#include "UI/Common/NodecraftLoadGuard.h"
 #include "UObject/Object.h"
 #include "ServerDetailsHeaderCard.generated.h"
 
@@ -42,7 +43,7 @@ class NODECRAFTDISCOVERY_API UServerDetailsHeaderCard : public UCommonUserWidget
 
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UCommonLoadGuard* LoadGuard;
+	UNodecraftLoadGuard* LoadGuard;
 	
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UAsyncImage* ServerImage;
@@ -73,7 +74,7 @@ protected:
 	TMap<EServerType, FServerTypeStyle> ServerTypeStyle;
 	
 public:
-	void SetServerData(UServerDataObject* ServerDataObject);
+	void SetServerData(UServerDataObject* ServerDataObject, bool bIsAwaitingMoreCompleteData);
 
 protected:
 	virtual void NativeConstruct() override;

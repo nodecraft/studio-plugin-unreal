@@ -1,9 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #include "Stores/NotificationsStore.h"
 
-#include "API/DiscoverySessionManagerSubsystem.h"
-#include "DeveloperSettings/DiscoveryAPISettings.h"
+#include "Api/NodecraftStudioSessionManagerSubsystem.h"
+#include "DeveloperSettings/NodecraftStudioApiSettings.h"
 #include "Services/NotificationsService.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogNotificationsStore, Log, All);
@@ -15,7 +15,7 @@ void UNotificationsStore::StartPollingForNotifications()
 	TimerDelegate.BindWeakLambda(this, [this]()
 	{
 		// If player session is valid, get notifications
-		if (UDiscoverySessionManager::Get().IsPlayerSessionValid())
+		if (UNodecraftStudioSessionManager::Get().IsPlayerSessionValid())
 		{
 			FGetNotificationsResponseDelegate LiveNotificationsReceivedDelegate = FGetNotificationsResponseDelegate::CreateWeakLambda(this, [this](TArray<UNotificationDataObject*> Notifications, bool Success, TOptional<FText> Error)
 			{
@@ -36,9 +36,10 @@ void UNotificationsStore::StartPollingForNotifications()
 
 	if (const UWorld* World = GetWorld())
 	{
-		if (const UDiscoveryAPISettings* DiscoveryAPISettings = GetDefault<UDiscoveryAPISettings>())
+		if (const UNodecraftStudioApiSettings* NodecraftStudioApiSettings = GetDefault<UNodecraftStudioApiSettings>())
 		{
-			World->GetTimerManager().SetTimer(PollingTimerHandle, TimerDelegate, DiscoveryAPISettings->GetNotificationPollingInterval(), true, 0.0f);
+			UE_LOG(LogNotificationsStore, Log, TEXT("Starting to poll for notifications. Polling every %f seconds."), NodecraftStudioApiSettings->GetNotificationPollingInterval());
+			World->GetTimerManager().SetTimer(PollingTimerHandle, TimerDelegate, NodecraftStudioApiSettings->GetNotificationPollingInterval(), true, 0.0f);
 		}
 		else
 		{
@@ -56,6 +57,7 @@ void UNotificationsStore::StopPollingForNotifications()
 {
 	if (const UWorld* World = GetWorld())
 	{
+		UE_LOG(LogNotificationsStore, Log, TEXT("Stopping polling for notifications."));
 		World->GetTimerManager().ClearTimer(PollingTimerHandle);
 	}
 	else
@@ -73,6 +75,7 @@ void UNotificationsStore::OnWorldBeginPlay(UWorld& InWorld)
 
 void UNotificationsStore::RemoveLiveNotification(UNotificationDataObject* Notification)
 {
+	UE_LOG(LogNotificationsStore, Log, TEXT("Removing notification with id: %s"), *Notification->GetId());
 	LiveNotifications.Remove(Notification);
 	OnLiveNotificationsUpdated.Broadcast(LiveNotifications);
 }
@@ -90,6 +93,7 @@ bool UNotificationsStore::RemoveLiveNotificationListener(const FDelegateHandle& 
 
 void UNotificationsStore::ClearAllNotifications()
 {
+	UE_LOG(LogNotificationsStore, Log, TEXT("Clearing all notifications."));
 	LiveNotifications.Empty();
 	OnLiveNotificationsUpdated.Broadcast(LiveNotifications);
 }
@@ -105,6 +109,7 @@ TArray<FString> UNotificationsStore::GetActiveNotificationIds()
 
 void UNotificationsStore::ClearNotifications(const TArray<FString>& Array)
 {
+	UE_LOG(LogNotificationsStore, Log, TEXT("Clearing notifications with ids: %s"), *FString::Join(Array, TEXT(", ")));
 	// Create a copy of all live notifications, then remove the ones that are in the array
 	TArray<UNotificationDataObject*> NotificationsCopy = LiveNotifications;
 	for (const FString& NotificationId : Array)

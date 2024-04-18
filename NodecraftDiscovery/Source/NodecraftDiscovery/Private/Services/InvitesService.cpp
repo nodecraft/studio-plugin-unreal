@@ -1,11 +1,13 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Services/InvitesService.h"
 
-#include "API/DiscoveryAPI.h"
+#include "Api/NodecraftStudioApi.h"
 #include "Interfaces/IHttpRequest.h"
+#include "Models/InviteDataObject.h"
 #include "Models/ServerDataObject.h"
+#include "Subsystems/MessageRouterSubsystem.h"
 #include "Utility/NodecraftUtility.h"
 
 bool UInvitesService::AcceptInvite(const FString& InviteId, FSimpleServiceResponseDelegate OnComplete)
@@ -13,6 +15,14 @@ bool UInvitesService::AcceptInvite(const FString& InviteId, FSimpleServiceRespon
 	FHttpRequestCompleteDelegate ReqCallback;
 	ReqCallback.BindWeakLambda(this, [this, OnComplete](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully) mutable
 	{
+		if (bConnectedSuccessfully)
+		{
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Response, __FUNCTION__);
+		}
+		else
+		{
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
+		}
 		if (bConnectedSuccessfully && EHttpResponseCodes::IsOk(Response.Get()->GetResponseCode()))
 		{
 			// Dismiss the notification
@@ -24,15 +34,23 @@ bool UInvitesService::AcceptInvite(const FString& InviteId, FSimpleServiceRespon
 		}
 	});
 
-	return UDiscoveryAPI::UpdateInviteStatus(this, InviteId, ENodecraftInviteStatus::Accepted, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::UpdateInviteStatus(this, InviteId, ENodecraftInviteStatus::Accepted, ReqCallback)->ProcessRequest();
 }
 
 bool UInvitesService::DeclineInvite(const FString& InviteId, FSimpleServiceResponseDelegate OnComplete)
 {
 	FHttpRequestCompleteDelegate ReqCallback;
-	ReqCallback.BindWeakLambda(this, [this, OnComplete](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) mutable
+	ReqCallback.BindWeakLambda(this, [this, OnComplete](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully) mutable
 	{
-		if (bWasSuccessful)
+		if (bConnectedSuccessfully)
+		{
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Response, __FUNCTION__);
+		}
+		else
+		{
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
+		}
+		if (bConnectedSuccessfully && EHttpResponseCodes::IsOk(Response.Get()->GetResponseCode()))
 		{
 			// Dismiss the notification
 			OnComplete.ExecuteIfBound(true, FText());
@@ -43,15 +61,15 @@ bool UInvitesService::DeclineInvite(const FString& InviteId, FSimpleServiceRespo
 		}
 	});
 
-	return UDiscoveryAPI::UpdateInviteStatus(this, InviteId, ENodecraftInviteStatus::Declined, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::UpdateInviteStatus(this, InviteId, ENodecraftInviteStatus::Declined, ReqCallback)->ProcessRequest();
 }
 
 bool UInvitesService::ListInvitableServers(const FString& FriendID, FOnListInvitableServers OnComplete)
 {
 	FHttpRequestCompleteDelegate ReqCallback;
-	ReqCallback.BindWeakLambda(this, [this, OnComplete](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+	ReqCallback.BindWeakLambda(this, [this, OnComplete](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully)
 	{
-		if (bWasSuccessful)
+		if (bConnectedSuccessfully)
 		{
 			if (EHttpResponseCodes::IsOk(Response.Get()->GetResponseCode()))
 			{
@@ -76,15 +94,55 @@ bool UInvitesService::ListInvitableServers(const FString& FriendID, FOnListInvit
 			}
 			else
 			{
-				const FText ErrorMsg = UNodecraftUtility::ParseError(Response, __FUNCTION__);
+				const FText ErrorMsg = UNodecraftUtility::ParseMessage(Response, __FUNCTION__);
 				OnComplete.ExecuteIfBound({}, false, ErrorMsg);
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Response, __FUNCTION__);
 		}
 		else
 		{
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
 			OnComplete.ExecuteIfBound({}, false, FText::FromString("UInvitesService::ListInvitableServers: Failed to connect to server."));
 		}
 	});
 
-	return UDiscoveryAPI::ListInvitableServers(this, FriendID, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::ListInvitableServers(this, FriendID, ReqCallback)->ProcessRequest();
+}
+
+bool UInvitesService::CreateInvite(const FString& ServerID, const FString& FriendID, FOnCreateInvite OnComplete)
+{
+	FHttpRequestCompleteDelegate ReqCallback;
+	ReqCallback.BindWeakLambda(this, [this, OnComplete](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully)
+	{
+		if (bConnectedSuccessfully)
+		{
+			if (EHttpResponseCodes::IsOk(Response.Get()->GetResponseCode()))
+			{
+				FJsonObjectWrapper ResJson;
+				ResJson.JsonObjectFromString(Response.Get()->GetContentAsString());
+				if (const TSharedPtr<FJsonObject> Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				{
+					const UInviteDataObject* InviteDataObject = UInviteDataObject::FromJson(Data.ToSharedRef());
+					OnComplete.ExecuteIfBound(InviteDataObject, true, TOptional<FText>());
+				}
+				else
+				{
+					OnComplete.ExecuteIfBound(nullptr, false, FText::FromString("UInvitesService::CreateInvite: No invite data."));
+				}
+			}
+			else
+			{
+				const FText ErrorMsg = UNodecraftUtility::ParseMessage(Response, __FUNCTION__);
+				OnComplete.ExecuteIfBound(nullptr, false, ErrorMsg);
+			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Response, __FUNCTION__);
+		}
+		else
+		{
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
+			OnComplete.ExecuteIfBound(nullptr, false, FText::FromString("UInvitesService::CreateInvite: Failed to connect to server."));
+		}
+	});
+	
+	return UNodecraftStudioApi::CreateInvite(this, ServerID, FriendID, ReqCallback)->ProcessRequest();
 }

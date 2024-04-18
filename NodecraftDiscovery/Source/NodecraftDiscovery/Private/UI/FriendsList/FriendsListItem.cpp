@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/FriendsList/FriendsListItem.h"
@@ -35,7 +35,7 @@ void UFriendsListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 		// load and set the style for status text
 		if (const TSoftClassPtr<UCommonTextStyle> Style = StatusStyle.FindChecked(FriendDataObject->GetStatus().ToString()); Style.IsNull() == false)
 		{
-			UAssetStreamerSubsystem::Get().LoadAssetAsync(Style.ToSoftObjectPath(), FStreamableDelegate::CreateLambda([this, Style]
+			UAssetStreamerSubsystem::Get().LoadAssetAsync(Style.ToSoftObjectPath(), FStreamableDelegate::CreateWeakLambda(this, [this, Style]
 			{
 				FriendStatusTextBlock->SetStyle(Style.Get());
 			}));
@@ -57,7 +57,6 @@ void UFriendsListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 		});
 	}
 	
-	InviteToPlayButton->SetVisibility(FriendDataObject->GetServer() ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
 	InviteToPlayButton->OnClicked().Clear();
 	InviteToPlayButton->OnClicked().AddWeakLambda(this, [this, FriendDataObject]
 	{
@@ -68,7 +67,7 @@ void UFriendsListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 				FOnListInvitableServers OnListInvitableServers;
 				OnListInvitableServers.BindWeakLambda(this, [this, FriendDataObject](TArray<UServerDataObject*> Servers, bool bSuccess, TOptional<FText> Error)
 				{
-					if (bSuccess)
+					if (bSuccess && Servers.Num() > 0)
 					{
 						UMenuManagerSubsystem::Get().ShowServerInvites(ServerInvitesModalClass.Get(), Servers, FriendDataObject);
 					}

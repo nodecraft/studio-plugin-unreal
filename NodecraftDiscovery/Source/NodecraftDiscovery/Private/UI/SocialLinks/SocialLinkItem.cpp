@@ -1,12 +1,16 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/SocialLinks/SocialLinkItem.h"
 
 #include "CommonTextBlock.h"
 #include "Components/Image.h"
+#include "DataTypes/LinkTypes.h"
 #include "Models/SocialLinkDataObject.h"
+#include "Services/LinksService.h"
 #include "Subsystems/AssetStreamerSubsystem.h"
+#include "Subsystems/MenuManagerSubsystem.h"
+#include "UI/Foundation/NodecraftButtonBase.h"
 
 void USocialLinkItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
@@ -18,9 +22,15 @@ void USocialLinkItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 
 	if (const TSoftObjectPtr<UTexture2D> Icon = IconMap[SocialLink->GetLinkType()]; Icon.IsNull() == false)
 	{
-		UAssetStreamerSubsystem::Get().LoadAssetAsync(Icon.ToSoftObjectPath(), FStreamableDelegate::CreateLambda([this, Icon]
-			{
-				LinkIconLeft->SetBrushFromTexture(Icon.Get());
-			}));
+		UAssetStreamerSubsystem::Get().LoadAssetAsync(Icon.ToSoftObjectPath(),
+			FStreamableDelegate::CreateWeakLambda(this, [this, Icon]
+		{
+			LinkIconLeft->SetBrushFromTexture(Icon.Get());
+		}));
 	}
+
+	Button->OnClicked().AddWeakLambda(this, [this]
+	{
+		UMenuManagerSubsystem::Get().ShowRedirectModal(URL, ELinkType::External);
+	});
 }

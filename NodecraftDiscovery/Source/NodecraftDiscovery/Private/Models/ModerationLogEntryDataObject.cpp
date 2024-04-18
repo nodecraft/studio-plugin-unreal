@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Models/ModerationLogEntryDataObject.h"
@@ -14,8 +14,11 @@ UModerationLogEntryDataObject* UModerationLogEntryDataObject::FromJson(const TSh
 	// type = ban or kick. not used at the moment.
 	ModerationLogEntryDataObject->Type = Json->GetStringField("type");
 
-	const FString DateCreatedString = Json->GetStringField("date_created");
-	FDateTime::ParseIso8601(*DateCreatedString, ModerationLogEntryDataObject->DateCreated);
+	FString DateCreatedString;
+	if (Json->TryGetStringField("date_created", DateCreatedString))
+	{
+		FDateTime::ParseIso8601(*DateCreatedString, ModerationLogEntryDataObject->DateCreated);
+	}
 
 	FString DateExpiresString;
 	if (Json->TryGetStringField("date_expires", DateExpiresString))

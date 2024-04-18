@@ -1,15 +1,15 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/ServerDetails/TabbedSections/ServerDetailsModerationHistorySection.h"
 
 #include "CommonListView.h"
-#include "CommonLoadGuard.h"
 #include "CommonTextBlock.h"
 #include "Components/HorizontalBox.h"
 #include "Components/Image.h"
 #include "Services/ServersService.h"
 #include "Models/ModerationLogEntryDataObject.h"
+#include "UI/Common/NodecraftLoadGuard.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogServerModerationSection, All, All);
 

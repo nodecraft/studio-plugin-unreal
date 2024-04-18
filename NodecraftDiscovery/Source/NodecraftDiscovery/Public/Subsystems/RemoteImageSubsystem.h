@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
@@ -6,6 +6,7 @@
 #include "RemoteImageSubsystem.generated.h"
 
 #define NC_CACHED_GAME_BACKGROUND_FILENAME "game_background"
+#define NC_CACHED_GAME_LOGO_FILENAME "game_logo"
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnImageDownloadedDelegate, UTexture*);
 

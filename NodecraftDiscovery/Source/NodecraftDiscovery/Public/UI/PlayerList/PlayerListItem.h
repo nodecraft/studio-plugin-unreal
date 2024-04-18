@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
@@ -33,7 +33,7 @@ protected:
 	UCommonTextBlock* PlayerStatusTextBlock;
 
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-	UAsyncImage* PlatformIcon;
+	UImage* PlatformIcon;
 
 private:
 	void UpdateTimestamp(const FDateTime& Time, bool bIsStartTime);

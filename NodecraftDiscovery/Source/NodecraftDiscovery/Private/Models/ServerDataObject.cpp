@@ -1,9 +1,10 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Models/ServerDataObject.h"
 
 #include "Models/SocialLinkDataObject.h"
+#include "Utility/NodecraftUtility.h"
 
 FString UServerDataObject::GetId() const
 {
@@ -146,6 +147,10 @@ UServerDataObject* UServerDataObject::FromJson(const TSharedRef<FJsonObject> Jso
 	ServerDataObject->Title = Json->GetStringField("title");
 	Json->TryGetStringField("summary", ServerDataObject->Summary);
 	Json->TryGetStringField("image_tile", ServerDataObject->ImageUrl);
+	if (ServerDataObject->ImageUrl.IsEmpty())
+	{
+		ServerDataObject->ImageUrl = UNodecraftUtility::GetDefaultServerImageUrl(ServerDataObject->Id);
+	}
 	Json->TryGetNumberField("players_count", ServerDataObject->PlayersCount);
 	Json->TryGetNumberField("players_max", ServerDataObject->PlayersMax);
 	Json->TryGetBoolField("is_favorite", ServerDataObject->bIsFavorite);

@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Models/GameDataObject.h"
@@ -28,7 +28,8 @@ UGameDataObject* UGameDataObject::FromJson(const TSharedRef<FJsonObject>& Json)
 		GameDataObject->SupportedIdentTypes.Add(IdentType);
 	}
 	
-	GameDataObject->ImageBackgroundURL = Json->GetStringField("image_background");
+	Json->TryGetStringField("image_background", GameDataObject->ImageBackgroundURL);
+	Json->TryGetStringField("image_tile", GameDataObject->GameLogoUrl);
 
 	return GameDataObject;
 }
@@ -46,4 +47,9 @@ TArray<EIdentityType> UGameDataObject::GetSupportedIdentTypes() const
 FString UGameDataObject::GetImageBackgroundURL() const
 {
 	return ImageBackgroundURL;
+}
+
+FString UGameDataObject::GetGameLogoURL() const
+{
+	return GameLogoUrl;
 }

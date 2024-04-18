@@ -1,11 +1,11 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/AllowsList/AllowsListItem.h"
 
 #include "CommonTextBlock.h"
 #include "Components/HorizontalBox.h"
-#include "DeveloperSettings/IdentitySettings.h"
+#include "DeveloperSettings/NodecraftStudioIdentitySettings.h"
 #include "Models/AllowsDataObject.h"
 #include "Models/AllowStatus.h"
 #include "Models/ServerDataObject.h"
@@ -29,7 +29,7 @@ void UAllowsListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 	const UAllowsDataObject* AllowsDataObject = Cast<UAllowsDataObject>(ListItemObject);
 	
 	PlayerImage->LoadPlayerAvatarAsync(AllowsDataObject->GetSender());
-	UTexture2D* IdentTexture = UIdentitySettings::Get().GetIconForType(AllowsDataObject->GetSender()->GetIdentType());
+	UTexture2D* IdentTexture = UNodecraftStudioIdentitySettings::Get().GetIconForType(AllowsDataObject->GetSender()->GetIdentType());
 	IdentImage->SetBrushFromTexture(IdentTexture);
 	Username->SetText(AllowsDataObject->GetSender()->GetUsername().IsEmpty() ?
 		FText::FromString(AllowsDataObject->GetSender()->GetIdent()) : FText::FromString(AllowsDataObject->GetSender()->GetUsername()));

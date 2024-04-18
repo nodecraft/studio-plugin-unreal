@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/ServerDetails/ServerDetailsHeaderCard.h"
@@ -11,7 +11,7 @@
 
 #define LOCTEXT_NAMESPACE "ServerDetailsHeaderCard"
 
-void UServerDetailsHeaderCard::SetServerData(UServerDataObject* ServerDataObject)
+void UServerDetailsHeaderCard::SetServerData(UServerDataObject* ServerDataObject, bool bIsAwaitingMoreCompleteData)
 {
 	if (ServerDataObject)
 	{
@@ -23,14 +23,14 @@ void UServerDetailsHeaderCard::SetServerData(UServerDataObject* ServerDataObject
 		FServerTypeStyle Style = ServerTypeStyle.FindChecked(ServerDataObject->GetType());
 		if (Style.BorderStyle.IsNull() == false)
 		{
-			UAssetStreamerSubsystem::Get().LoadAssetAsync(Style.BorderStyle.ToSoftObjectPath(), FStreamableDelegate::CreateLambda([this, Style]
+			UAssetStreamerSubsystem::Get().LoadAssetAsync(Style.BorderStyle.ToSoftObjectPath(), FStreamableDelegate::CreateWeakLambda(this, [this, Style]
 			{
 				ServerTypeBorder->SetStyle(Style.BorderStyle.Get());
 			}));
 		}
 		if (Style.TextStyle.IsNull() == false)
 		{
-			UAssetStreamerSubsystem::Get().LoadAssetAsync(Style.TextStyle.ToSoftObjectPath(), FStreamableDelegate::CreateLambda([this, Style]
+			UAssetStreamerSubsystem::Get().LoadAssetAsync(Style.TextStyle.ToSoftObjectPath(), FStreamableDelegate::CreateWeakLambda(this, [this, Style]
 			{
 				ServerTypeTextBlock->SetStyle(Style.TextStyle.Get());
 			}));
@@ -52,9 +52,14 @@ void UServerDetailsHeaderCard::SetServerData(UServerDataObject* ServerDataObject
 				ServerOwnerInfoTextBlock->SetText(Username);
 			}
 		}
+		else
+		{
+			ServerOwnerInfoTextBlock->SetText(FText::GetEmpty());
+		}
 		ServerRegionTextBlock->SetText(ServerDataObject->GetRegionTitle());
 		GameVersionTextBlock->SetText(ServerDataObject->GetGameVersion());
-		
+
+		TagsTextBlock->SetText(FText::GetEmpty());
 		FString Tags = "";
 		for (FString Tag : ServerDataObject->GetTags())
 		{
@@ -68,8 +73,8 @@ void UServerDetailsHeaderCard::SetServerData(UServerDataObject* ServerDataObject
             Tags.RemoveFromEnd(",");
             TagsTextBlock->SetText(FText::FromString(Tags));
 		}
-		LoadGuard->SetIsLoading(false);
 	}
+	LoadGuard->SetIsLoading(bIsAwaitingMoreCompleteData == true);
 }
 
 void UServerDetailsHeaderCard::NativeConstruct()

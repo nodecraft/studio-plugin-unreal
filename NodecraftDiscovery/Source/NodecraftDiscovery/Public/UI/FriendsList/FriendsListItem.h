@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
@@ -22,11 +22,11 @@ class NODECRAFTDISCOVERY_API UFriendsListItem : public UCommonActivatableWidget,
 {
 	GENERATED_BODY()
 
+protected:
 	// IUserObjectListEntry
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
 	// IUserObjectListEntry
 
-protected:
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
 	UAsyncImage* FriendProfileImage;
 

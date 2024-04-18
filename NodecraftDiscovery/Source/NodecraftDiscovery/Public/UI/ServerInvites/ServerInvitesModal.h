@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
@@ -6,6 +6,7 @@
 #include "CommonActivatableWidget.h"
 #include "ServerInvitesModal.generated.h"
 
+class UAlertMessage;
 class UFriendDataObject;
 class UCommonActivatableWidgetStack;
 class UServerDataObject;
@@ -22,10 +23,11 @@ class NODECRAFTDISCOVERY_API UServerInvitesModal : public UCommonActivatableWidg
 	GENERATED_BODY()
 
 public:
-	void Configure(const TArray<UServerDataObject*>& Servers, const UFriendDataObject* Invitee, UCommonActivatableWidgetStack* PopupStack);
+	void Configure(const TArray<UServerDataObject*>& Servers, const UFriendDataObject* InInvitee, FSimpleDelegate OnPopupClosed);
 
 protected:
 	virtual void NativeConstruct() override;
+	virtual void NativeOnActivated() override;
 	
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
 	UNodecraftLoadGuard* LoadGuard;
@@ -41,4 +43,7 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
 	UNodecraftButtonBase* CloseButtonBottom;
+
+	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UAlertMessage* Alert;
 };

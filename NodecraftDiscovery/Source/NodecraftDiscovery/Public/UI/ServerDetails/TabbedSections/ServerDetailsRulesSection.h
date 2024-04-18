@@ -1,18 +1,18 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "CommonActivatableWidget.h"
-#include "CommonLoadGuard.h"
 #include "CommonTextBlock.h"
 #include "ServerDetailsSection.h"
-#include "Components/Border.h"
 #include "Models/ServerDataObject.h"
 #include "UI/Common/ConsentLabelButton.h"
 #include "UObject/Object.h"
 #include "ServerDetailsRulesSection.generated.h"
 
+class UNodecraftLoadGuard;
+class UCommonBorder;
 /**
  * 
  */
@@ -23,13 +23,13 @@ class NODECRAFTDISCOVERY_API UServerDetailsRulesSection : public UCommonActivata
 
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UCommonLoadGuard* LoadGuard;
+	UNodecraftLoadGuard* LoadGuard;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UCommonTextBlock* RulesText;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UConsentLabelButton* ConsentExplanation;
+	UCommonBorder* ConsentExplanation;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UConsentLabelButton* ConsentLabelButton;
@@ -52,6 +52,9 @@ protected:
 	
 public:
 	void RefreshConsentLabelButton(const URulesDataObject* Rules);
+
+	// Sets server data for this section. Expects to have a URulesDataObject.
+	// Will log an error if the server data object or rules is null.
 	virtual void SetServerData(UServerDataObject* InServerDataObject) override;
 	
 	void SetLoading(bool bLoading);

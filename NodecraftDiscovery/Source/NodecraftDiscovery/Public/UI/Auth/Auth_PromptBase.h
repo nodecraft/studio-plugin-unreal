@@ -1,16 +1,14 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "AuthScreen.h"
 #include "CommonActivatableWidget.h"
-#include "CommonUserWidget.h"
 #include "CommonButtonBase.h"
-#include "Components/TextBlock.h"
-#include "Interfaces/IHttpRequest.h"
 #include "Auth_PromptBase.generated.h"
 
+class UAlertMessage;
 /**
  * 
  */
@@ -21,6 +19,7 @@ class NODECRAFTDISCOVERY_API UAuth_PromptBase : public UCommonActivatableWidget
 
 public:
 	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 
 	void DisplayError(const FText& InErrorText);
 
@@ -32,7 +31,7 @@ protected:
 	UCommonButtonBase* SubmitButton;
 
 	UPROPERTY(meta=(BindWidget))
-	UTextBlock* ErrorTextBlock;
+	UAlertMessage* Alert;
 
 	UPROPERTY()
 	UAuthScreen* ParentScreen;

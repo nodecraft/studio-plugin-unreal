@@ -1,12 +1,12 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #include "Subsystems/RemoteImageSubsystem.h"
 
 #include "Subsystems/AsyncTaskFetchImage.h"
 #include "ImageUtils.h"
+#include "NodecraftLogCategories.h"
 #include "Services/GameService.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogRemoteImageSubsystem, Log, All);
 
 void URemoteImageSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -20,7 +20,12 @@ void URemoteImageSubsystem::Deinitialize()
 
 void URemoteImageSubsystem::FetchImage(FString CachedFileName, FString RemoteURL, FOnImageDownloadedDelegate& Complete)
 {
-	UTexture2D* LoadedTexture = LoadTextureFromDisk(CachedFileName);
+	UTexture2D* LoadedTexture = nullptr;
+	if (CachedFileName.IsEmpty() == false)
+	{
+		LoadedTexture = LoadTextureFromDisk(CachedFileName);
+	}
+	
 	if (LoadedTexture)
 	{
 		Complete.Broadcast(LoadedTexture);
@@ -31,8 +36,11 @@ void URemoteImageSubsystem::FetchImage(FString CachedFileName, FString RemoteURL
 
 		DownloadTask->OnSuccess.BindWeakLambda(this, [this, Complete, CachedFileName](UTexture2D* Texture, FString URL)
 		{
-			Complete.Broadcast(Texture);
 			SaveTextureToDisk(Texture, CachedFileName);
+			UTexture2D* TexToDisplay = LoadTextureFromDisk(CachedFileName);
+			// TODO: Rather than re-loading the texture, we ought to be able to simply broadcast it,
+			// but for some reason the texture is not being displayed when we do that.
+			Complete.Broadcast(TexToDisplay);
 		});
 
 		DownloadTask->OnFail.BindWeakLambda(this, [Complete](UTexture2D* Texture, FString URL)
@@ -71,11 +79,11 @@ void URemoteImageSubsystem::SaveTextureToDisk(UTexture2D* Texture, const FString
 	// Save the image to disk
 	if (FImageUtils::SaveImageByExtension(WCHAR_TO_TCHAR(*FilePath), Image))
 	{
-		UE_LOG(LogRemoteImageSubsystem, Verbose, TEXT("Texture saved to %s"), *FilePath);
+		UE_LOG(LogNodecraft_RemoteImageSubsystem, Verbose, TEXT("Texture saved to %s"), *FilePath);
 	}
 	else
 	{
-		UE_LOG(LogRemoteImageSubsystem, Verbose, TEXT("Failed to save texture to %s"), *FilePath);
+		UE_LOG(LogNodecraft_RemoteImageSubsystem, Verbose, TEXT("Failed to save texture to %s"), *FilePath);
 	}
 }
 

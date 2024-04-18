@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/ServerDetails/JoiningServerQueueModal.h"
@@ -6,52 +6,15 @@
 #include "CommonTextBlock.h"
 #include "Components/ProgressBar.h"
 #include "Models/ServerQueueDataObject.h"
-#include "Models/ServerQueueTokenDataObject.h"
 #include "Models/ServerSessionDataObject.h"
 #include "Services/ServerQueueService.h"
-#include "Services/ServersService.h"
 #include "UI/Foundation/NodecraftButtonBase.h"
 
 #define LOCTEXT_NAMESPACE "JoiningServerQueueModal"
 
-void UJoiningServerQueueModal::Configure(const UServerQueueDataObject* ServerQueueDataObject, const UServerQueueTokenDataObject* InServerQueueTokenDataObject, FSimpleDelegate& OnPopupClosed)
+void UJoiningServerQueueModal::Configure(FSimpleDelegate& OnPopupClosed)
 {
-	ServerQueueTokenDataObject = InServerQueueTokenDataObject;
-	OnClosed = OnPopupClosed;
-
-	UServerQueueService::Get(GetWorld())->OnGetServerSession.Clear();
-	UServerQueueService::Get(GetWorld())->OnGetServerSession.AddDynamic(this, &UJoiningServerQueueModal::OnGetServerSession);
-
-	UServerQueueService* QueueService = UServerQueueService::Get(GetWorld());
-	QueueService->OnGetServerQueue.BindWeakLambda(this, [this, OnPopupClosed](UServerQueueDataObject* ServerQueue, bool bSuccess, TOptional<FText> Error)
-	{
-		if (bSuccess)
-		{
-			WaitTimeInSeconds = ServerQueue->GetEstimatedWait();
-			UpdateWaitTimeUI(WaitTimeInSeconds);
-			if (ServerQueue->GetServerSession())
-			{
-				OnPopupClosed.ExecuteIfBound();
-			}
-		}
-	});
-	QueueService->OnRenewServerQueue.BindWeakLambda(this, [this, QueueService](UServerQueueTokenDataObject* ServerQueueToken)
-	{
-		ServerQueueTokenDataObject = ServerQueueToken;
-		QueueService->StopPollingServerQueue();
-		QueueService->StartPollingServerQueue(ServerQueueToken);
-	});
-	QueueService->StartPollingServerQueue(ServerQueueTokenDataObject);
-	
-	QueuePositionText->SetText(FText::Format(LOCTEXT("QueuePositionXofY", "position {0} of {1}"),
-		ServerQueueDataObject->GetQueuePosition(), ServerQueueDataObject->GetQueueSize()));
-
-	const float ProgressBarPercent = float(ServerQueueDataObject->GetQueuePosition()) / float(ServerQueueDataObject->GetQueueSize());
-	ProgressBar->SetPercent(ProgressBarPercent);
-
-	WaitTimeInSeconds = ServerQueueDataObject->GetEstimatedWait();
-	UpdateWaitTimeUI(WaitTimeInSeconds);
-
+	ClosePopupDelegate = OnPopupClosed;
 	if (const UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().SetTimer(CountdownTimerHandle, this, &UJoiningServerQueueModal::CountdownTimerTick, 5.f, true);
@@ -59,20 +22,45 @@ void UJoiningServerQueueModal::Configure(const UServerQueueDataObject* ServerQue
 	
 	CancelButton->OnClicked().AddWeakLambda(this, [this, OnPopupClosed]
 	{
-		FSimpleServiceResponseDelegate OnCancelServerQueue;
-		OnCancelServerQueue.BindWeakLambda(this, [this, OnPopupClosed](bool bSuccess,  TOptional<FText> Error)
+		if (UWorld* World = GetWorld())
 		{
-			if (bSuccess)
-			{
-				if (UServerQueueService* QueueService = UServerQueueService::Get(GetWorld()))
-				{
-					QueueService->StopPollingServerQueue();
-				}
-				OnPopupClosed.ExecuteIfBound();
-			}
-		});
-		UServerQueueService::Get(GetWorld())->CancelServerQueue(ServerQueueTokenDataObject->GetToken(), OnCancelServerQueue);
+			UServerQueueService::Get(World)->CancelServerQueue();
+		}
+		OnPopupClosed.ExecuteIfBound();
 	});
+}
+
+void UJoiningServerQueueModal::NativeOnInitialized()
+{
+	Super::NativeOnInitialized();
+
+	UServerQueueService::Get(GetWorld())->OnGetServerSession.AddDynamic(this, &UJoiningServerQueueModal::OnGetServerSession);
+
+	UServerQueueService* QueueService = UServerQueueService::Get(GetWorld());
+
+	QueueService->AddGetServerQueueDelegate(FGetServerQueueDelegate::CreateWeakLambda(this, [this](UServerQueueDataObject* ServerQueue, bool bSuccess, TOptional<FText> Error)
+	{
+		if (bSuccess)
+		{
+			if (ServerQueue)
+			{
+				const float ProgressBarPercent = float(ServerQueue->GetQueuePosition()) / float(ServerQueue->GetQueueSize());
+				ProgressBar->SetPercent(ProgressBarPercent);
+				QueuePositionText->SetText(FText::Format(LOCTEXT("QueuePositionXofY", "position {0} of {1}"),
+				ServerQueue->GetQueuePosition(), ServerQueue->GetQueueSize()));
+				WaitTimeInSeconds = ServerQueue->GetEstimatedWait();
+				UpdateWaitTimeUI(WaitTimeInSeconds);
+				if (ServerQueue->GetServerSession())
+				{
+					EstimatedWaitTime->SetText(FText::GetEmpty());
+					QueuePositionText->SetText(LOCTEXT("JoiningServer", "Joining server..."));
+				}
+			}
+		}
+	}));
+
+	QueuePositionText->SetText(LOCTEXT("WaitingToJoinQueue", "Waiting to join queue..."));
+	EstimatedWaitTime->SetText(FText::GetEmpty());
 }
 
 void UJoiningServerQueueModal::CountdownTimerTick()
@@ -95,7 +83,7 @@ void UJoiningServerQueueModal::OnGetServerSession(const UServerSessionDataObject
 {
 	if (Session)
 	{
-		OnClosed.ExecuteIfBound();
+		ClosePopupDelegate.ExecuteIfBound();
 	}
 }
 

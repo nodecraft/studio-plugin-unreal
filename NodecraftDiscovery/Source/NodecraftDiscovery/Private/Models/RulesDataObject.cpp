@@ -1,6 +1,8 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #include "Models/RulesDataObject.h"
+
+#include "NodecraftLogCategories.h"
 
 FText URulesDataObject::GetContent() const
 {
@@ -33,8 +35,7 @@ FDateTime URulesDataObject::GetDateSigned() const
 	const bool bSuccess = FDateTime::ParseIso8601(*DateAllSigned, DateSigned);
 	if (bSuccess == false)
 	{
-		DEFINE_LOG_CATEGORY_STATIC(LogRulesDataObject, All, All)
-		UE_LOG(LogRulesDataObject, Error, TEXT("URulesDataObject::GetDateSigned(): Failed to parse date: %s"), *DateAllSigned);
+		UE_LOG(LogNodecraftJson, Error, TEXT("URulesDataObject::GetDateSigned(): Failed to parse date: %s"), *DateAllSigned);
 	}
 	return DateSigned;
 }
@@ -74,7 +75,7 @@ URulesDataObject* URulesDataObject::FromJson(const TSharedRef<FJsonObject> Json)
 	URulesDataObject* RulesDataObject = NewObject<URulesDataObject>();
 	RulesDataObject->Content = Json->GetStringField("content");
 	RulesDataObject->StatusRaw = Json->GetStringField("status_all");
-	RulesDataObject->DateAllSigned = Json->GetStringField("date_all_signed");
+	Json->TryGetStringField("date_all_signed", RulesDataObject->DateAllSigned);
 	RulesDataObject->Consents = FGameConsents::FromDataJson(Json);
 	
 	return RulesDataObject;

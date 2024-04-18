@@ -1,9 +1,10 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "CommonActivatableWidget.h"
+#include "Stores/FriendsStore.h"
 #include "FriendsList.generated.h"
 
 class UCommonTextBlock;
@@ -18,6 +19,9 @@ class NODECRAFTDISCOVERY_API UFriendsList : public UCommonActivatableWidget
 {
 	GENERATED_BODY()
 
+private:
+	FDelegateHandle FriendsUpdatedDelegateHandle;
+
 protected:
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
 	UCommonLoadGuard* LoadGuard;
@@ -27,10 +31,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
 	UCommonTextBlock* FriendCountText;
-	
+
 public:
 
 	virtual void NativeConstruct() override;
-	
-	void LoadData();
+	virtual void NativeDestruct() override;	
 };

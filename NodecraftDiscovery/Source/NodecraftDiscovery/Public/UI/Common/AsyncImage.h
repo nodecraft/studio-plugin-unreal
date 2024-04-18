@@ -1,10 +1,11 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "CommonLazyImage.h"
 #include "Models/PlayerDataObject.h"
+#include "Services/ServiceDelegates.h"
 #include "AsyncImage.generated.h"
 
 /**
@@ -18,6 +19,9 @@ class NODECRAFTDISCOVERY_API UAsyncImage : public UCommonLazyImage
 public:
 	// Will load the image from the cache if it exists, otherwise it will download it from the URI and cache it.
 	void LoadImageAsync(const FString& URI, const FString& FilenameForCache);
+	// Will download the image from the URI and not cache it, nor will it look for it in the cache.
+	void LoadImageAsyncSkipCache(const FString& URI);
+	void LoadImageAsyncSkipCache(const FString& URI, FSimpleServiceResponseDelegate OnComplete);
 
 	void LoadPlayerAvatarAsync(const UPlayerDataObject* PlayerDataObject);
 

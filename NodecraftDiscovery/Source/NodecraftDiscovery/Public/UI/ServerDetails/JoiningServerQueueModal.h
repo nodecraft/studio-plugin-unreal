@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
@@ -12,17 +12,16 @@ class UServerQueueDataObject;
 class UNodecraftButtonBase;
 class UProgressBar;
 class UCommonTextBlock;
-/**
- * 
- */
+
 UCLASS()
 class NODECRAFTDISCOVERY_API UJoiningServerQueueModal : public UCommonActivatableWidget
 {
 	GENERATED_BODY()
 
 public:
-	void Configure(const UServerQueueDataObject* ServerQueueDataObject, const UServerQueueTokenDataObject* InServerQueueTokenDataObject, FSimpleDelegate& OnPopupClosed);
+	void Configure(FSimpleDelegate& OnPopupClosed);
 
+	virtual void NativeOnInitialized() override;
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UCommonTextBlock* QueuePositionText;
@@ -36,13 +35,10 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UNodecraftButtonBase* CancelButton;
 
-	UPROPERTY()
-	const UServerQueueTokenDataObject* ServerQueueTokenDataObject;
-
 private:
 	int32 WaitTimeInSeconds;
 	FTimerHandle CountdownTimerHandle;
-	FSimpleDelegate OnClosed;
+	FSimpleDelegate ClosePopupDelegate;
 	
 	void CountdownTimerTick();
 	

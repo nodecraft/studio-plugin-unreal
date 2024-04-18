@@ -1,10 +1,15 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #include "UI/NotificationsList/NotificationListItem.h"
+
+#include "CommonListView.h"
 #include "Models/NotificationDataObject.h"
 #include "Services/NotificationsService.h"
+#include "Services/ServersService.h"
 #include "Stores/NotificationsStore.h"
 #include "Subsystems/AssetStreamerSubsystem.h"
+#include "Subsystems/MenuManagerSubsystem.h"
+#include "UI/NotificationsList/NotificationList.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogNotificationListItem, Log, All);
 #define LOCTEXT_NAMESPACE "NotificationListItem"
@@ -85,6 +90,7 @@ void UNotificationListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 						if (UNotificationsStore* Store = UNotificationsStore::Get(GetWorld()))
 						{
 							Store->RemoveLiveNotification(NotificationDataObject);
+							UMenuManagerSubsystem::Get().ShowServerDetails(NotificationDataObject->GetServer());
 						}
 					}
 				}
@@ -156,7 +162,7 @@ void UNotificationListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 
 	if (ListItemConfig.PrimaryButtonStyle.IsNull() == false)
 	{
-		UAssetStreamerSubsystem::Get().LoadAssetAsync(ListItemConfig.PrimaryButtonStyle.ToSoftObjectPath(), FStreamableDelegate::CreateLambda([this, ListItemConfig]
+		UAssetStreamerSubsystem::Get().LoadAssetAsync(ListItemConfig.PrimaryButtonStyle.ToSoftObjectPath(), FStreamableDelegate::CreateWeakLambda(this, [this, ListItemConfig]
 		{
 			PrimaryActionButton->SetStyle(ListItemConfig.PrimaryButtonStyle.Get());
 		}));
@@ -165,7 +171,7 @@ void UNotificationListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 	// Set notif icon if appropriate
 	if (ListItemConfig.NotifIcon.IsNull() == false)
 	{
-		UAssetStreamerSubsystem::Get().LoadAssetAsync(ListItemConfig.NotifIcon, FStreamableDelegate::CreateLambda([this, ListItemConfig]
+		UAssetStreamerSubsystem::Get().LoadAssetAsync(ListItemConfig.NotifIcon, FStreamableDelegate::CreateWeakLambda(this, [this, ListItemConfig]
 		{
 			NotifImage->SetBrushFromTexture(ListItemConfig.NotifIcon.Get());
 		}));
@@ -175,7 +181,7 @@ void UNotificationListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 	EventIcon->SetVisibility(ListItemConfig.EventTextIcon.IsNull() ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
 	if (ListItemConfig.EventTextIcon.IsNull() == false)
 	{
-		UAssetStreamerSubsystem::Get().LoadAssetAsync(ListItemConfig.EventTextIcon, FStreamableDelegate::CreateLambda([this, ListItemConfig]
+		UAssetStreamerSubsystem::Get().LoadAssetAsync(ListItemConfig.EventTextIcon, FStreamableDelegate::CreateWeakLambda(this, [this, ListItemConfig]
 		{
 			EventIcon->SetBrushFromTexture(ListItemConfig.EventTextIcon.Get());
 			EventIcon->SetColorAndOpacity(ListItemConfig.EventTextIconColor);

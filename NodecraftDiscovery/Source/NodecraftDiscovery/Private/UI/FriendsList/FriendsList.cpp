@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/FriendsList/FriendsList.h"
@@ -7,7 +7,7 @@
 #include "CommonLoadGuard.h"
 #include "CommonTextBlock.h"
 #include "Models/FriendDataObject.h"
-#include "Services/FriendsService.h"
+#include "Stores/FriendsStore.h"
 
 #define LOCTEXT_NAMESPACE "FriendsList"
 
@@ -15,19 +15,13 @@ void UFriendsList::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	LoadData();
-}
+	FriendCountText->SetText(FText::GetEmpty());
 
-void UFriendsList::LoadData()
-{
-	UFriendsService& FriendsService = UFriendsService::Get();
-
-	LoadGuard->SetIsLoading(true);
-	
-	FGetFriendsListDelegate GetFriendsListDelegate;
-	GetFriendsListDelegate.BindWeakLambda(this, [this](const TArray<UFriendDataObject*> Friends, bool bSuccess, TOptional<FText> Error)
+	if (UWorld* World = GetWorld())
 	{
-		if (bSuccess)
+		if (UFriendsStore* FriendsStore = UFriendsStore::Get(World))
+		{
+			FriendsUpdatedDelegateHandle = FriendsStore->AddFriendsUpdatedListener(FOnFriendsUpdated::FDelegate::CreateWeakLambda(this, [this](const TArray<UFriendDataObject*>& Friends)
 		{
 			FriendListView->SetListItems(Friends);
 
@@ -44,14 +38,22 @@ void UFriendsList::LoadData()
 			FriendCountText->SetText(FriendCount);
 
 			LoadGuard->SetIsLoading(false);
+		}));
 		}
-		else
+	}
+}
+
+void UFriendsList::NativeDestruct()
+{
+	if (UWorld* World = GetWorld())
+	{
+		if (UFriendsStore* FriendsStore = UFriendsStore::Get(World))
 		{
-			FriendCountText->SetText(FText::GetEmpty());
+			FriendsStore->RemoveFriendsUpdatedListener(FriendsUpdatedDelegateHandle);
 		}
-	});
+	}
+	Super::NativeDestruct();
 	
-	FriendsService.GetFriends(GetFriendsListDelegate);
 }
 
 #undef LOCTEXT_NAMESPACE

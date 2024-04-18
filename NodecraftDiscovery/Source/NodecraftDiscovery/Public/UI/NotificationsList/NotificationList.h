@@ -1,15 +1,13 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "CommonActivatableWidget.h"
 #include "CommonListView.h"
-#include "CommonTextBlock.h"
 #include "API/NotificationListType.h"
 #include "Models/NotificationDataObject.h"
 #include "UI/Alerts/AlertMessage.h"
-#include "UI/Common/NodecraftLoadGuard.h"
 #include "NotificationList.generated.h"
 
 
@@ -23,6 +21,9 @@ class NODECRAFTDISCOVERY_API UNotificationList : public UCommonActivatableWidget
 	GENERATED_BODY()
 
 protected:
+	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
+	
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
 	UCommonListView* NotifsListView;
 
@@ -35,5 +36,4 @@ protected:
 public:
 	void LoadData(ENotificationListType NotifListType, FSimpleDelegate OnComplete);
 	void SetListItems(const TArray<UNotificationDataObject*>& Notifs);
-	virtual void NativeConstruct() override;
 };

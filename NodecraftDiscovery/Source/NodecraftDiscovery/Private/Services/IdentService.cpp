@@ -1,21 +1,21 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Services/IdentService.h"
 
-#include "API/DiscoveryAPI.h"
+#include "NodecraftLogCategories.h"
+#include "Api/NodecraftStudioApi.h"
 #include "Models/PlayerSession.h"
 #include "Models/Consents.h"
 #include "DataTypes/IdentityType.h"
 #include "DeveloperSettings/SupportedAuthPlatformsPreprocessor.h"
 #include "Services/GameService.h"
+#include "Subsystems/MessageRouterSubsystem.h"
 #include "Utility/NodecraftUtility.h"
 
 #if NC_AUTH_STEAM_ENABLED
 #include "SteamAuthSubsystem.h"
 #endif
-
-DEFINE_LOG_CATEGORY_STATIC(LogIdentService, Log, All);
 
 void UIdentService::SetHasFailedWithIdentityType(const EIdentityType IdentityType)
 {
@@ -54,12 +54,14 @@ FHttpRequestCompleteDelegate UIdentService::CreateSendTokenCompleteDelegate(FAcc
 				DelegateData.Error = FText::FromString("TODO: Parse error from JSON");
 				OnComplete.ExecuteIfBound(DelegateData);
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
 			DelegateData.Status = ESendIdentTokenResponseStatus::Error;
 			DelegateData.Error = FText::FromString("Failed to connect to server. Please try again.");
 			OnComplete.ExecuteIfBound(DelegateData);
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
 		}
 	});
 
@@ -90,7 +92,7 @@ bool UIdentService::SendIdentTokenSteam(const FString& Ticket, const FString& Id
 
 	LastAcceptConsentsDelegate = AcceptConsentsDelegate;
 	LastIdentTokenJsonPayload = Json;
-	return UDiscoveryAPI::SendIdentToken(this, Json, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::SendIdentToken(this, Json, ReqCallback)->ProcessRequest();
 }
 
 void UIdentService::AttemptSteamAuth()
@@ -102,16 +104,16 @@ void UIdentService::AttemptSteamAuth()
 		{
 		case ESendIdentTokenResponseStatus::Success:
 			OnAutoAuthSuccess.ExecuteIfBound();
-			UE_LOG(LogIdentService, Log, TEXT("Auto auth success"));
+			UE_LOG(LogNodecraftAuth, Log, TEXT("Auto auth success"));
 			break;
 		case ESendIdentTokenResponseStatus::RequiresConsents:
 			OnAutoAuthRequiresConsent.ExecuteIfBound(Data.AcceptConsentsDelegate, "steam");
-			UE_LOG(LogIdentService, Log, TEXT("Auto auth requires consents"));
+			UE_LOG(LogNodecraftAuth, Log, TEXT("Auto auth requires consents"));
 			break;
 		case ESendIdentTokenResponseStatus::Error:
 			FailedIdentityTypes.Add(EIdentityType::Steam);
 			OnAutoAuthFailure.ExecuteIfBound();
-			UE_LOG(LogIdentService, Error, TEXT("Auto auth error: %s"), *Data.Error.ToString());
+			UE_LOG(LogNodecraftAuth, Error, TEXT("Auto auth error: %s"), *Data.Error.ToString());
 			break;
 		default:
 			unimplemented();
@@ -125,14 +127,14 @@ void UIdentService::AttemptSteamAuth()
 		{
 			// Retrieved auth token. Send it to the server
 			SendIdentTokenSteam(Token, "test", SendTokenResponseDelegate);
-			UE_LOG(LogIdentService, Log, TEXT("Auto auth success"));
+			UE_LOG(LogNodecraftAuth, Log, TEXT("Auto auth success"));
 		}
 		else
 		{
 			// Attempt next auth method
 			FailedIdentityTypes.Add(EIdentityType::Steam);
 			OnAutoAuthFailure.ExecuteIfBound();
-			UE_LOG(LogIdentService, Error, TEXT("Steam auth error: %s"), *Error);
+			UE_LOG(LogNodecraftAuth, Error, TEXT("Steam auth error: %s"), *Error);
 		}
 	});
 
@@ -165,7 +167,7 @@ bool UIdentService::SendEmailToken(FString Email, FString Token, FSendIdentToken
 
 	LastAcceptConsentsDelegate = AcceptConsentsDelegate;
 	LastIdentTokenJsonPayload = Json;
-	return UDiscoveryAPI::SendIdentToken(this, Json, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::SendIdentToken(this, Json, ReqCallback)->ProcessRequest();
 }
 
 bool UIdentService::VerifyPlayerSession(FPlayerSessionResponseDelegate OnComplete)
@@ -184,7 +186,7 @@ bool UIdentService::VerifyPlayerSession(FPlayerSessionResponseDelegate OnComplet
 				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
 				{
 					Session = FPlayerSession::FromJson(Data);
-					UDiscoverySessionManager::Get().SetPlayerSession(Session);
+					UNodecraftStudioSessionManager::Get().SetPlayerSession(Session);
 					OnComplete.ExecuteIfBound(Session, true, FText::GetEmpty());
 				}
 				else
@@ -194,17 +196,19 @@ bool UIdentService::VerifyPlayerSession(FPlayerSessionResponseDelegate OnComplet
 			}
 			else
 			{
-				const FText ErrorMessage = UNodecraftUtility::ParseError(Res, FString(__FUNCTION__));
+				const FText ErrorMessage = UNodecraftUtility::ParseMessage(Res, FString(__FUNCTION__));
 				OnComplete.ExecuteIfBound(Session, false, ErrorMessage);
 			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
 		else
 		{
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
 			OnComplete.ExecuteIfBound(Session, false, FText::FromString("UIdentService::GetPlayerSession: Failed to connect to server"));
 		}
 	});
 	
-	return UDiscoveryAPI::GetPlayerSession(this, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::GetPlayerSession(this, ReqCallback)->ProcessRequest();
 }
 
 bool UIdentService::ResendPreviousTokenWithConsents(const FSendIdentTokenResponseDelegate& Delegate,
@@ -217,7 +221,7 @@ bool UIdentService::ResendPreviousTokenWithConsents(const FSendIdentTokenRespons
 
 	FHttpRequestCompleteDelegate ReqCallback = CreateSendTokenCompleteDelegate(LastAcceptConsentsDelegate, Delegate);
 	
-	return UDiscoveryAPI::SendIdentToken(this, Json, ReqCallback)->ProcessRequest();
+	return UNodecraftStudioApi::SendIdentToken(this, Json, ReqCallback)->ProcessRequest();
 }
 
 bool DoesClientSupportIdentityType(const EIdentityType IdentityType)
@@ -265,7 +269,7 @@ void UIdentService::AttemptAutoAuth()
 	EIdentityType IdentityTypeToTry = GetNextAutoAuthPlatformToTry();
 	if (IdentityTypeToTry == EIdentityType::UNDEFINED)
 	{
-		UE_LOG(LogIdentService, Error, TEXT("Tried to auto auth but no identity types available to try. Failing."));
+		UE_LOG(LogNodecraftAuth, Error, TEXT("Tried to auto auth but no identity types available to try. Failing."));
 		OnAutoAuthFailure.ExecuteIfBound();
 		return;
 	}
@@ -279,7 +283,7 @@ void UIdentService::AttemptAutoAuth()
 			[[fallthrough]];
 #endif
 	default:
-		UE_LOG(LogIdentService, Error, TEXT("Tried to auto auth with unsupported identity type. Failing."));
+		UE_LOG(LogNodecraftAuth, Error, TEXT("Tried to auto auth with unsupported identity type. Failing."));
 		OnAutoAuthFailure.ExecuteIfBound();
 		break;
 	}

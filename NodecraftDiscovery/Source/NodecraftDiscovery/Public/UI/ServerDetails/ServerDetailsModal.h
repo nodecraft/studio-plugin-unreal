@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
@@ -7,6 +7,7 @@
 #include "CommonActivatableWidgetSwitcher.h"
 #include "ModerationConsolePlayerDetailsPanel.h"
 #include "ServerDetailsHeaderCard.h"
+#include "ToggleFavoriteButton.h"
 #include "TabbedSections/ServerDetailsAboutSection.h"
 #include "TabbedSections/ServerDetailsAllowedPlayersSection.h"
 #include "TabbedSections/ServerDetailsModerationConsole.h"
@@ -15,6 +16,7 @@
 #include "TabbedSections/ServerDetailsOwnerSettingsSection.h"
 #include "TabbedSections/ServerDetailsRulesSection.h"
 #include "UI/Common/NodecraftTabListWidgetBase.h"
+#include "UI/Foundation/NodecraftLoadingButton.h"
 #include "UI/PlayerList/PlayerList.h"
 #include "UObject/Object.h"
 #include "ServerDetailsModal.generated.h"
@@ -30,29 +32,15 @@ class NODECRAFTDISCOVERY_API UServerDetailsModal : public UCommonActivatableWidg
 	GENERATED_BODY()
 
 protected:
-	// Community Server
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UPanelWidget* CommunityServerSection;
 	
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UNodecraftTabListWidgetBase* CommunityServerTabList;
+	UNodecraftTabListWidgetBase* TabsList;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UCommonActivatableWidgetSwitcher* CommunityServerTabContentSwitcher;
-
-	// END Community Server
+	UCommonActivatableWidgetSwitcher* ServerTabContentSwitcher;
 	
-	// Private Server
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UPanelWidget* PrivateServerSection;
-	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UNodecraftTabListWidgetBase* PrivateServerTabList;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UCommonActivatableWidgetSwitcher* PrivateServerTabContentSwitcher;
-	// END Private Server
-
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UPlayerList* OnlinePlayersList;
 
@@ -72,13 +60,16 @@ protected:
 	UCommonButtonBase* JoinButton;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UCommonButtonBase* FavoriteButton;
+	UToggleFavoriteButton* FavoriteButton;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UServerDetailsHeaderCard* HeaderCard;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UAlertMessage* AlertMessage;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UCommonBorder* PasswordRequiredPill;
 
 	// Community server sections
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
@@ -110,7 +101,10 @@ private:
 	UServerDataObject* ServerData;
 
 	void ToggleIsFavorite();
-	
+
+	// Returns the tab id of the first visible tab
+	FString AdjustTabsVisibility(const UServerDataObject* ServerDataObject);
+
 public:
 	void OnGetServerDetailsComplete(UServerDataObject* ServerDataObject, bool bSuccess, TOptional<FText> Error);
 	void LoadServerDetails(UServerDataObject* ServerDataObject);
@@ -119,8 +113,12 @@ public:
 	void OnTabContentCreated(FName TabId, UCommonUserWidget* TabWidget);
 
 	UFUNCTION()
-	void OnPrivateTabSelected(FName TabId);
+	void OnSelectedTab(FName TabId);
 
 	virtual void NativeOnInitialized() override;
 	virtual void NativeOnActivated() override;
+	
+	void SetCloseDelegate(FSimpleDelegate InOnCloseDelegate);
+	
+	void NavigateToRulesTabWithError(const FText& ErrorText);
 };

@@ -1,8 +1,8 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "1.0",
-	"FriendlyName": "NodecraftDiscovery",
+	"VersionName": "0.0.1",
+	"FriendlyName": "Nodecraft Studio",
 	"Description": "",
 	"Category": "Other",
 	"CreatedBy": "Nodecraft",
@@ -11,8 +11,8 @@
 	"MarketplaceURL": "",
 	"SupportURL": "",
 	"CanContainContent": true,
-	"IsBetaVersion": false,
-	"IsExperimentalVersion": false,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": true,
 	"Installed": false,
 	"Modules": [
 		{
@@ -21,7 +21,7 @@
 			"LoadingPhase": "Default"
 		},
 		{
-			"Name": "NodecraftDiscoveryEditor",
+			"Name": "NodecraftStudioEditor",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
 		},
@@ -36,7 +36,12 @@
 			"LoadingPhase": "Default"
 		},
 		{
-			"Name": "SteamAuth",
+			"Name": "NodecraftSteamAuth",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "NodecraftGame",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}

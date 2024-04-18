@@ -1,8 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "UI/Settings/UserSettingsLegal.h"
 
+#include "DataTypes/LinkTypes.h"
 #include "Services/ConsentsService.h"
 #include "Subsystems/AssetStreamerSubsystem.h"
 #include "Subsystems/MenuManagerSubsystem.h"
@@ -33,7 +34,7 @@ void UUserSettingsLegal::NativeConstruct()
 	
 	PrivacyPolicy->OnClicked().AddWeakLambda(this, [this]
 	{
-		// TODO: redirect to privacy policy page
+		UMenuManagerSubsystem::Get().ShowRedirectModal("https://nodecraft.com/legal/privacy-policy", ELinkType::Internal);
 	});
 	
 	SoftwareLicenses->OnClicked().AddWeakLambda(this, [this]

@@ -1,9 +1,8 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CommonLoadGuard.h"
 #include "CommonTextBlock.h"
 #include "CommonUserWidget.h"
 #include "ServerDetailsSection.h"
@@ -11,6 +10,7 @@
 #include "UObject/Object.h"
 #include "ServerDetailsOverviewSection.generated.h"
 
+class UNodecraftLoadGuard;
 /**
  * 
  */
@@ -21,7 +21,7 @@ class NODECRAFTDISCOVERY_API UServerDetailsOverviewSection : public UCommonUserW
 
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UCommonLoadGuard* LoadGuard;
+	UNodecraftLoadGuard* LoadGuard;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UCommonTextBlock* OverviewText;

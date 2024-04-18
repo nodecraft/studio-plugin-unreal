@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #include "NodecraftDiscovery.h"
 

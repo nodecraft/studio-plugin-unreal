@@ -1,12 +1,11 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
 #include "Models/PlayerDataObject.h"
 
+#include "NodecraftLogCategories.h"
 #include "DataTypes/IdentityType.h"
 
-
-DEFINE_LOG_CATEGORY_STATIC(LogPlayerDataObject, All, All);
 
 FString UPlayerDataObject::GetId() const
 {
@@ -60,6 +59,11 @@ EIdentityType UPlayerDataObject::GetIdentType() const
 	return EIdentityType::Email;
 }
 
+FString UPlayerDataObject::GetIdentTypeRaw() const
+{
+	return IdentType;
+}
+
 FString UPlayerDataObject::GetImageAvatarUrl() const
 {
 	return ImageUrl;
@@ -81,7 +85,7 @@ FDateTime UPlayerDataObject::GetDateStart() const
 	const bool bSuccess = FDateTime::ParseIso8601(*DateStart, Datetime);
 	if (bSuccess == false)
 	{
-		UE_LOG(LogPlayerDataObject, Error, TEXT("UPlayerDataObject::GetDateStart(): Failed to parse date: %s"), *DateStart);
+		UE_LOG(LogNodecraftJson, Error, TEXT("UPlayerDataObject::GetDateStart(): Failed to parse date: %s"), *DateStart);
 	}
 	return Datetime;
 }
@@ -92,7 +96,7 @@ FDateTime UPlayerDataObject::GetDateEnd() const
 	const bool bSuccess = FDateTime::ParseIso8601(*DateEnd, Datetime);
 	if (bSuccess == false)
 	{
-		UE_LOG(LogPlayerDataObject, Error, TEXT("UPlayerDataObject::GetDateEnd(): Failed to parse date: %s"), *DateEnd);
+		UE_LOG(LogNodecraftJson, Error, TEXT("UPlayerDataObject::GetDateEnd(): Failed to parse date: %s"), *DateEnd);
 	}
 	return Datetime;
 }
@@ -103,7 +107,7 @@ FDateTime UPlayerDataObject::GetDateFirstJoined() const
 	const bool bSuccess = FDateTime::ParseIso8601(*DateFirstJoined, DateJoined);
 	if (bSuccess == false)
 	{
-		UE_LOG(LogPlayerDataObject, Error, TEXT("UPlayerDataObject::GetDateSigned(): Failed to parse date: %s"), *DateFirstJoined);
+		UE_LOG(LogNodecraftJson, Error, TEXT("UPlayerDataObject::GetDateSigned(): Failed to parse date: %s"), *DateFirstJoined);
 	}
 	return DateJoined;
 }
@@ -122,7 +126,7 @@ UPlayerDataObject* UPlayerDataObject::FromJson(const TSharedRef<FJsonObject> Jso
 	Json->TryGetStringField("ident", PlayerDataObject->Ident);
 	Json->TryGetStringField("ident_type", PlayerDataObject->IdentType);
 	Json->TryGetStringField("username", PlayerDataObject->Username);
-	Json->TryGetStringField("image_tile", PlayerDataObject->ImageUrl);
+	Json->TryGetStringField("image_avatar", PlayerDataObject->ImageUrl);
 
 	// In many cases, neither date start, nor date end will be present
 	if (Json->TryGetStringField("date_start", PlayerDataObject->DateStart) == false)
