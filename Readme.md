@@ -13,7 +13,7 @@ Soon! Our team is working on getting this published on the Unreal Engine Marketp
 
 > Is this plugin ready for production use?
 
-We recommend that studios see this release as an early technical preview. We're nearing production ready for the SDK within Q2 of 2024.
+We recommend that studios see this release as an early technical preview. We're nearing production ready for the SDK within Q4 of 2024.
 
 > How much does it cost for server hosting?
 
