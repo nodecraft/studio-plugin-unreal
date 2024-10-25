@@ -7,6 +7,7 @@
 #include "Models/Consents.h"
 #include "Models/RulesDataObject.h"
 #include "UObject/Object.h"
+#include "Engine/Engine.h"
 #include "ConsentsService.generated.h"
 
 

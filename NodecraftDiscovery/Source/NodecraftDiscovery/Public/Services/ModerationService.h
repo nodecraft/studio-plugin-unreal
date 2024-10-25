@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/Engine.h"
 #include "ServiceDelegates.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Models/KickDataObject.h"

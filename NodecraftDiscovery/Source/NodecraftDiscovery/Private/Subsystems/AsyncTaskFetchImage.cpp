@@ -5,7 +5,6 @@
 
 #include "Blueprint/AsyncTaskDownloadImage.h"
 #include "Modules/ModuleManager.h"
-#include "Engine/Texture2D.h"
 #include "Engine/Texture2DDynamic.h"
 #include "Rendering/Texture2DResource.h"
 #include "IImageWrapper.h"

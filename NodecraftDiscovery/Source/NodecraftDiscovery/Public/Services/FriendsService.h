@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Subsystems/EngineSubsystem.h"
+#include "Engine/Engine.h"
 #include "FriendsService.generated.h"
 
 class UFriendDataObject;

@@ -21,32 +21,31 @@ class NODECRAFTDISCOVERY_API UNotificationsDrawerWidget : public UCommonActivata
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	virtual void NativeOnInitialized() override;
+	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
+	virtual UWidget* NativeGetDesiredFocusTarget() const override;
+
+	void ShowNotifsPage(ENotificationListType NotifListType);
+
+protected:
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Notification Drawer", meta=(BindWidget))
 	UNotificationList* ActiveNotificationsList;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Notification Drawer", meta=(BindWidget))
 	UNotificationList* HistoricNotificationsList;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Notification Drawer", meta=(BindWidget))
 	UCommonTextBlock* HeaderTextBlock;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Notification Drawer", meta=(BindWidget))
 	UCommonButtonBase* ClearAllButton;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Notification Drawer", meta=(BindWidget))
 	UNodecraftButtonBase* SwitchNotifsPageButton;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Notification Drawer", meta=(BindWidget))
 	UNodecraftLoadGuard* LoadGuard;
 
 	FDelegateHandle LiveNotifsListenerHandle;
-
-public:
-	virtual void NativeOnInitialized() override;
-
-	virtual void NativeConstruct() override;
-
-	virtual void NativeDestruct() override;
-
-	void ShowNotifsPage(ENotificationListType NotifListType);
 };

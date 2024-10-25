@@ -17,4 +17,4 @@ void FNodecraftSteamAuthModule::ShutdownModule()
 
 #undef LOCTEXT_NAMESPACE
 	
-IMPLEMENT_MODULE(FNodecraftSteamAuthModule, SteamAuth)
+IMPLEMENT_MODULE(FNodecraftSteamAuthModule, NodecraftSteamAuth)

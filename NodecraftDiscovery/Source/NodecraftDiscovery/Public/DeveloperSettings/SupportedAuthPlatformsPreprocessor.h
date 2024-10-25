@@ -1,4 +1,6 @@
-﻿#pragma once
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
+
+#pragma once
 
 // Override these values to enable or disable different authentication methods
 #ifndef NC_AUTH_STEAM_ENABLED

@@ -18,9 +18,9 @@ public:
 	void SetIsFavorited(bool bIsFavorited);
 
 protected:
-	UPROPERTY(EditAnywhere, Category="Favorite Button")
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Server Details|Styles")
 	TSoftClassPtr<UCommonButtonStyle> ButtonStyleFavorited;
 
-	UPROPERTY(EditAnywhere, Category="Favorite Button")
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Server Details|Styles")
 	TSoftClassPtr<UCommonButtonStyle> ButtonStyleNotFavorited;
 };

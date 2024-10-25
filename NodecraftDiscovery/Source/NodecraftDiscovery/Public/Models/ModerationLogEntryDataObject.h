@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
+#include "Dom/JsonObject.h"
 #include "DataTypes/ModerationTypes.h"
 #include "ModerationLogEntryDataObject.generated.h"
 
@@ -23,13 +24,16 @@ public:
 	FDateTime GetDateCreated() const;
 	FDateTime GetDateExpires() const;
 	EModerationDuration GetModerationDuration() const;
+	EModerationAction GetType() const;
+	FString GetReason() const;
 	
 
 protected:
 	UPROPERTY()
 	UPlayerDataObject* Player;
 	
-	FString Type;
+	EModerationAction Type;
+	FString Reason;
 	FDateTime DateCreated;
 
 	// only present for bans. if empty, then the ban is permanent.

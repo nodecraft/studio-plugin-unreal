@@ -3,17 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CommonActivatableWidget.h"
+#include "Engine/Texture2D.h"
 #include "CommonBorder.h"
 #include "CommonButtonBase.h"
 #include "CommonRichTextBlock.h"
 #include "CommonTextBlock.h"
-#include "Blueprint/IUserObjectListEntry.h"
 #include "Components/SizeBox.h"
 #include "Models/NotificationDataObject.h"
 #include "UI/Common/AsyncImage.h"
+#include "UI/Common/NodecraftListItemBase.h"
 #include "UI/Common/NodecraftLoadGuard.h"
-#include "UI/Foundation/NodecraftButtonBase.h"
+
 #include "NotificationListItem.generated.h"
 
 USTRUCT(BlueprintType)
@@ -23,38 +23,38 @@ struct FNotificationListItemConfig
 
 	FNotificationListItemConfig() = default;
 
-	UPROPERTY(EditAnywhere)
-	FLinearColor BorderColor = FLinearColor::Transparent;
-
-	UPROPERTY(EditAnywhere)
-	FLinearColor BackgroundColor = FLinearColor::Transparent;
-
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Notification List Item Config")
 	FLinearColor ContentAreaBackgroundColor = FLinearColor::Transparent;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Notification List Item Config")
+	TSubclassOf<UCommonBorderStyle> BorderStyleDefault;
+
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Notification List Item Config")
+	TSubclassOf<UCommonBorderStyle> BorderStyleFocused;
+
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Notification List Item Config")
 	TSoftObjectPtr<UTexture2D> NotifIcon;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Notification List Item Config")
 	TSoftObjectPtr<UTexture2D> EventTextIcon;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Notification List Item Config")
 	FLinearColor EventTextIconColor = FLinearColor::Transparent;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Notification List Item Config")
 	FLinearColor EventTextColor = FLinearColor::Transparent;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Notification List Item Config")
 	TSoftClassPtr<UCommonButtonStyle> PrimaryButtonStyle;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Notification List Item Config")
 	FLinearColor PrimaryButtonBorderColor = FLinearColor::Transparent;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Notification List Item Config")
 	FLinearColor PrimaryButtonColorLeft = FLinearColor::Transparent;
 
 	// dlohnes 01/29/24: Currently unused as we are just applying a flat color, but we want to use a material that applies a gradient
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Notification List Item Config")
 	FLinearColor PrimaryButtonColorRight = FLinearColor::Transparent;
 };
 
@@ -63,7 +63,7 @@ struct FNotificationListItemConfig
  * 
  */
 UCLASS()
-class NODECRAFTDISCOVERY_API UNotificationListItem : public UCommonActivatableWidget, public IUserObjectListEntry
+class NODECRAFTDISCOVERY_API UNotificationListItem : public UNodecraftListItemBase
 {
 	GENERATED_BODY()
 
@@ -73,7 +73,7 @@ class NODECRAFTDISCOVERY_API UNotificationListItem : public UCommonActivatableWi
 		Large
 	};
 
-
+private:
 	void ConfigForKickNotif(const UNotificationDataObject* NotificationDataObject);
 	void ConfigForBanNotif(const UNotificationDataObject* NotificationDataObject);
 	void ConfigForAllowNotif(const UNotificationDataObject* NotificationDataObject);
@@ -83,70 +83,61 @@ class NODECRAFTDISCOVERY_API UNotificationListItem : public UCommonActivatableWi
 	void UpdateTimestamp(const FDateTime& Time);
 
 	void UpdateItemSize(ENotifListItemSize Size);
+
+protected:
 	// IUserObjectListEntry
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
 	// IUserObjectListEntry
 
+	virtual FReply NativeOnFocusReceived(const FGeometry& InGeometry, const FFocusEvent& InFocusEvent) override;
+	virtual void NativeOnFocusLost(const FFocusEvent& InFocusEvent) override;
+	
 protected:
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-	UCommonBorder* NotifBorder;
-
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Notification List Item", meta=(BindWidget))
 	UBorder* ContentBorder;
 
 	// Controls the height of the entire notif with height override
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Notification List Item", meta=(BindWidget))
 	USizeBox* NotifSizeBox;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Notification List Item", meta=(BindWidget))
 	USizeBox* NotifImageSizeBox;
 	
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Notification List Item", meta=(BindWidget))
 	UAsyncImage* NotifImage;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Notification List Item", meta=(BindWidget))
 	UPanelWidget* PlayerInfoContainer;
 	
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Notification List Item", meta=(BindWidget))
 	UImage* PlayerPlatformIcon;
 	
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Notification List Item", meta=(BindWidget))
 	UCommonTextBlock* PlayerNameTextBlock;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Notification List Item", meta=(BindWidget))
 	UPanelWidget* EventInfoContainer;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Notification List Item", meta=(BindWidget))
 	UImage* EventIcon;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Notification List Item", meta=(BindWidget))
 	UCommonRichTextBlock* EventTextBlock;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Notification List Item", meta=(BindWidget))
 	UCommonRichTextBlock* EventTextDetailBlock;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Notification List Item", meta=(BindWidget))
 	UCommonTextBlock* TimestampTextBlock;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-	UCommonButtonBase* PrimaryActionButton;
-	
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-	UNodecraftButtonBase* DismissActionButton;
-
-	// Dynamic material instance for the border and background
-	UPROPERTY()
-	UMaterialInstanceDynamic* BorderMaterialInstance;
-
 	// Map of configs for each notification type
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Nodecraft UI|Notification List Item Config")
 	TMap<ENotificationType, FNotificationListItemConfig> NotificationTypeConfigs;
 
 	void SetIsLoading(bool bLoading);
 private:
 	UPROPERTY(meta=(BindWidget))
 	UNodecraftLoadGuard* LoadGuard;
-
-public:
-	virtual void NativeConstruct() override;
+	
+	void UpdateBorderStyles();
 };

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Models/NotificationDataObject.h"
 #include "Subsystems/WorldSubsystem.h"
+#include "Engine/World.h"
 #include "NotificationsStore.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnNotificationsUpdated, const TArray<UNotificationDataObject*>&);

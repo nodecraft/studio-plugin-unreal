@@ -11,19 +11,19 @@ struct NODECRAFTDISCOVERY_API FBanDuration
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft Data")
 	FText DisplayText;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft Data")
 	bool bPermanent = false;
 
-	UPROPERTY(EditAnywhere, meta=(EditConditionHides, EditCondition="bPermanent==false"))
+	UPROPERTY(EditAnywhere, meta=(EditConditionHides, Category = "Nodecraft Data", EditCondition="bPermanent==false"))
 	int32 Days = 0;
 
-	UPROPERTY(EditAnywhere, meta=(EditConditionHides, EditCondition="bPermanent==false"))
+	UPROPERTY(EditAnywhere, meta=(EditConditionHides, Category = "Nodecraft Data", EditCondition="bPermanent==false"))
 	int32 Hours = 0;
 
-	UPROPERTY(EditAnywhere, meta=(EditConditionHides, EditCondition="bPermanent==false"))
+	UPROPERTY(EditAnywhere, meta=(EditConditionHides, Category = "Nodecraft Data", EditCondition="bPermanent==false"))
 	int32 Minutes = 0;
 	
 	TOptional<FTimespan> GetDuration() const

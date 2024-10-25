@@ -11,17 +11,17 @@ UFriendDataObject* UFriendDataObject::FromJson(const TSharedRef<FJsonObject> Jso
 	UFriendDataObject* FriendDataObject = NewObject<UFriendDataObject>();
 
 	// parse the player object
-	if (const TSharedPtr<FJsonObject> PlayerObject = Json->GetObjectField("player"))
+	if (const TSharedPtr<FJsonObject> PlayerObject = Json->GetObjectField(TEXT("player")))
 	{
 		FriendDataObject->Player = UPlayerDataObject::FromJson(PlayerObject.ToSharedRef());
 	}
 
-	FriendDataObject->Status = Json->GetStringField("status");
-	Json->TryGetStringField("date_active", FriendDataObject->DateActive);
+	FriendDataObject->Status = Json->GetStringField(TEXT("status"));
+	Json->TryGetStringField(TEXT("date_active"), FriendDataObject->DateActive);
 
 	// parse the server object
 	const TSharedPtr<FJsonObject>* ServerObject;
-	if (Json->TryGetObjectField("server", ServerObject))
+	if (Json->TryGetObjectField(TEXT("server"), ServerObject))
 	{
 		FriendDataObject->ServerDataObject = UServerDataObject::FromJson(ServerObject->ToSharedRef());
 	}

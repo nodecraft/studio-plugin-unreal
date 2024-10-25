@@ -16,16 +16,16 @@ class NODECRAFTDISCOVERY_API UNodecraftBadgedButton : public UNodecraftButtonBas
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(EditInstanceOnly, Category = "Nodecraft Badged Button")
+	UPROPERTY(EditInstanceOnly, Category = "Nodecraft UI")
 	TSoftClassPtr<UCommonButtonStyle> UnbadgedButtonStyle;
 
-	UPROPERTY(EditInstanceOnly, Category = "Nodecraft Badged Button")
+	UPROPERTY(EditInstanceOnly, Category = "Nodecraft UI")
 	TSoftClassPtr<UCommonButtonStyle> BadgedButtonStyle;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI", meta=(BindWidget))
 	UPanelWidget* BadgeContainer;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI", meta=(BindWidget))
 	UTextBlock* BadgeText;
 
 public:

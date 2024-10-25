@@ -6,6 +6,7 @@
 #include "Interfaces/IHttpRequest.h"
 #include "Subsystems/EngineSubsystem.h"
 #include "UI/Alerts/AlertMessage.h"
+#include "Engine/Engine.h"
 #include "MessageRouterSubsystem.generated.h"
 
 

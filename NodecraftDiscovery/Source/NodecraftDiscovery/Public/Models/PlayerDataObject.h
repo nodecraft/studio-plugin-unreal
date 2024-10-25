@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
+#include "Dom/JsonObject.h"
 #include "PlayerDataObject.generated.h"
 
 enum class EIdentityType : uint8;

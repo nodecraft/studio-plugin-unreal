@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "ServiceDelegates.h"
 #include "Interfaces/IHttpRequest.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 #include "ServerQueueService.generated.h"
 
 class UCommonActivatableWidget;
@@ -56,6 +58,7 @@ public:
 	void StartPollingServerQueue();
 	void StopPollingServerQueue();
 	void AddGetServerQueueDelegate(FGetServerQueueDelegate Delegate);
+	void RemoveGetServerQueueDelegate();
 
 	FRenewServerQueueDelegate OnRenewServerQueue;
 	
@@ -67,12 +70,14 @@ public:
 
 	FSimpleMulticastDelegate OnPasswordIncorrect;
 
+	FSimpleMulticastDelegate OnIdleCheckinRequired;
+
 	// You only need to use either OnGetServerSession or OnGetServerConnectionString.
 	// OnGetServerConnectionString is more convenient for most use cases.
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category = "Nodecraft Services")
 	FGetServerSessionDelegate OnGetServerSession;
 	
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category = "Nodecraft Services")
 	FGetServerConnectionString OnGetServerConnectionString;
 
 	FOnUserMustAcceptServerConsents OnUserMustAcceptServerConsents;
@@ -80,6 +85,8 @@ public:
 protected:
 	FTimerDelegate ServerQueuePollTimerDelegate;
 	FTimerHandle ServerQueuePollTimerHandle;
+	FTimerDelegate CancelQueueTimerDelegate;
+	FTimerHandle CancelQueueTimerHandle;
 
 private:
 	// The current server queue token we are using to poll the server queue

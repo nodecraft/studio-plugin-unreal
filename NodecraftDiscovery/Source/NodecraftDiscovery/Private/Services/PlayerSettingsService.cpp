@@ -4,8 +4,8 @@
 #include "Services/PlayerSettingsService.h"
 
 #include "JsonObjectWrapper.h"
-#include "Api/NodecraftStudioApi.h"
-#include "Api/NodecraftStudioSessionManagerSubsystem.h"
+#include "API/NodecraftStudioApi.h"
+#include "API/NodecraftStudioSessionManagerSubsystem.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Models/PlayerSettings.h"
@@ -26,7 +26,7 @@ bool UPlayerSettingsService::UpdateCurrentPlayerRegion(const FString& RegionID,
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
 					Session = FPlayerSession::FromJson(Data);
 					UNodecraftStudioSessionManager::Get().SetPlayerSession(Session);					
@@ -64,7 +64,7 @@ bool UPlayerSettingsService::GetPlayerSettings(FGetPlayerSettingsDelegate& OnCom
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
 					UPlayerSettings* PlayerSettings = UPlayerSettings::FromJson(Data.ToSharedRef());
 					OnComplete.ExecuteIfBound(PlayerSettings, true, FText::GetEmpty());
@@ -106,7 +106,7 @@ bool UPlayerSettingsService::UpdateDefaultPlayerRegion(const FString& DefaultReg
 				UPlayerSettings* PlayerSettings;
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
 					PlayerSettings = UPlayerSettings::FromJson(Data.ToSharedRef());
 					OnComplete.ExecuteIfBound(PlayerSettings, true, FText::GetEmpty());
@@ -144,7 +144,7 @@ bool UPlayerSettingsService::UpdatePlayerAnalyticsOptOut(bool AnalyticsOptOut, F
 				UPlayerSettings* PlayerSettings;
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
 					PlayerSettings = UPlayerSettings::FromJson(Data.ToSharedRef());
 					OnComplete.ExecuteIfBound(PlayerSettings, true, FText::GetEmpty());

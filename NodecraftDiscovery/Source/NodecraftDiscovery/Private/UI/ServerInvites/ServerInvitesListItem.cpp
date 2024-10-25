@@ -3,6 +3,7 @@
 
 #include "UI/ServerInvites/ServerInvitesListItem.h"
 
+#include "CommonInputSubsystem.h"
 #include "CommonTextBlock.h"
 #include "Models/FriendDataObject.h"
 #include "Models/ServerDataObject.h"
@@ -27,7 +28,7 @@ void UServerInvitesListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 	ServerDescription->SetText(ServerDataObject->GetSummary());
 	PlayerCount->SetText(FText::FromString(FString::Printf(TEXT("%d / %d"), ServerDataObject->GetPlayersCount(), ServerDataObject->GetPlayersMax())));
 	
-	InviteButton->OnClicked().AddWeakLambda(this, [this, ServerDataObject, Invitee, InviteDetails]
+	PrimaryActionButton->OnClicked().AddWeakLambda(this, [this, ServerDataObject, Invitee, InviteDetails]
 	{
 		FOnCreateInvite OnCreateInviteComplete;
 		OnCreateInviteComplete.BindWeakLambda(this, [this, InviteDetails](const UInviteDataObject* InviteDataObject, bool bSuccess, TOptional<FText> Error)
@@ -43,4 +44,32 @@ void UServerInvitesListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 		});
 		UInvitesService::Get().CreateInvite(ServerDataObject->GetId(), Invitee->GetPlayer()->GetId(), OnCreateInviteComplete);
 	});
+}
+
+FNavigationReply UServerInvitesListItem::NativeOnNavigation(const FGeometry& MyGeometry,
+	const FNavigationEvent& InNavigationEvent, const FNavigationReply& InDefaultReply)
+{
+	if (OnNavDelegate.IsBound())
+	{
+		return OnNavDelegate.Execute(MyGeometry, InNavigationEvent, InDefaultReply);
+	}
+	return Super::NativeOnNavigation(MyGeometry, InNavigationEvent, InDefaultReply);
+}
+
+FReply UServerInvitesListItem::NativeOnFocusReceived(const FGeometry& InGeometry, const FFocusEvent& InFocusEvent)
+{
+	if (const ULocalPlayer* LocalPlayer = GetOwningLocalPlayer())
+	{
+		if (UCommonInputSubsystem::Get(LocalPlayer)->GetCurrentInputType() == ECommonInputType::Gamepad)
+		{
+			RegisterActionBinding(EUIActionBindingType::Primary);
+		}
+	}
+	return Super::NativeOnFocusReceived(InGeometry, InFocusEvent);
+}
+
+void UServerInvitesListItem::NativeOnFocusLost(const FFocusEvent& InFocusEvent)
+{
+	UnregisterUIActionBindings();
+	Super::NativeOnFocusLost(InFocusEvent);
 }

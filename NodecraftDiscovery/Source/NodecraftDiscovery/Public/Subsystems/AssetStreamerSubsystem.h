@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/StreamableManager.h"
 #include "Subsystems/EngineSubsystem.h"
+#include "Engine/Engine.h"
 #include "AssetStreamerSubsystem.generated.h"
 
 /**

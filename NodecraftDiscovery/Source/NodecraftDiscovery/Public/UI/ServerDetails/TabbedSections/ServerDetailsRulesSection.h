@@ -8,6 +8,7 @@
 #include "ServerDetailsSection.h"
 #include "Models/ServerDataObject.h"
 #include "UI/Common/ConsentLabelButton.h"
+#include "UI/Common/NodecraftScrollBox.h"
 #include "UObject/Object.h"
 #include "ServerDetailsRulesSection.generated.h"
 
@@ -22,29 +23,32 @@ class NODECRAFTDISCOVERY_API UServerDetailsRulesSection : public UCommonActivata
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UNodecraftLoadGuard* LoadGuard;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* RulesText;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonBorder* ConsentExplanation;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UConsentLabelButton* ConsentLabelButton;
-
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
+	UNodecraftScrollBox* RulesScrollBox;
+	
 	// Consent related styles
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Nodecraft UI|Styles")
 	TSoftObjectPtr<UMaterialInterface> ConsentGrantedBackgroundMaterial;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Nodecraft UI|Styles")
 	TSoftObjectPtr<UMaterialInterface> ConsentNotGrantedBackgroundMaterial;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Nodecraft UI|Styles")
 	TSoftClassPtr<UCommonTextStyle> ConsentGrantedTextStyle;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Nodecraft UI|Styles")
 	TSoftClassPtr<UCommonTextStyle> ConsentNotGrantedTextStyle;
 
 	UPROPERTY()
@@ -56,6 +60,10 @@ public:
 	// Sets server data for this section. Expects to have a URulesDataObject.
 	// Will log an error if the server data object or rules is null.
 	virtual void SetServerData(UServerDataObject* InServerDataObject) override;
+
+	virtual void NativeOnActivated() override;
+
+	virtual void NativeOnDeactivated() override;
 	
 	void SetLoading(bool bLoading);
 
@@ -63,4 +71,16 @@ public:
 	void OnConsentButtonClicked();
 	
 	virtual void NativeConstruct() override;
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Input", meta=(RowType="/Script/CommonUI.CommonInputActionDataBase"))
+	FDataTableRowHandle AcceptConsentsActionData;
+
+private:
+	void RefreshSignConsentsAction();
+	void UpdateActionBindings(ECommonInputType CurrentInputType);
+
+	FUIActionBindingHandle ScrollRulesActionHandle;
+
+	FUIActionBindingHandle AcceptConsentsActionHandle;
 };

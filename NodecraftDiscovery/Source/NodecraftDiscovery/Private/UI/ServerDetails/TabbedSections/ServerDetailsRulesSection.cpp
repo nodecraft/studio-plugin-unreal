@@ -4,10 +4,12 @@
 #include "UI/ServerDetails/TabbedSections/ServerDetailsRulesSection.h"
 
 #include "CommonBorder.h"
-#include "CommonLoadGuard.h"
+#include "CommonInputSubsystem.h"
 #include "CommonTextBlock.h"
+#include "Input/CommonUIInputTypes.h"
 #include "Services/ConsentsService.h"
 #include "UI/Common/NodecraftLoadGuard.h"
+#include "Utility/NodecraftMacros.h"
 
 #define LOCTEXT_NAMESPACE "ServerDetailsRulesSection"
 
@@ -52,7 +54,98 @@ void UServerDetailsRulesSection::SetServerData(UServerDataObject* InServerDataOb
 	}
 
 	RefreshConsentLabelButton(InServerDataObject->GetRules());
+	RefreshSignConsentsAction();
 	LoadGuard->SetIsLoading(false);
+}
+
+void UServerDetailsRulesSection::RefreshSignConsentsAction()
+{
+	RulesScrollBox->OnScrolledToBottom.RemoveAll(this);
+	AcceptConsentsActionHandle.Unregister();
+
+	// When we activate Rules Section, check to see if we need to sign consents.
+	// If we do, register a delegate such that once we scroll down to the bottom of the rules (or if we can't scroll),
+	// we'll show the consent button.
+	// Otherwise, unregister the action if it's registesred.
+	
+	ECommonInputType CurrentInputType = ECommonInputType::MouseAndKeyboard;
+	if (ULocalPlayer* LocalPlayer = GetOwningLocalPlayer())
+	{
+		CurrentInputType = UCommonInputSubsystem::Get(LocalPlayer)->GetCurrentInputType();
+	}
+	
+	bool bNeedsToSignConsents = false;
+	if (CurrentInputType == ECommonInputType::Gamepad)
+	{
+		if (ServerDataObject)
+		{
+			if (const auto Rules = ServerDataObject->GetRules())
+			{
+				if (Rules->GetConsentStatus() == EConsentStatus::Outdated || Rules->GetConsentStatus() == EConsentStatus::NotSigned)
+				{
+					bNeedsToSignConsents = true;
+
+					auto SetupActionHandle = [this]()
+					{
+						AcceptConsentsActionHandle = RegisterUIActionBinding(
+												FBindUIActionArgs(AcceptConsentsActionData, true,
+													FSimpleDelegate::CreateWeakLambda(this, [this]
+												{
+													ConsentLabelButton->OnClicked().Broadcast();
+												})));
+
+						RulesScrollBox->OnScrolledToBottom.RemoveAll(this);
+					};
+					
+					// If we can already see everything, we should just set up the action.
+					// Otherwise, we'll wait until we scroll to the bottom.
+					if (RulesScrollBox->GetScrollOffsetOfEnd() <= 0.0f)
+					{
+						SetupActionHandle();
+					}
+					else
+					{
+						RulesScrollBox->OnScrolledToBottom.AddWeakLambda(this, [this, SetupActionHandle]
+						{
+							SetupActionHandle();
+						});
+					}
+				}
+			}
+		}
+	}
+	
+	if (bNeedsToSignConsents == false || CurrentInputType != ECommonInputType::Gamepad)
+	{
+		AcceptConsentsActionHandle.Unregister();
+	}
+}
+
+void UServerDetailsRulesSection::UpdateActionBindings(ECommonInputType CurrentInputType)
+{
+	RefreshSignConsentsAction();
+}
+
+
+void UServerDetailsRulesSection::NativeOnActivated()
+{
+	Super::NativeOnActivated();
+
+	RulesScrollBox->SetListeningForInput(true);
+	RefreshSignConsentsAction();
+
+	ON_INPUT_METHOD_CHANGED(UpdateActionBindings);
+}
+
+void UServerDetailsRulesSection::NativeOnDeactivated()
+{
+	RulesScrollBox->SetListeningForInput(false);
+
+	if (AcceptConsentsActionHandle.IsValid())
+	{
+		AcceptConsentsActionHandle.Unregister();
+	}
+	Super::NativeOnDeactivated();
 }
 
 void UServerDetailsRulesSection::SetLoading(const bool bLoading)
@@ -70,6 +163,7 @@ void UServerDetailsRulesSection::OnConsentButtonClicked()
 		{
 			ServerDataObject->UpdateRules(Rules);
 			RefreshConsentLabelButton(ServerDataObject->GetRules());
+			RefreshSignConsentsAction();
 		}
 		else
 		{

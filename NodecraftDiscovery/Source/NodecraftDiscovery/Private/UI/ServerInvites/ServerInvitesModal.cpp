@@ -12,6 +12,7 @@
 #include "UI/Common/NodecraftLoadGuard.h"
 #include "UI/Foundation/NodecraftButtonBase.h"
 #include "UI/FriendsList/FriendsListItem.h"
+#include "UI/ServerInvites/ServerInvitesListItem.h"
 
 #define LOCTEXT_NAMESPACE "ServerInvitesModal"
 
@@ -48,6 +49,36 @@ void UServerInvitesModal::Configure(const TArray<UServerDataObject*>& Servers, c
 	});
 }
 
+void UServerInvitesModal::NativeOnInitialized()
+{
+	Super::NativeOnInitialized();
+	ListView->OnEntryWidgetGenerated().AddWeakLambda(this, [this](UWidget& InEntryWidget)
+	{
+		if (UServerInvitesListItem* ListItem = Cast<UServerInvitesListItem>(&InEntryWidget))
+		{
+			ListItem->OnNavDelegate.BindWeakLambda(this, [this, &InEntryWidget](const FGeometry& MyGeometry, const FNavigationEvent& InNavigationEvent, const FNavigationReply& InDefaultReply)
+			{
+				const UUserWidget* FirstItem = ListView->GetEntryWidgetFromItem(ListView->GetItemAt(0));
+				const UUserWidget* LastItem = ListView->GetEntryWidgetFromItem(ListView->GetItemAt(ListView->GetNumItems() - 1));
+				if (InNavigationEvent.GetNavigationType() == EUINavigation::Up && &InEntryWidget == FirstItem)
+				{
+					return FNavigationReply::Stop();
+				}
+				if (InNavigationEvent.GetNavigationType() == EUINavigation::Down && &InEntryWidget == LastItem)
+				{
+					return FNavigationReply::Stop();
+				}
+				if (InNavigationEvent.GetNavigationType() == EUINavigation::Left || InNavigationEvent.GetNavigationType() == EUINavigation::Right
+					|| InNavigationEvent.GetNavigationType() == EUINavigation::Next || InNavigationEvent.GetNavigationType() == EUINavigation::Previous)
+				{
+					return FNavigationReply::Stop();
+				}
+				return InDefaultReply;
+			});
+		}
+	});
+}
+
 void UServerInvitesModal::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -59,6 +90,19 @@ void UServerInvitesModal::NativeOnActivated()
 {
 	Super::NativeOnActivated();
 	Alert->Hide();
+}
+
+UWidget* UServerInvitesModal::NativeGetDesiredFocusTarget() const
+{
+	return ListView->GetDisplayedEntryWidgets().IsValidIndex(0)
+		? ListView->GetDisplayedEntryWidgets()[0]
+		: Super::NativeGetDesiredFocusTarget();
+}
+
+bool UServerInvitesModal::NativeOnHandleBackAction()
+{
+	CloseButtonTop->OnClicked().Broadcast();
+	return Super::NativeOnHandleBackAction();
 }
 
 #undef LOCTEXT_NAMESPACE

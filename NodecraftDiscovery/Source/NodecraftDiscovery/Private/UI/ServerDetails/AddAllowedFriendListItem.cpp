@@ -6,6 +6,7 @@
 #include "CommonListView.h"
 #include "CommonTextBlock.h"
 #include "DeveloperSettings/NodecraftStudioIdentitySettings.h"
+#include "Models/AllowsDataObject.h"
 #include "Models/FriendDataObject.h"
 #include "Models/InviteFriendViewModel.h"
 #include "Models/ServerDataObject.h"
@@ -38,21 +39,21 @@ void UAddAllowedFriendListItem::NativeOnListItemObjectSet(UObject* ListItemObjec
 
 	Alert->Hide();
 
-	InviteButton->OnClicked().Clear();
-	InviteButton->OnClicked().AddWeakLambda(this, [this]
+	PrimaryActionButton->OnClicked().Clear();
+	PrimaryActionButton->OnClicked().AddWeakLambda(this, [this]
 	{
-		if (UInviteFriendViewModel* FriendViewModel = GetListItem<UInviteFriendViewModel>())
+		if (UInviteFriendViewModel* FriendVM = GetListItem<UInviteFriendViewModel>())
 		{
 			FUpdateAllowResponseDelegate OnComplete;
-			OnComplete.BindWeakLambda(this, [this, FriendViewModel](UAllowsDataObject* AllowsDataObject, bool bSuccess, TOptional<FText> Error)
+			OnComplete.BindWeakLambda(this, [this, FriendVM](UAllowsDataObject* AllowsDataObject, bool bSuccess, TOptional<FText> Error)
 			{
 				if (bSuccess)
 				{
 					if (UCommonListView* ListView = Cast<UCommonListView>(GetOwningListView()))
 					{
-						ListView->RemoveItem(FriendViewModel);
+						ListView->RemoveItem(FriendVM);
 						ListView->RequestRefresh();
-						FriendViewModel->ClosePopupDelegate.ExecuteIfBound();
+						FriendVM->ClosePopupDelegate.ExecuteIfBound();
 					}
 				}
 				else
@@ -60,8 +61,31 @@ void UAddAllowedFriendListItem::NativeOnListItemObjectSet(UObject* ListItemObjec
 					Alert->Show(Error.GetValue(), EAlertType::Error);
 				}
 			});
-			UAllowsService::Get().CreateAllow(FriendViewModel->GetServer()->GetId(),
-			                                  FriendViewModel->GetInvitee()->GetPlayer()->GetId(), OnComplete);
+			UAllowsService::Get().CreateAllow(FriendVM->GetServer()->GetId(),
+			                                  FriendVM->GetInvitee()->GetPlayer()->GetId(), OnComplete);
 		}
 	});
+	
+}
+
+FNavigationReply UAddAllowedFriendListItem::NativeOnNavigation(const FGeometry& MyGeometry,
+	const FNavigationEvent& InNavigationEvent, const FNavigationReply& InDefaultReply)
+{
+	if (OnNavDelegate.IsBound())
+	{
+		return OnNavDelegate.Execute(MyGeometry, InNavigationEvent, InDefaultReply);
+	}
+	return Super::NativeOnNavigation(MyGeometry, InNavigationEvent, InDefaultReply);
+}
+
+FReply UAddAllowedFriendListItem::NativeOnFocusReceived(const FGeometry& InGeometry, const FFocusEvent& InFocusEvent)
+{
+	RegisterActionBinding(EUIActionBindingType::Primary);
+	return Super::NativeOnFocusReceived(InGeometry, InFocusEvent);
+}
+
+void UAddAllowedFriendListItem::NativeOnFocusLost(const FFocusEvent& InFocusEvent)
+{
+	UnregisterUIActionBindings();
+	Super::NativeOnFocusLost(InFocusEvent);
 }

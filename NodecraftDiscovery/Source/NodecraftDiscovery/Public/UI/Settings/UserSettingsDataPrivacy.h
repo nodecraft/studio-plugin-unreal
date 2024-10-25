@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "CommonActivatableWidget.h"
+#include "CommonInputTypeEnum.h"
 #include "UserSettingsDataPrivacy.generated.h"
 
-class UCommonTextBlock;
+class UNodecraftRadioButtonGroup;
 class UCommonTextStyle;
 class UNodecraftButtonBase;
 class UNodecraftLoadGuard;
-class UNodecraftRadioButton;
 class UAlertMessage;
 /**
  * 
@@ -21,39 +21,28 @@ class NODECRAFTDISCOVERY_API UUserSettingsDataPrivacy : public UCommonActivatabl
 	GENERATED_BODY()
 
 protected:
+	virtual void NativeOnInitialized() override;
 	virtual void NativeConstruct() override;
-
 	virtual void NativeOnActivated() override;
+	virtual UWidget* NativeGetDesiredFocusTarget() const override;
 
-	void UpdateStyles();
-
-	UPROPERTY(EditDefaultsOnly)
-	TSoftClassPtr<UCommonTextStyle> SelectedTextStyle;
-
-	UPROPERTY(EditDefaultsOnly)
-	TSoftClassPtr<UCommonTextStyle> NormalTextStyle;
-
-	UPROPERTY(EditDefaultsOnly)
-	FColor ButtonStateImageSelectedColor;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Data Privacy", meta = (BindWidget))
 	UNodecraftLoadGuard* LoadGuard;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Data Privacy", meta = (BindWidget))
 	UAlertMessage* AlertMessage;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UNodecraftRadioButton* AnalyticsOptIn;
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Data Privacy", meta = (BindWidget))
+	UNodecraftRadioButtonGroup* RadioButtonGroup;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UNodecraftRadioButton* AnalyticsOptOut;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Data Privacy", meta = (BindWidget))
 	UNodecraftButtonBase* SaveSettingsButton;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UCommonTextBlock* OptInText;
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Input", meta=(RowType="/Script/CommonUI.CommonInputActionDataBase"))
+	FDataTableRowHandle SaveInputActionData;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UCommonTextBlock* OptOutText;
+private:
+	void UpdateActionBindings(ECommonInputType CurrentInputType);
+	
+	FUIActionBindingHandle SaveUIActionHandle;
 };

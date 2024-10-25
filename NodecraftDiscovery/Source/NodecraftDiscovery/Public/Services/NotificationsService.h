@@ -6,6 +6,7 @@
 #include "ServiceDelegates.h"
 #include "Models/NotificationDataObject.h"
 #include "Subsystems/EngineSubsystem.h"
+#include "Engine/Engine.h"
 #include "NotificationsService.generated.h"
 
 DECLARE_DELEGATE_ThreeParams(FGetNotificationsResponseDelegate, TArray<UNotificationDataObject*> /*Notifications*/, bool /*bSuccess*/, FText /*Error*/);

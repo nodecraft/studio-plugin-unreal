@@ -3,6 +3,8 @@
 
 #include "UI/ServerDetails/ModerationActionButton.h"
 
+#include "Engine/Texture2D.h"
+#include "DataTypes/ModerationTypes.h"
 #include "Subsystems/AssetStreamerSubsystem.h"
 
 void UModerationActionButton::ConfigureForAction(const EModerationAction InAction)

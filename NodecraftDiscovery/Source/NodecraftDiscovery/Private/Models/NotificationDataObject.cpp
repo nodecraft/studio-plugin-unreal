@@ -112,13 +112,13 @@ UNotificationDataObject* UNotificationDataObject::FromJson(const TSharedRef<FJso
 {
 	UNotificationDataObject* NotificationDataObject = NewObject<UNotificationDataObject>();
 
-	NotificationDataObject->Id = Json->GetStringField("id");
+	NotificationDataObject->Id = Json->GetStringField(TEXT("id"));
 	
-	Json->TryGetStringField("date_created", NotificationDataObject->DateCreated);
+	Json->TryGetStringField(TEXT("date_created"), NotificationDataObject->DateCreated);
 	
-	Json->TryGetStringField("subject", NotificationDataObject->Subject);
+	Json->TryGetStringField(TEXT("subject"), NotificationDataObject->Subject);
 
-	if (const FString TypeString = Json->GetStringField("type"); TypeString == "server_kicks")
+	if (const FString TypeString = Json->GetStringField(TEXT("type")); TypeString == "server_kicks")
 	{
 		NotificationDataObject->Type = ENotificationType::Kick;
 	}
@@ -144,37 +144,37 @@ UNotificationDataObject* UNotificationDataObject::FromJson(const TSharedRef<FJso
 	}
 
 	const TSharedPtr<FJsonObject>* PlayerJson;
-	if (Json->TryGetObjectField("player", PlayerJson))
+	if (Json->TryGetObjectField(TEXT("player"), PlayerJson))
 	{
 		NotificationDataObject->Player = UPlayerDataObject::FromJson(PlayerJson->ToSharedRef());
 	}
 
 	const TSharedPtr<FJsonObject>* ServerJson;
-	if (Json->TryGetObjectField("server", ServerJson))
+	if (Json->TryGetObjectField(TEXT("server"), ServerJson))
 	{
 		NotificationDataObject->Server = UServerDataObject::FromJson(ServerJson->ToSharedRef());
 	}
 
 	const TSharedPtr<FJsonObject>* BanJson;
-	if (Json->TryGetObjectField("ban", BanJson))
+	if (Json->TryGetObjectField(TEXT("ban"), BanJson))
 	{
 		NotificationDataObject->Ban = UBanDataObject::FromJson(BanJson->ToSharedRef());
 	}
 
 	const TSharedPtr<FJsonObject>* CommunityJson;
-	if (Json->TryGetObjectField("community", CommunityJson))
+	if (Json->TryGetObjectField(TEXT("community"), CommunityJson))
 	{
 		NotificationDataObject->Community = UCommunityDataObject::FromJson(CommunityJson->ToSharedRef());
 	}
 
 	const TSharedPtr<FJsonObject>* AllowDataJson;
-	if (Json->TryGetObjectField("server_allow", AllowDataJson))
+	if (Json->TryGetObjectField(TEXT("server_allow"), AllowDataJson))
 	{
 		NotificationDataObject->AllowData = FServerAllowDataObject::FromJson(AllowDataJson->ToSharedRef());
 	}
 
 	const TSharedPtr<FJsonObject>* InviteDataJson;
-	if (Json->TryGetObjectField("server_invite", InviteDataJson))
+	if (Json->TryGetObjectField(TEXT("server_invite"), InviteDataJson))
 	{
 		NotificationDataObject->InviteData = FServerInviteDataObject::FromJson(InviteDataJson->ToSharedRef());
 	}

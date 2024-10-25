@@ -1,7 +1,7 @@
 ﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 
-#include <DeveloperSettings/NodecraftStudioIdentitySettings.h>
+#include "DeveloperSettings/NodecraftStudioIdentitySettings.h"
 
 UTexture2D* UNodecraftStudioIdentitySettings::GetIconForType(EIdentityType Type) const
 {

@@ -18,13 +18,13 @@ struct FServerCardLabelStyleConfig
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Styles")
 	UTexture2D* LabelIconImage = nullptr;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Styles")
 	FText LabelTitle;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Styles")
 	FLinearColor BackgroundColor = FLinearColor::Transparent;
 };
 UCLASS()
@@ -36,23 +36,23 @@ class NODECRAFTDISCOVERY_API UServerCardLabel : public UUserWidget
 public:
 	virtual void NativeOnInitialized() override;
 	
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="Nodecraft UI|Server Card Label")
 	void SetLabelType(EServerCardLabelType LabelType);
 	
 protected:
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Card Label", meta=(BindWidget))
 	UBorder* Background;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Card Label", meta=(BindWidget))
 	UImage* Icon;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Card Label", meta=(BindWidget))
 	UCommonTextBlock* LabelText;
 	
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Server Card Label")
 	TMap<EServerCardLabelType, FServerCardLabelStyleConfig> StyleMap;
 
-	UPROPERTY(EditInstanceOnly)
+	UPROPERTY(EditInstanceOnly, Category = "Nodecraft UI|Server Card Label")
 	EServerCardLabelType LabelType;
 	
 };

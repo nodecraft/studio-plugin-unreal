@@ -20,7 +20,7 @@ private:
 	FDelegateHandle FriendsUpdatedDelegateHandle;
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI", meta = (BindWidget))
 	UCommonTextBlock* FriendsCountTextBlock;
 
 public:

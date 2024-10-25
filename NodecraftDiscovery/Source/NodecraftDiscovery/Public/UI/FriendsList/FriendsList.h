@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "CommonActivatableWidget.h"
-#include "Stores/FriendsStore.h"
 #include "FriendsList.generated.h"
 
 class UCommonTextBlock;
@@ -19,21 +18,21 @@ class NODECRAFTDISCOVERY_API UFriendsList : public UCommonActivatableWidget
 {
 	GENERATED_BODY()
 
-private:
-	FDelegateHandle FriendsUpdatedDelegateHandle;
-
 protected:
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
+	virtual UWidget* NativeGetDesiredFocusTarget() const override;
+	
+protected:
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Friends List", meta=(BindWidget))
 	UCommonLoadGuard* LoadGuard;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Friends List", meta=(BindWidget))
 	UCommonListView* FriendListView;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Friends List", meta=(BindWidget))
 	UCommonTextBlock* FriendCountText;
 
-public:
-
-	virtual void NativeConstruct() override;
-	virtual void NativeDestruct() override;	
+private:
+	FDelegateHandle FriendsUpdatedDelegateHandle;
 };

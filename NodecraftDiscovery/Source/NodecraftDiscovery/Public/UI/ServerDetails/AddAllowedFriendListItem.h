@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CommonActivatableWidget.h"
-#include "Blueprint/IUserObjectListEntry.h"
+#include "Common/NodecraftDelegates.h"
+#include "UI/Common/NodecraftListItemBase.h"
 #include "AddAllowedFriendListItem.generated.h"
 
 class UCommonTextStyle;
@@ -17,32 +17,35 @@ class UAsyncImage;
  * 
  */
 UCLASS()
-class NODECRAFTDISCOVERY_API UAddAllowedFriendListItem : public UCommonActivatableWidget, public IUserObjectListEntry
+class NODECRAFTDISCOVERY_API UAddAllowedFriendListItem : public UNodecraftListItemBase
 {
 	GENERATED_BODY()
 
+public:
+	FOnNavigationDelegate OnNavDelegate;
+
 protected:
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
+	virtual FNavigationReply NativeOnNavigation(const FGeometry& MyGeometry, const FNavigationEvent& InNavigationEvent, const FNavigationReply& InDefaultReply) override;
+	virtual FReply NativeOnFocusReceived(const FGeometry& InGeometry, const FFocusEvent& InFocusEvent) override;
+	virtual void NativeOnFocusLost(const FFocusEvent& InFocusEvent) override;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UAsyncImage* Avatar;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* Status;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UImage* IdentImage;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* PlayerIdent;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UNodecraftButtonBase* InviteButton;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UAlertMessage* Alert;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Nodecraft UI|Styles")
 	TMap<FString, TSoftClassPtr<UCommonTextStyle>> StatusStyle;
 
 private:

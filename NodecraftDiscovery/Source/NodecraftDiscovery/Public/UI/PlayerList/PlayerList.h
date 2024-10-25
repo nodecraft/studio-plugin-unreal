@@ -9,6 +9,7 @@
 #include "API/PlayerListType.h"
 #include "Components/Image.h"
 #include "Models/ServerDataObject.h"
+#include "UI/Common/NodecraftScrollBox.h"
 #include "UObject/Object.h"
 #include "PlayerList.generated.h"
 
@@ -23,29 +24,39 @@ class NODECRAFTDISCOVERY_API UPlayerList : public UCommonActivatableWidget
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Player List", meta=(BindWidget))
 	UCommonLoadGuard* LoadGuard;
 	
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Player List", meta=(BindWidget))
 	UCommonTextBlock* TitleTextBlock;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Player List", meta=(BindWidget))
 	UImage* HeaderHairline;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Player List", meta=(BindWidget))
 	UCommonListView* PlayerListView;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Nodecraft UI|Player List", meta=(BindWidget))
+	FText ActionDisplayName;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Player List", meta=(BindWidget))
 	UImage* NoPlayersImage;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Player List", meta=(BindWidget))
 	UCommonTextBlock* NoPlayersTextBlock;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Player List", meta=(BindWidget))
+	UNodecraftScrollBox* ScrollBox;
+
 public:
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable,  Category = "Nodecraft UI|Player List")
 	void SetTitleText(const FText Text);
 
-	UFUNCTION(BlueprintCallable)
-	void LoadData(EPlayerListType PlayerListType, UServerDataObject* ServerDataObject);
+	void SetListeningForScrollInput(bool bIsListeningForInput);
+
+	bool IsListeningForScrollInput() const;
+
+	void LoadData(EPlayerListType PlayerListType, UServerDataObject* ServerDataObject, FSimpleDelegate OnComplete);
 	void SetServerData(EPlayerListType PlayerListType, UPlayerListDataObject* PlayerListDataObject) const;
+	bool HasItems();
 };

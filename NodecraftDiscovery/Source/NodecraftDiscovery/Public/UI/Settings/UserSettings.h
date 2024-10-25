@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/DataTable.h"
+#include "CommonInputTypeEnum.h"
 #include "CommonActivatableWidget.h"
 #include "UserSettings.generated.h"
 
@@ -22,30 +24,40 @@ class NODECRAFTDISCOVERY_API UUserSettings : public UCommonActivatableWidget
 {
 	GENERATED_BODY()
 
-public:
-	void GoToMainPage() const;
-
 protected:
+	virtual void NativeOnInitialized() override;
 	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
+	virtual UWidget* NativeGetDesiredFocusTarget() const override;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|User Settings", meta = (BindWidget))
 	UNodecraftButtonBase* BackButton;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|User Settings", meta = (BindWidget))
 	UCommonActivatableWidgetSwitcher* WidgetSwitcher;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|User Settings", meta = (BindWidget))
 	UUserSettingsMainPage* MainPage;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|User Settings", meta = (BindWidget))
 	UUserSettingsServerRegion* ServerRegionPage;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|User Settings", meta = (BindWidget))
 	UUserSettingsAccountReputation* AccountReputationPage;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|User Settings", meta = (BindWidget))
 	UUserSettingsDataPrivacy* DataPrivacyPage;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|User Settings", meta = (BindWidget))
 	UUserSettingsLegal* LegalPage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Input", meta=(RowType="/Script/CommonUI.CommonInputActionDataBase"))
+	FDataTableRowHandle BackButtonInputActionData;
+
+private:
+	void GoToMainPage();
+	void UpdateActionBindings(ECommonInputType CurrentInputType);
+	
+	FUIActionBindingHandle BackButtonInputActionHandle;
+	int32 CurrentPageIndex = 0;
 };

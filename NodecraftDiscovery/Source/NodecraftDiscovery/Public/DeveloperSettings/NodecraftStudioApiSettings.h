@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/DeveloperSettings.h"
 #include "NodecraftStudioApiSettings.generated.h"
 
 /**
@@ -14,26 +15,26 @@ class NODECRAFTDISCOVERY_API UNodecraftStudioApiSettings : public UDeveloperSett
 	GENERATED_BODY()
 
 private:
-	UPROPERTY(EditAnywhere, Config)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft Settings", Config)
 	FString ApiRoot = "https://api.nodecraft.studio/v1/";
 
-	UPROPERTY(EditAnywhere, Config)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft Settings", Config)
 	FString PublicGameToken;
 
-	UPROPERTY(EditAnywhere, Config)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft Settings", Config)
 	float NotificationPollingInterval = 15.0f;
 
-	UPROPERTY(EditAnywhere, Config)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft Settings", Config)
 	float ServerJoinPollingInterval = 15.0f;
 
-	UPROPERTY(EditAnywhere, Config)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft Settings", Config)
 	float FriendsPollingIntervalInGame = 180.0f;
 
-	UPROPERTY(EditAnywhere, Config)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft Settings", Config)
 	float FriendsPollingIntervalOutOfGame = 30.0f;
 
 	// In Seconds
-	UPROPERTY(EditAnywhere, Config)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft Settings", Config)
 	float ServerHeartbeatRate = 8.0f;
 
 public:

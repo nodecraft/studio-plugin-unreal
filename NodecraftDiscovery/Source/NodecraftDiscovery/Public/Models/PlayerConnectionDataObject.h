@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
+#include "Dom/JsonObject.h"
 #include "PlayerConnectionDataObject.generated.h"
 
 enum class EPlayerConnectionStatus : uint8;

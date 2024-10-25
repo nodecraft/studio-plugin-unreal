@@ -7,12 +7,12 @@ UServerSessionDataObject* UServerSessionDataObject::FromJson(const TSharedPtr<FJ
 {
 	UServerSessionDataObject* Session = NewObject<UServerSessionDataObject>();
 
-	Session->Token = Json->GetStringField("token");
-	Json->TryGetStringField("server_connection", Session->ServerConnection);
-	Session->PlayerAccessTokenID = Json->GetStringField("player_access_token_id");
+	Session->Token = Json->GetStringField(TEXT("token"));
+	Json->TryGetStringField(TEXT("server_connection"), Session->ServerConnection);
+	Session->PlayerAccessTokenID = Json->GetStringField(TEXT("player_access_token_id"));
 
 	FString DateString;
-	if (Json->TryGetStringField("date_expires", DateString))
+	if (Json->TryGetStringField(TEXT("date_expires"), DateString))
 	{
 		FDateTime::ParseIso8601(*DateString, Session->DateExpires);
 	}

@@ -43,9 +43,9 @@ UBanDataObject* UBanDataObject::FromJson(const TSharedRef<FJsonObject> Json)
 {
 	UBanDataObject* BanDataObject = NewObject<UBanDataObject>();
 
-	BanDataObject->Id = Json->GetStringField("id");
+	BanDataObject->Id = Json->GetStringField(TEXT("id"));
 
-	const FString ScopeString = Json->GetStringField("scope");
+	const FString ScopeString = Json->GetStringField(TEXT("scope"));
 	if (ScopeString == "server")
 	{
 		BanDataObject->Scope = EBanScope::Server;
@@ -64,28 +64,28 @@ UBanDataObject* UBanDataObject::FromJson(const TSharedRef<FJsonObject> Json)
 	}
 
 	FString DateExpiresString;
-	Json->TryGetStringField("date_expires", DateExpiresString);
+	Json->TryGetStringField(TEXT("date_expires"), DateExpiresString);
 	FDateTime::ParseIso8601(*DateExpiresString, BanDataObject->DateExpires);
 
 	
 	FString DateCreatedString;
-	Json->TryGetStringField("date_created", DateCreatedString);
+	Json->TryGetStringField(TEXT("date_created"), DateCreatedString);
 	FDateTime::ParseIso8601(*DateCreatedString, BanDataObject->DateCreated);
 
 	FString PublicReasonString;
-	if (Json->TryGetStringField("public_reason", PublicReasonString))
+	if (Json->TryGetStringField(TEXT("public_reason"), PublicReasonString))
 	{
 		BanDataObject->PublicReason = FText::FromString(PublicReasonString);
 	}
 	
 	// reason
-	if (FString ReasonStr; Json->TryGetStringField("reason", ReasonStr))
+	if (FString ReasonStr; Json->TryGetStringField(TEXT("reason"), ReasonStr))
 	{
 		BanDataObject->Reason = FText::FromString(ReasonStr);
 	}
 
 	const TSharedPtr<FJsonObject>* AuthorObject;
-	if (Json->TryGetObjectField("author", AuthorObject))
+	if (Json->TryGetObjectField(TEXT("author"), AuthorObject))
 	{
 		BanDataObject->Author = UPlayerDataObject::FromJson(AuthorObject->ToSharedRef());
 	}

@@ -1,4 +1,9 @@
-﻿#pragma once
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "PlayerConnectionSubjects.generated.h"
 
 UENUM()
 enum class EPlayerConnectionSubject

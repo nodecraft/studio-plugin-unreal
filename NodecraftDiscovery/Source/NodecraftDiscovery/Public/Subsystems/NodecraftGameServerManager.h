@@ -7,6 +7,7 @@
 #include "Models/Server/HeartbeatDataObjects.h"
 #include "Models/Server/PlayerJoinDataObjects.h"
 #include "Subsystems/WorldSubsystem.h"
+#include "Engine/Engine.h"
 #include "NodecraftGameServerManager.generated.h"
 
 USTRUCT()
@@ -22,6 +23,9 @@ struct NODECRAFTDISCOVERY_API FVerifiedPlayerData
 
 	UPROPERTY()
 	FString UUID;
+
+	UPROPERTY()
+	FString PlayerID;
 };
 
 /**
@@ -86,7 +90,7 @@ protected:
 	// The number of heartbeat calls that have failed in a row
 	// You can use this to determine if the server is having issues staying in contact with Nodecraft
 	// TODO: Dexter Add documentation for this
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft Subsystems")
 	int32 NumConsecutiveFailedHeartbeats = 0;
 
 };

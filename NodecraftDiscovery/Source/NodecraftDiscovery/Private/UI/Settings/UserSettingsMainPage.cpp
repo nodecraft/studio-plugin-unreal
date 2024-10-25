@@ -8,7 +8,7 @@
 #include "DeveloperSettings/NodecraftStudioIdentitySettings.h"
 #include "Services/IdentService.h"
 #include "UI/Common/AsyncImage.h"
-#include "UI/Foundation/NodecraftButtonBase.h"
+#include "UI/Common/IconTextLoadingButton.h"
 
 void UUserSettingsMainPage::NativeConstruct()
 {
@@ -40,4 +40,9 @@ void UUserSettingsMainPage::NativeConstruct()
     PlayerImage->LoadPlayerAvatarAsync(PlayerSession.PlayerData);
 	UTexture2D* IdentTexture = UNodecraftStudioIdentitySettings::Get().GetIconForType(PlayerSession.PlayerData->GetIdentType());
 	IdentTypeImage->SetBrushFromTexture(IdentTexture);
+}
+
+UWidget* UUserSettingsMainPage::NativeGetDesiredFocusTarget() const
+{
+	return ChangeServerRegionButton;
 }

@@ -122,21 +122,21 @@ UPlayerDataObject* UPlayerDataObject::FromJson(const TSharedRef<FJsonObject> Jso
 	// Generate a new ServerDataObject from Json
 	UPlayerDataObject* PlayerDataObject = NewObject<UPlayerDataObject>();
 
-	Json->TryGetStringField("id", PlayerDataObject->Id);
-	Json->TryGetStringField("ident", PlayerDataObject->Ident);
-	Json->TryGetStringField("ident_type", PlayerDataObject->IdentType);
-	Json->TryGetStringField("username", PlayerDataObject->Username);
-	Json->TryGetStringField("image_avatar", PlayerDataObject->ImageUrl);
+	Json->TryGetStringField(TEXT("id"), PlayerDataObject->Id);
+	Json->TryGetStringField(TEXT("ident"), PlayerDataObject->Ident);
+	Json->TryGetStringField(TEXT("ident_type"), PlayerDataObject->IdentType);
+	Json->TryGetStringField(TEXT("username"), PlayerDataObject->Username);
+	Json->TryGetStringField(TEXT("image_avatar"), PlayerDataObject->ImageUrl);
 
 	// In many cases, neither date start, nor date end will be present
-	if (Json->TryGetStringField("date_start", PlayerDataObject->DateStart) == false)
+	if (Json->TryGetStringField(TEXT("date_start"), PlayerDataObject->DateStart) == false)
 	{
-		Json->TryGetStringField("date_end", PlayerDataObject->DateEnd);
+		Json->TryGetStringField(TEXT("date_end"), PlayerDataObject->DateEnd);
 	}
 
 	// Present in the case of Server Player Details
-	Json->TryGetNumberField("playtime", PlayerDataObject->Playtime);
-	Json->TryGetStringField("date_first_joined", PlayerDataObject->DateFirstJoined);
+	Json->TryGetNumberField(TEXT("playtime"), PlayerDataObject->Playtime);
+	Json->TryGetStringField(TEXT("date_first_joined"), PlayerDataObject->DateFirstJoined);
 	// End of Server Player Details
 
 	return PlayerDataObject;

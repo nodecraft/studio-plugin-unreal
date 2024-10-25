@@ -7,6 +7,7 @@
 #include "CommonRichTextBlock.h"
 #include "Models/Consents.h"
 #include "UI/Common/NodecraftLoadGuard.h"
+#include "UI/Common/NodecraftScrollBox.h"
 #include "Auth_TermsOfServicePrompt.generated.h"
 
 /**
@@ -18,19 +19,24 @@ class NODECRAFTDISCOVERY_API UAuth_TermsOfServicePrompt : public UAuth_PromptBas
 	GENERATED_BODY()
 
 public:
-	virtual void NativeConstruct() override;
-
-	virtual void NativeOnActivated() override;
-
 	FSimpleDelegate OnConsentDetailsRetrieved;
-
 	FSimpleDelegate OnLoggedInSuccess;
-
 	FSimpleDelegate OnConsentsRequireSignature;
 
 	void RetrieveConsentDetails(const FString& IdentType);
 
 protected:
+	virtual void NativeOnInitialized() override;
+	virtual void NativeOnActivated() override;
+	virtual void NativeOnDeactivated() override;
+	virtual bool NativeOnHandleBackAction() override;
+	
+	virtual void RefreshActions(ECommonInputType InputType) override;
+	virtual void SubmitRequest() override;
+
+	UFUNCTION()
+	void Cancel();
+	
 	UPROPERTY(meta=(BindWidget))
 	UNodecraftLoadGuard* LoadGuard;
 	
@@ -43,15 +49,14 @@ protected:
 	UPROPERTY(meta=(BindWidgetOptional))
 	UCommonButtonBase* BackButton;
 
-	virtual void SubmitRequest() override;
-
-	UFUNCTION()
-	void Cancel();
-
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI", meta = (BindWidget))
+	UNodecraftScrollBox* ScrollBox;
+	
 private:
-
 	FGameConsents Consents;
 
 	FString PlayerEmail;
 	FString PlayerAuthCode;
+
+	FUIActionBindingHandle AcceptConsentsActionHandle;
 };

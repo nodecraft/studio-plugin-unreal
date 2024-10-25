@@ -3,6 +3,7 @@
 
 #include "UI/Auth/AuthScreen.h"
 
+#include "CommonInputSubsystem.h"
 #include "NodecraftLogCategories.h"
 #include "API/NodecraftStudioApi.h"
 #include "Models/GameDataObject.h"
@@ -11,6 +12,7 @@
 #include "UI/Auth/Auth_EmailPrompt.h"
 #include "UI/Auth/Auth_TermsOfServicePrompt.h"
 #include "UI/Auth/Auth_TokenPrompt.h"
+#include "Utility/NodecraftMacros.h"
 
 void UAuthScreen::NativeConstruct()
 {
@@ -128,6 +130,8 @@ void UAuthScreen::NativeConstruct()
 	{
 		AttemptAutoAuth();
 	}
+
+	ON_INPUT_METHOD_CHANGED(UpdateActionBindings)
 }
 
 /* Get the game details, and then attempt to auto auth if possible,
@@ -191,4 +195,10 @@ void UAuthScreen::OnAuthComplete_Internal()
 void UAuthScreen::Cancel()
 {
 	WidgetSwitcher->SetActiveWidgetIndex(0);
+}
+
+void UAuthScreen::UpdateActionBindings(ECommonInputType CurrentInputType)
+{
+	ActionBarContainer->SetVisibility(CurrentInputType == ECommonInputType::MouseAndKeyboard
+		? ESlateVisibility::Collapsed : ESlateVisibility::SelfHitTestInvisible);
 }

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "CommonActivatableWidget.h"
+#include "CommonInputTypeEnum.h"
 #include "Services/ServerQueueService.h"
 #include "ServerPasswordModal.generated.h"
 
@@ -21,34 +22,57 @@ class NODECRAFTDISCOVERY_API UServerPasswordModal : public UCommonActivatableWid
 	GENERATED_BODY()
 
 public:
-	void Configure(UServerDataObject* ServerDataObject, FSimpleDelegate InOnClosed);
+	void Configure(UServerDataObject* InServerDataObject, FSimpleDelegate InOnClosed);
 
 protected:
-	virtual void NativeConstruct() override;
-
+	virtual void NativeOnInitialized() override;
 	virtual void NativeOnActivated() override;
 	virtual void NativeOnDeactivated() override;
-	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	virtual UWidget* NativeGetDesiredFocusTarget() const override;
+	virtual bool NativeOnHandleBackAction() override;
+	void UnregisterActionBindings();
+
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UEditableTextBox* InputBox;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UNodecraftButtonBase* ShowHidePasswordButton;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UNodecraftButtonBase* CancelButton;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UNodecraftButtonBase* JoinButton;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UAlertMessage* AlertMessage;
+
+	UPROPERTY(EditDefaultsOnly, Category="Nodecraft UI|Input", meta=(RowType="/Script/CommonUI.CommonInputActionDataBase"))
+	FDataTableRowHandle JoinButtonActionData;
+
+	UPROPERTY(EditDefaultsOnly, Category="Nodecraft UI|Input", meta=(RowType="/Script/CommonUI.CommonInputActionDataBase"))
+	FDataTableRowHandle PasswordVisibilityToggleButtonActionData;
 	
 	FDelegateHandle TransitionToJoiningServerQueueHandle;
 
+	UPROPERTY()
+	UServerDataObject* ServerDataObject;
+	
 private:
+	void RefreshActions(ECommonInputType InputType);
+	void AttemptToJoinServer();
+	void ToggleShowPassword();
+	
 	UFUNCTION()
 	void OnGetServerSession(const UServerSessionDataObject* Session);
 
+	UFUNCTION()
+	void OnTextChanged(const FText& InText);
+	
+	UFUNCTION()
+    void OnTextCommitted(const FText& InText, ETextCommit::Type CommitMethod);
+
 	FSimpleDelegate OnClosed;
+	FUIActionBindingHandle JoinButtonActionHandle;
+	FUIActionBindingHandle PasswordVisibilityToggleButtonActionHandle;
 };

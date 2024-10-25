@@ -1,6 +1,7 @@
 ﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 using UnrealBuildTool;
+using System.IO;
 
 public class NodecraftGame : ModuleRules
 {
@@ -11,6 +12,7 @@ public class NodecraftGame : ModuleRules
 		PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...
+				Path.Combine(ModuleDirectory, "Public"),
 			}
 		);
 				

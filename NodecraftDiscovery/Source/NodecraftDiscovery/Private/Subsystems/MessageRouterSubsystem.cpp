@@ -5,6 +5,7 @@
 #include "NodecraftLogCategories.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Utility/NodecraftUtility.h"
+#include "Internationalization/Regex.h"
 
 static auto SendMsgClosure = [](const TArray<FString>& Args)
 	{
@@ -77,7 +78,7 @@ void UMessageRouterSubsystem::RouteMessage(const FString& MessageIdentifer, cons
 	UE_LOG(LogNodecraftMessageRouter, VeryVerbose, TEXT("Routing message %s with body %s"), *MessageIdentifer, *MessageBody.ToString());
 	for (FErrorRoute ErrorRoute : ErrorRoutes)
 	{
-		// match the route codes with the error identifier. The codes are either error identifiers or regex patterns
+		// match the route codes with the error identifier. The codes are either message identifiers or regex patterns
 		for (FString Code : ErrorRoute.Codes)
 		{
 			// If the code matches perfectly or is a regex pattern that matches the error identifier

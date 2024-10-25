@@ -3,6 +3,7 @@
 
 #include "UI/ServerDetails/ServerModerationConsolePlayerListSection.h"
 
+#include "Engine/Texture2D.h"
 #include "Models/PlayerServerDetails.h"
 #include "Subsystems/AssetStreamerSubsystem.h"
 #include "UI/ServerDetails/ServerModerationConsolePlayerListItem.h"
@@ -10,7 +11,7 @@
 void UServerModerationConsolePlayerListSection::NativePreConstruct()
 {
 	Super::NativePreConstruct();
-	UAssetStreamerSubsystem::Get().LoadAssetAsync(HeaderIconTexture, FStreamableDelegate::CreateWeakLambda(this, [this]()
+	UAssetStreamerSubsystem::Get().LoadAssetAsync(HeaderIconTexture.ToSoftObjectPath(), FStreamableDelegate::CreateWeakLambda(this, [this]()
 	{
 		SectionHeaderIcon->SetBrushFromTexture(HeaderIconTexture.Get());
 		SectionHeaderIcon->SetBrushTintColor(FSlateColor(HeaderIconTint));
@@ -32,6 +33,7 @@ void UServerModerationConsolePlayerListSection::SetPlayers(const TArray<UPlayerS
 		UPlayerServerDetailsViewModel* PlayerViewModel = UPlayerServerDetailsViewModel::FromDataObject(Player);
 		PlayerViewModel->OnPlayerSelectionChanged = OnPlayerSelectionChanged;
 		PlayerViewModel->OnPlayerSelectedExclusive = OnPlayerSelectedExclusive;
+		PlayerViewModel->OnPlayerItemReceivedFocus = OnPlayerItemReceivedFocus;
 		PlayerViewModel->bIsSelectable = bAreChildrenSelectable;
 		PlayerViewModels.Add(PlayerViewModel);
 	}

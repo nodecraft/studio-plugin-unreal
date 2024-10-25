@@ -18,16 +18,14 @@ class NODECRAFTDISCOVERY_API UUserSettingsLegal : public UCommonActivatableWidge
 
 protected:
 	virtual void NativeConstruct() override;
+	virtual UWidget* NativeGetDesiredFocusTarget() const override;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Legal Settings", meta = (BindWidget))
 	UNodecraftButtonBase* TermsOfService;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Legal Settings", meta = (BindWidget))
 	UNodecraftButtonBase* PrivacyPolicy;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UNodecraftButtonBase* SoftwareLicenses;
-
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Legal Settings")
 	TSoftClassPtr<UTermsOfServiceModal> TermsOfServiceModal;
 };

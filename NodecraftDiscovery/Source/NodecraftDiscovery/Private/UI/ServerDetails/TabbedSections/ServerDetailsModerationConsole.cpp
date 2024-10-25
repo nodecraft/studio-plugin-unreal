@@ -6,7 +6,9 @@
 #include "API/NodecraftMessageCodes.h"
 #include "Services/ModerationService.h"
 #include "Stores/ModerationStore.h"
+#include "Stores/ServersStore.h"
 #include "Subsystems/MessageRouterSubsystem.h"
+#include "UI/Common/NodecraftLoadGuard.h"
 
 #define MSG_ROUTE_ID "ServerDetailsModConsole"
 
@@ -29,53 +31,20 @@ void UServerDetailsModerationConsole::NativeOnInitialized()
 
 	AlertMessage->Hide();
 
-	BannedButton->OnClicked().AddWeakLambda(this, [this]()
-	{
-		SelectButton(BannedButton);
-		TabContentSwitcher->SetActiveWidgetIndex(0);
-		PlayerSelector->SetDisplayMode(EPlayerSelectorMode::Banned);
-		UE_LOG(LogServerDetailsModerationConsole, Display, TEXT("BannedButton clicked"));
-	});
-
-	// Do the same kind of binding as above for the rest of the buttons
-	AllButton->OnClicked().AddWeakLambda(this, [this]()
-	{
-		SelectButton(AllButton);
-		TabContentSwitcher->SetActiveWidgetIndex(0);
-		PlayerSelector->SetDisplayMode(EPlayerSelectorMode::All);
-		UE_LOG(LogServerDetailsModerationConsole, Display, TEXT("AllButton clicked"));
-	});
-
-	PlayersButton->OnClicked().AddWeakLambda(this, [this]()
-	{
-		SelectButton(PlayersButton);
-		TabContentSwitcher->SetActiveWidgetIndex(0);
-		PlayerSelector->SetDisplayMode(EPlayerSelectorMode::Players);
-		UE_LOG(LogServerDetailsModerationConsole, Display, TEXT("PlayersButton clicked"));
-	});
-
-	StaffButton->OnClicked().AddWeakLambda(this, [this]()
-	{
-		SelectButton(StaffButton);
-		TabContentSwitcher->SetActiveWidgetIndex(0);
-		PlayerSelector->SetDisplayMode(EPlayerSelectorMode::Staff);
-		UE_LOG(LogServerDetailsModerationConsole, Display, TEXT("StaffButton clicked"));
-	});
-
-	LogButton->OnClicked().AddWeakLambda(this, [this]()
-	{
-		SelectButton(LogButton);
-		TabContentSwitcher->SetActiveWidgetIndex(1);
-		UE_LOG(LogServerDetailsModerationConsole, Display, TEXT("LogButton clicked"));
-	});
-
 	PlayerSelector->OnSelectedPlayersChanged.AddWeakLambda(this, [this](const TArray<UPlayerServerDetailsDataObject*>& SelectedPlayers)
 	{
 		OnSelectedPlayersChanged.Broadcast(SelectedPlayers);
 		UE_LOG(LogServerDetailsModerationConsole, Display, TEXT("PlayerSelector OnSelectedPlayersChanged"));
 	});
 
-	SelectButton(AllButton);
+	FiltersTabList->SetLinkedSwitcher(TabContentSwitcher);
+	SelectFilterTab("All");
+
+	PlayerSelector->OnFocusSetToPlayer.BindWeakLambda(this, [this](UWidget* PlayerWidget)
+	{
+		OnPlayerSelected(PlayerWidget);
+		UE_LOG(LogServerDetailsModerationConsole, Display, TEXT("PlayerSelector OnFocusSetToPlayer"));
+	});
 }
 
 void UServerDetailsModerationConsole::NativeConstruct()
@@ -109,6 +78,8 @@ void UServerDetailsModerationConsole::NativeConstruct()
 	{
 		UE_LOG(LogServerDetailsModerationConsole, Error, TEXT("UServerDetailsModerationConsole::NativeConstruct: Failed to get world"));
 	}
+
+	
 }
 
 void UServerDetailsModerationConsole::NativeDestruct()
@@ -133,20 +104,16 @@ void UServerDetailsModerationConsole::NativeOnActivated()
 {
 	Super::NativeOnActivated();
 	AlertMessage->Hide();
+	FiltersTabList->OnTabSelected.AddUniqueDynamic(this, &ThisClass::SelectFilterTab);
+	PlayerSelector->ActivateWidget();
 }
 
-void UServerDetailsModerationConsole::SelectButton(UNodecraftButtonBase* Button)
+void UServerDetailsModerationConsole::NativeOnDeactivated()
 {
-	AllButton->ClearSelection();
-	StaffButton->ClearSelection();
-	PlayersButton->ClearSelection();
-	BannedButton->ClearSelection();
-	LogButton->ClearSelection();
-	AllButton->SetIsSelected(AllButton == Button);
-	StaffButton->SetIsSelected(StaffButton == Button);
-	PlayersButton->SetIsSelected(PlayersButton == Button);
-	BannedButton->SetIsSelected(BannedButton == Button);
-	LogButton->SetIsSelected(LogButton == Button);
+	PlayerSelector->ClearSelection();
+	FiltersTabList->OnTabSelected.RemoveAll(this);
+	RequestQueue.Get()->CancelRequeusts();
+	Super::NativeOnDeactivated();
 }
 
 void UServerDetailsModerationConsole::LoadData(const FString& InServerId)
@@ -158,10 +125,17 @@ void UServerDetailsModerationConsole::LoadData(const FString& InServerId)
 void UServerDetailsModerationConsole::ReloadData()
 {
 	LoadGuard->SetIsLoading(true);
+
+	ModerationHistorySection->SetServerId(ServerId);
+	ModerationHistorySection->LoadData();
 	
 	UModerationService &ModerationService = UModerationService::Get();
 	if (const UWorld* World = GetWorld())
 	{
+		if (RequestQueue)
+		{
+			RequestQueue->CancelRequeusts();
+		}
 		RequestQueue = MakeShared<FHTTPRequestQueue>();
 		TArray<TSharedRef<IHttpRequest>> Requests;
 		Requests.Add(ModerationService.GetModeratorsRequest(World, ServerId));
@@ -169,14 +143,70 @@ void UServerDetailsModerationConsole::ReloadData()
 		Requests.Add(ModerationService.GetOfflinePlayersRequest(World, ServerId));
 		Requests.Add(ModerationService.GetBannedPlayersRequest(World, ServerId));
 		Requests.Add(ModerationService.GetOwnerRequest(World, ServerId));
-		RequestQueue.Get()->RunQueue(this, Requests, FAllRequestsFinishedDelegate::CreateWeakLambda(this, [this](bool bSuccess)
+		RequestQueue.Get()->RunQueue(this, Requests, FAllRequestsFinishedDelegate::CreateWeakLambda(
+			this, [this](bool bSuccess)
 		{
-			LoadGuard->SetIsLoading(false);
+			if (bSuccess && UServersStore::Get().GetCurrentServerId() == ServerId)
+			{
+				LoadGuard->SetIsLoading(false);
+				PlayerSelector->SetFocusOnFirstPlayer();
+			}
 		}));
 	}
+}
+
+void UServerDetailsModerationConsole::SetupNavigation(const FGetFocusDestination& InDelegate)
+{
+	PlayerSelector->SetupNavigation(InDelegate);
+}
+
+UWidget* UServerDetailsModerationConsole::GetFirstFocusablePlayerWidget()
+{
+	return PlayerSelector->GetFirstFocusablePlayerWidget();
 }
 
 void UServerDetailsModerationConsole::ClearPlayerSelection()
 {
 	PlayerSelector->ClearSelection();
+}
+
+void UServerDetailsModerationConsole::SelectFilterTab(FName TabId)
+{
+	// Clearing here works but only because we happen to be doing so in the PlayerSelector.
+	// TODO: We really ought to actually have the VM layer determine if an item is checked or not, but we don't have time to do that right now.
+	ClearPlayerSelection();
+	if (TabId == "All")
+	{
+		TabContentSwitcher->SetActiveWidgetIndex(0);
+		PlayerSelector->SetDisplayMode(EPlayerSelectorMode::All);
+		UE_LOG(LogServerDetailsModerationConsole, Display, TEXT("AllButton clicked"));
+	}
+	else if (TabId == "Staff")
+	{
+		TabContentSwitcher->SetActiveWidgetIndex(0);
+		PlayerSelector->SetDisplayMode(EPlayerSelectorMode::Staff);
+		UE_LOG(LogServerDetailsModerationConsole, Display, TEXT("StaffButton clicked"));
+	}
+	else if (TabId == "Players")
+	{
+		TabContentSwitcher->SetActiveWidgetIndex(0);
+		PlayerSelector->SetDisplayMode(EPlayerSelectorMode::Players);
+		UE_LOG(LogServerDetailsModerationConsole, Display, TEXT("PlayersButton clicked"));
+	}
+	else if (TabId == "Bans")
+	{
+		TabContentSwitcher->SetActiveWidgetIndex(0);
+		PlayerSelector->SetDisplayMode(EPlayerSelectorMode::Banned);
+		UE_LOG(LogServerDetailsModerationConsole, Display, TEXT("BannedButton clicked"));
+	}
+	else if (TabId == "Log")
+	{
+		TabContentSwitcher->SetActiveWidgetIndex(1);
+		UE_LOG(LogServerDetailsModerationConsole, Display, TEXT("LogButton clicked"));
+	}
+}
+
+void UServerDetailsModerationConsole::OnPlayerSelected(UWidget* PlayerWidget)
+{
+	ScrollBox->ScrollWidgetIntoView(PlayerWidget);
 }

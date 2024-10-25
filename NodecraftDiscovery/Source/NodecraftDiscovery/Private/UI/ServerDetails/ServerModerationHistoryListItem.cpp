@@ -3,12 +3,24 @@
 
 #include "UI/ServerDetails/ServerModerationHistoryListItem.h"
 #include "CommonTextBlock.h"
-#include "DeveloperSettings/NodecraftStudioStyleSettings.h"
+#include "PlayerPlatformIcon.h"
 #include "Models/ModerationLogEntryDataObject.h"
 #include "Models/PlayerDataObject.h"
 #include "Subsystems/AssetStreamerSubsystem.h"
+#include "DataTypes/ModerationTypes.h"
 
 #define LOCTEXT_NAMESPACE "ServerDetailsModerationListItem"
+
+void UServerModerationHistoryListItem::UpdateExpirationTextStyle(EModerationDuration ModerationDuration)
+{
+	if (const TSoftClassPtr<UCommonTextStyle> Style = ExpirationTextStyle.FindChecked(ModerationDuration); Style.IsNull() == false)
+	{
+		UAssetStreamerSubsystem::Get().LoadAssetAsync(Style.ToSoftObjectPath(), FStreamableDelegate::CreateWeakLambda(this, [this, Style]
+		{
+			Expires->SetStyle(Style.Get());
+		}));
+	}
+}
 
 void UServerModerationHistoryListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
@@ -18,26 +30,39 @@ void UServerModerationHistoryListItem::NativeOnListItemObjectSet(UObject* ListIt
 	if (const UPlayerDataObject* Player = ModerationLogEntryDataObject->GetPlayer())
 	{
 		Username->SetText(Player->GetUsername().IsEmpty() ? FText::FromString(Player->GetIdent()) : FText::FromString(Player->GetUsername()));
+		IdentImage->SetIdentity(Player->GetIdentType());
+
+		const FText ModerationTypeText = ModerationLogEntryDataObject->GetType() == EModerationAction::Ban ? LOCTEXT("ModerationTypeBan", "Ban") : LOCTEXT("ModerationTypeKick", "Kick");
+		ModerationType->SetText(ModerationTypeText);
+
+		ModerationReason->SetText(FText::FromString(ModerationLogEntryDataObject->GetReason()));
 		
-		ModerationDate->SetText(FText::FromString(ModerationLogEntryDataObject->GetDateCreated().ToFormattedString(*UNodecraftStudioStyleSettings::GetDateFormat())));
+		ModerationDate->SetText(FText::AsDate(ModerationLogEntryDataObject->GetDateCreated()));
 
-		switch (ModerationLogEntryDataObject->GetModerationDuration())
+		if (ModerationLogEntryDataObject->GetType() == EModerationAction::Kick)
 		{
-		case EModerationDuration::Temporary:
-			Expires->SetText(FText::FromString(ModerationLogEntryDataObject->GetDateExpires().ToFormattedString(*UNodecraftStudioStyleSettings::GetDateFormat())));
-			break;
-		case EModerationDuration::Permanent:
-			Expires->SetText(LOCTEXT("PermanentBanOrKick", "Permanent"));
-			break;
-		default: ;
+			Expires->SetText(FText::FromString("--"));
+			UpdateExpirationTextStyle(EModerationDuration::Undefined);
 		}
-
-		if (const TSoftClassPtr<UCommonTextStyle> Style = ExpirationTextStyle.FindChecked(ModerationLogEntryDataObject->GetModerationDuration()); Style.IsNull() == false)
+		else
 		{
-			UAssetStreamerSubsystem::Get().LoadAssetAsync(Style.ToSoftObjectPath(), FStreamableDelegate::CreateWeakLambda(this, [this, Style]
+			switch (ModerationLogEntryDataObject->GetModerationDuration())
 			{
-				Expires->SetStyle(Style.Get());
-			}));
+			case EModerationDuration::Temporary:
+				Expires->SetText(FText::AsDate(ModerationLogEntryDataObject->GetDateExpires()));
+				break;
+			case EModerationDuration::Permanent:
+				Expires->SetText(LOCTEXT("PermanentBanOrKick", "Permanent"));
+				break;
+			case EModerationDuration::Undefined:
+				Expires->SetText(LOCTEXT("UndefinedBanOrKick", "Undefined"));
+				break;
+			case EModerationDuration::Expired:
+				Expires->SetText(LOCTEXT("ExpiredBanOrKick", "Expired"));
+				break;
+			default: ;
+			}
+			UpdateExpirationTextStyle(ModerationLogEntryDataObject->GetModerationDuration());
 		}
 	}
 }

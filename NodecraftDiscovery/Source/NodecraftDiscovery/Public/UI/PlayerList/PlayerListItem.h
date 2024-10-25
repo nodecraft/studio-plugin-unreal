@@ -3,10 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CommonActivatableWidget.h"
 #include "CommonTextBlock.h"
-#include "Blueprint/IUserObjectListEntry.h"
 #include "UI/Common/AsyncImage.h"
+#include "UI/Common/NodecraftListItemBase.h"
 #include "UObject/Object.h"
 #include "PlayerListItem.generated.h"
 
@@ -14,7 +13,7 @@
  * 
  */
 UCLASS(Blueprintable)
-class NODECRAFTDISCOVERY_API UPlayerListItem : public UCommonActivatableWidget, public IUserObjectListEntry
+class NODECRAFTDISCOVERY_API UPlayerListItem : public UNodecraftListItemBase
 {
 	GENERATED_BODY()
 
@@ -23,16 +22,16 @@ class NODECRAFTDISCOVERY_API UPlayerListItem : public UCommonActivatableWidget, 
 	// IUserObjectListEntry
 	
 protected:
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Player List Item", meta=(BindWidget))
 	UAsyncImage* PlayerProfileImage;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Player List Item", meta=(BindWidget))
 	UCommonTextBlock* PlayerNameTextBlock;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Player List Item", meta=(BindWidget))
 	UCommonTextBlock* PlayerStatusTextBlock;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Player List Item", meta=(BindWidget))
 	UImage* PlatformIcon;
 
 private:

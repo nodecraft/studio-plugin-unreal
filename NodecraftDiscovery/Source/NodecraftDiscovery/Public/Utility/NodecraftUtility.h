@@ -3,8 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CommonInputTypeEnum.h"
 #include "Interfaces/IHttpRequest.h"
 #include "UObject/Object.h"
+#include "Dom/JsonObject.h"
 #include "NodecraftUtility.generated.h"
 
 enum class ELinkType : uint8;
@@ -27,4 +29,5 @@ public:
 	static FString GetQrCodeUrl(const FString& URL, const ELinkType UrlType);
 	static FString GetDefaultServerImageUrl(const FString& ServerId);
 	static FString JsonObjToString(TSharedPtr<FJsonObject> JsonObj);
+	static ECommonInputType GetCurrentInputType(const UWorld* World);
 };

@@ -4,9 +4,9 @@
 #include "UI/PlayerList/PlayerList.h"
 
 #include "CommonLoadGuard.h"
-#include "Models/PlayerDataObject.h"
 #include "Models/PlayerListDataObject.h"
 #include "Services/ServersService.h"
+#include "Stores/ServersStore.h"
 
 #define LOCTEXT_NAMESPACE "PlayerList"
 
@@ -15,7 +15,17 @@ void UPlayerList::SetTitleText(const FText Text)
 	TitleTextBlock->SetText(Text);
 }
 
-void UPlayerList::LoadData(EPlayerListType PlayerListType, UServerDataObject* ServerDataObject)
+void UPlayerList::SetListeningForScrollInput(bool bIsListeningForInput)
+{
+	ScrollBox->SetListeningForInput(bIsListeningForInput, ActionDisplayName);
+}
+
+bool UPlayerList::IsListeningForScrollInput() const
+{
+	return ScrollBox->GetListeningForInput();
+}
+
+void UPlayerList::LoadData(EPlayerListType PlayerListType, UServerDataObject* ServerDataObject, FSimpleDelegate InOnComplete)
 {
 	// Get the servers service
 	UServersService& ServersService = UServersService::Get();
@@ -23,12 +33,11 @@ void UPlayerList::LoadData(EPlayerListType PlayerListType, UServerDataObject* Se
 	// Use it to request the popular servers
 	FGetPlayersListDelegate OnComplete;
 	// Call BindLambda on OnComplete, and pass in a lambda that calls PopulateWithServerJson
-	//
 	LoadGuard->SetIsLoading(true);
-	OnComplete.BindWeakLambda(this, [this, PlayerListType]
+	OnComplete.BindWeakLambda(this, [this, PlayerListType, ServerDataObject, InOnComplete]
 		(UPlayerListDataObject* PlayerListDataObject, bool Success, TOptional<FText> Error)
 	{
-		if (Success)
+		if (Success && UServersStore::Get().GetCurrentServerId() == ServerDataObject->GetId())
 		{
 			if (PlayerListDataObject->GetPlayerDataObjects().Num() > 0)
 			{
@@ -43,6 +52,7 @@ void UPlayerList::LoadData(EPlayerListType PlayerListType, UServerDataObject* Se
 			SetServerData(PlayerListType, PlayerListDataObject);
 
 			LoadGuard->SetIsLoading(false);
+			InOnComplete.ExecuteIfBound();
 		}
 	});
 
@@ -50,10 +60,12 @@ void UPlayerList::LoadData(EPlayerListType PlayerListType, UServerDataObject* Se
 	{
 	case EPlayerListType::Online:
 		ServersService.GetOnlinePlayers(ServerDataObject->GetId(), OnComplete);
+		NoPlayersTextBlock->SetText(LOCTEXT("NoOnlinePlayers", "No Players Online"));
 		break;
 		
 	case EPlayerListType::Recent:
 		ServersService.GetRecentPLayers(ServerDataObject->GetId(), OnComplete);
+		NoPlayersTextBlock->SetText(LOCTEXT("NoRecentPlayers", "No Recent Players"));
 		break;
 		
 	default:
@@ -81,6 +93,11 @@ void UPlayerList::SetServerData(EPlayerListType PlayerListType, UPlayerListDataO
 		}
 		PlayerListView->SetListItems(PlayerListDataObject->GetPlayerDataObjects());
 	}
+}
+
+bool UPlayerList::HasItems()
+{
+	return PlayerListView->GetNumItems() > 0;
 }
 
 #undef LOCTEXT_NAMESPACE

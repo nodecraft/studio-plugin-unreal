@@ -97,7 +97,7 @@ public:
 			                   {
 				                   FJsonObjectWrapper ResJson;
 				                   ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				                   if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				                   if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				                   {
 										UNodecraftStudioSessionManager& SessionManager = UNodecraftStudioSessionManager::Get();
 				                   		SessionManager.SetPlayerSession(FPlayerSession::FromJson(Data));
@@ -121,11 +121,12 @@ public:
 
 
 	// Server Lists
-	static TSharedRef<IHttpRequest> ListPopularServers(const UObject* WeakContext, FHttpRequestCompleteDelegate& OnComplete);
-	static TSharedRef<IHttpRequest> ListRecommendedServers(const UObject* WeakContext, FHttpRequestCompleteDelegate& OnComplete);
-	static TSharedRef<IHttpRequest> ListPlayerOwnedServers(const UObject* WeakContext, FHttpRequestCompleteDelegate& OnComplete);
-	static TSharedRef<IHttpRequest> ListFavoriteServers(const UObject* WeakContext, FHttpRequestCompleteDelegate& OnComplete);
+	static TSharedRef<IHttpRequest> ListPopularServers(const UObject* WeakContext, int32 PageNumber, FHttpRequestCompleteDelegate& OnComplete);
+	static TSharedRef<IHttpRequest> ListRecommendedServers(const UObject* WeakContext, int32 PageNumber, FHttpRequestCompleteDelegate& OnComplete);
+	static TSharedRef<IHttpRequest> ListPlayerOwnedServers(const UObject* WeakContext, int32 PageNumber, FHttpRequestCompleteDelegate& OnComplete);
+	static TSharedRef<IHttpRequest> ListFavoriteServers(const UObject* WeakContext, int32 PageNumber, FHttpRequestCompleteDelegate& OnComplete);
 	static TSharedRef<IHttpRequest> ListInvitableServers(const UObject* WeakContext, const FString& InviteeID, FHttpRequestCompleteDelegate& OnComplete);
+	static TSharedRef<IHttpRequest> SearchServers(const UObject* WeakContext, const FString& SearchQuery, TOptional<uint32> Page, FHttpRequestCompleteDelegate& OnComplete);
 
 	// Server join queue
 	static TSharedRef<IHttpRequest> GetServerQueue(const UObject* WeakContext, const FString& Token, FHttpRequestCompleteDelegate& OnComplete);

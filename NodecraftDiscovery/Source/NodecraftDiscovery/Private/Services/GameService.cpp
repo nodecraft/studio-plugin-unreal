@@ -4,7 +4,7 @@
 #include "Services/GameService.h"
 
 #include "JsonObjectWrapper.h"
-#include "Api/NodecraftStudioApi.h"
+#include "API/NodecraftStudioApi.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Models/GameDataObject.h"
@@ -25,7 +25,7 @@ bool UGameService::GetGameDetails(FGameDetailsResponseDelegate OnComplete)
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject> Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject> Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
 					GameDataObject = UGameDataObject::FromJson(Data.ToSharedRef());
 					// Cache the game background image for the next time the user logs in, in case we've never received it
@@ -78,3 +78,36 @@ bool UGameService::IsGameDetailsCached() const
 {
 	return GameDataObject != nullptr;
 }
+
+FDelegateHandle UGameService::AddPlayerInGameStateListener(const FOnPlayerInGameStateChanged::FDelegate& Delegate)
+{
+	Delegate.ExecuteIfBound(bIsPlayerInGame);
+	return OnPlayerInGameStateChanged.Add(Delegate);
+}
+
+void UGameService::SetIsPlayerInGame(bool bInGame)
+{
+	bIsPlayerInGame = bInGame;
+	OnPlayerInGameStateChanged.Broadcast(bIsPlayerInGame);
+}
+
+#if !UE_BUILD_SHIPPING
+static FAutoConsoleCommand ConsoleCommandUpdateState(
+	TEXT("NC.GameService.UpdatePlayerInGameState"),
+	TEXT("Arguments: [0]:state (0/1)")
+	TEXT("Set the player's in game state\n"),
+	FConsoleCommandWithArgsDelegate::CreateLambda([](const TArray<FString>& Args)
+	{
+		if (Args.Num() > 0 && (Args[0] == "0" || Args[0] == "1"))
+		{
+			const bool PlayerInGame = Args[0] == "1";
+
+			UGameService::Get().SetIsPlayerInGame(PlayerInGame);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Need 1 argument (0 or 1) for this command to run."));
+		}
+	}),
+	ECVF_Cheat);
+#endif

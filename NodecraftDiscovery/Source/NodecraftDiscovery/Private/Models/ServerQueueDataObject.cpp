@@ -10,15 +10,15 @@ UServerQueueDataObject* UServerQueueDataObject::FromJson(const TSharedRef<FJsonO
 	UServerQueueDataObject* ServerQueueDataObject = NewObject<UServerQueueDataObject>();
 
 	const TSharedPtr<FJsonObject>* Session;
-	if (Json->TryGetObjectField("session", Session))
+	if (Json->TryGetObjectField(TEXT("session"), Session))
 	{
 		ServerQueueDataObject->ServerSession = UServerSessionDataObject::FromJson(Session->ToSharedRef());
 	}
-	ServerQueueDataObject->PlayersCount = Json->GetNumberField("players_count");
-	ServerQueueDataObject->PlayersMax = Json->GetNumberField("players_max");
-	ServerQueueDataObject->QueuePosition = Json->GetNumberField("queue_position");
-	ServerQueueDataObject->QueueSize = Json->GetNumberField("queue_size");
-	ServerQueueDataObject->EstimatedWait = Json->GetNumberField("estimated_wait");
+	ServerQueueDataObject->PlayersCount = Json->GetNumberField(TEXT("players_count"));
+	ServerQueueDataObject->PlayersMax = Json->GetNumberField(TEXT("players_max"));
+	ServerQueueDataObject->QueuePosition = Json->GetNumberField(TEXT("queue_position"));
+	ServerQueueDataObject->QueueSize = Json->GetNumberField(TEXT("queue_size"));
+	ServerQueueDataObject->EstimatedWait = Json->GetNumberField(TEXT("estimated_wait"));
 
 	return ServerQueueDataObject;	
 }

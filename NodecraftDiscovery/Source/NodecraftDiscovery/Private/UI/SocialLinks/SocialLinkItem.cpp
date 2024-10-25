@@ -3,11 +3,12 @@
 
 #include "UI/SocialLinks/SocialLinkItem.h"
 
+#include "Engine/Texture2D.h"
+#include "CommonInputSubsystem.h"
 #include "CommonTextBlock.h"
 #include "Components/Image.h"
 #include "DataTypes/LinkTypes.h"
 #include "Models/SocialLinkDataObject.h"
-#include "Services/LinksService.h"
 #include "Subsystems/AssetStreamerSubsystem.h"
 #include "Subsystems/MenuManagerSubsystem.h"
 #include "UI/Foundation/NodecraftButtonBase.h"
@@ -29,8 +30,37 @@ void USocialLinkItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 		}));
 	}
 
-	Button->OnClicked().AddWeakLambda(this, [this]
+	PrimaryActionButton->OnClicked().AddWeakLambda(this, [this]
 	{
 		UMenuManagerSubsystem::Get().ShowRedirectModal(URL, ELinkType::External);
 	});
+}
+
+FNavigationReply USocialLinkItem::NativeOnNavigation(const FGeometry& MyGeometry,
+	const FNavigationEvent& InNavigationEvent, const FNavigationReply& InDefaultReply)
+{
+	if (OnNavDelegate.IsBound())
+	{
+		return OnNavDelegate.Execute(MyGeometry, InNavigationEvent, InDefaultReply);
+	}
+	
+	return Super::NativeOnNavigation(MyGeometry, InNavigationEvent, InDefaultReply);
+}
+
+FReply USocialLinkItem::NativeOnFocusReceived(const FGeometry& InGeometry, const FFocusEvent& InFocusEvent)
+{
+	if (const ULocalPlayer* LocalPlayer = GetOwningLocalPlayer())
+	{
+		if (UCommonInputSubsystem::Get(LocalPlayer)->GetCurrentInputType() == ECommonInputType::Gamepad)
+		{
+			RegisterActionBinding(EUIActionBindingType::Primary);
+		}
+	}
+	return Super::NativeOnFocusReceived(InGeometry, InFocusEvent);
+}
+
+void USocialLinkItem::NativeOnFocusLost(const FFocusEvent& InFocusEvent)
+{
+	UnregisterUIActionBindings();
+	Super::NativeOnFocusLost(InFocusEvent);
 }

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "PlayerDataObject.h"
 #include "UObject/Object.h"
+#include "Dom/JsonObject.h"
 #include "PlayerSession.generated.h"
 
 USTRUCT()

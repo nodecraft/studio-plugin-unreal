@@ -6,6 +6,7 @@
 #include "CommonBorder.h"
 #include "CommonListView.h"
 #include "Components/VerticalBox.h"
+#include "Input/CommonUIInputTypes.h"
 #include "Services/AllowsService.h"
 #include "UI/Common/NodecraftLoadGuard.h"
 #include "Models/AllowsDataObject.h"
@@ -15,8 +16,12 @@
 #include "Models/InviteFriendViewModel.h"
 #include "Services/FriendsService.h"
 #include "Stores/AllowsStore.h"
+#include "Stores/ServersStore.h"
 #include "UI/Alerts/AlertMessage.h"
 #include "UI/Common/IconTextLoadingButton.h"
+#include "UI/ServerDetails/AddAllowedFriendListItem.h"
+#include "UI/ServerDetails/AllowedPlayersListItem.h"
+#include "UI/ServerDetails/AllowedPlayersListView.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogServerDetails, All, All);
 
@@ -27,7 +32,7 @@ void UServerDetailsAllowedPlayersSection::LoadAllowsFromServer()
 		FListPlayerAllowsResponseDelegate OnComplete;
 		OnComplete.BindWeakLambda(this, [this](TArray<UAllowsDataObject*> Allows, bool bSuccess, TOptional<FText> Error)
 		{
-			if (bSuccess)
+			if (bSuccess && UServersStore::Get().GetCurrentServerId() == ServerDataObject->GetId())
 			{
 				RefreshAllowsList(Allows);
 				LoadGuard->SetIsLoading(false);
@@ -67,6 +72,49 @@ void UServerDetailsAllowedPlayersSection::RefreshHeaderVisibility()
 														 : ESlateVisibility::Collapsed);
 }
 
+void UServerDetailsAllowedPlayersSection::SetAddFriendsPopupVisibility(const ESlateVisibility InVisibility)
+{
+	AddFriendsPopupContainer->SetVisibility(InVisibility);
+
+	if (InVisibility == ESlateVisibility::Collapsed || InVisibility == ESlateVisibility::Hidden)
+	{
+		RegisterAddFriendsUIAction();
+
+		if (UAllowsViewModel* SelectedItem = AllAllowsListView->GetSelectedItem<UAllowsViewModel>())
+		{
+			AllAllowsListView->RequestNavigateToItem(SelectedItem);
+		}
+		else if (AllAllowsListView->GetDisplayedEntryWidgets().IsValidIndex(0))
+		{
+			AllAllowsListView->NavigateToIndex(0);
+		}
+	}
+	else
+	{
+		if (AddFriendsUIActionHandle.IsValid())
+		{
+			AddFriendsUIActionHandle.Unregister();
+		}
+		
+		if (AddFriendsListView->GetDisplayedEntryWidgets().IsValidIndex(0))
+		{
+			AddFriendsListView->NavigateToIndex(0);
+		}
+		else
+		{
+			 OnAddFriendsListWidgetGeneratedHandle = AddFriendsListView->OnEntryWidgetGenerated().AddWeakLambda(
+				this, [&](UWidget& InEntryWidget) mutable
+				{
+					if (AddFriendsListView->GetDisplayedEntryWidgets().IsValidIndex(0) && OnAddFriendsListWidgetGeneratedHandle.IsValid())
+					{
+						AddFriendsListView->NavigateToIndex(0);
+						OnAddFriendsListWidgetGeneratedHandle.Reset();
+					}
+				});
+		}
+	}
+}
+
 void UServerDetailsAllowedPlayersSection::SetServerData(UServerDataObject* InServerDataObject)
 {
 	if (InServerDataObject == nullptr)
@@ -95,7 +143,7 @@ void UServerDetailsAllowedPlayersSection::SetServerData(UServerDataObject* InSer
 		{
 			if (AddFriendsPopupContainer->IsVisible())
 			{
-				AddFriendsPopupContainer->SetVisibility(ESlateVisibility::Collapsed);
+				SetAddFriendsPopupVisibility(ESlateVisibility::Collapsed);
 			}
 			else
 			{
@@ -104,7 +152,7 @@ void UServerDetailsAllowedPlayersSection::SetServerData(UServerDataObject* InSer
 				OnGetFriends.BindWeakLambda(
 					this, [this](TArray<UFriendDataObject*> Friends, bool bSuccess, TOptional<FText> Error)
 					{
-						if (bSuccess)
+						if (bSuccess && UServersStore::Get().GetCurrentServerId() == ServerDataObject->GetId())
 						{
 							if (Friends.Num() > 0)
 							{
@@ -116,7 +164,7 @@ void UServerDetailsAllowedPlayersSection::SetServerData(UServerDataObject* InSer
 										FSimpleDelegate OnInviteSent;
 										OnInviteSent.BindWeakLambda(this, [this]
 										{
-											AddFriendsPopupContainer->SetVisibility(ESlateVisibility::Collapsed);
+											SetAddFriendsPopupVisibility(ESlateVisibility::Collapsed);
 											AddFriendsButton->SetIsSelected(false);
 										});
 										UInviteFriendViewModel* ViewModel = UInviteFriendViewModel::FromDataObjects(
@@ -125,11 +173,14 @@ void UServerDetailsAllowedPlayersSection::SetServerData(UServerDataObject* InSer
 									}
 								}
 								AddFriendsListView->SetListItems(FriendsWithoutPendingOrAcceptedAllow);
-								AddFriendsPopupContainer->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+								if (FriendsWithoutPendingOrAcceptedAllow.Num() > 0)
+								{
+									SetAddFriendsPopupVisibility(ESlateVisibility::SelfHitTestInvisible);
+								}
 							}
 							else
 							{
-								AddFriendsPopupContainer->SetVisibility(ESlateVisibility::Collapsed);
+								SetAddFriendsPopupVisibility(ESlateVisibility::Collapsed);
 							}
 						}
 						AddFriendsButton->SetIsLoading(false);
@@ -144,6 +195,60 @@ void UServerDetailsAllowedPlayersSection::SetServerData(UServerDataObject* InSer
 	
 }
 
+bool UServerDetailsAllowedPlayersSection::ShouldProcessBackAction() const
+{
+	return AddFriendsPopupContainer->IsVisible();
+}
+
+bool UServerDetailsAllowedPlayersSection::ProcessBackAction()
+{
+	if (ShouldProcessBackAction())
+	{
+		SetAddFriendsPopupVisibility(ESlateVisibility::Collapsed);
+		return true;
+	}
+	return false;
+}
+
+void UServerDetailsAllowedPlayersSection::NativeOnInitialized()
+{
+	Super::NativeOnInitialized();
+
+	AllAllowsListView->SetSelectionMode(ESelectionMode::Single);
+	
+	AddFriendsListView->OnEntryWidgetGenerated().AddWeakLambda(this, [this](UWidget& InEntryWidget)
+	{
+		if (UAddAllowedFriendListItem* ListItem = Cast<UAddAllowedFriendListItem>(&InEntryWidget))
+		{
+			ListItem->OnNavDelegate.BindWeakLambda(this, [this, &InEntryWidget](const FGeometry& MyGeometry, const FNavigationEvent& InNavigationEvent, const FNavigationReply& InDefaultReply)
+			{
+				if (InNavigationEvent.GetNavigationGenesis() == ENavigationGenesis::Controller)
+				{
+					const UUserWidget* FirstItem = AddFriendsListView->GetEntryWidgetFromItem(AddFriendsListView->GetItemAt(0));
+					const UUserWidget* LastItem = AddFriendsListView->GetEntryWidgetFromItem(AddFriendsListView->GetItemAt(AddFriendsListView->GetNumItems() - 1));
+					if (InNavigationEvent.GetNavigationType() == EUINavigation::Up && &InEntryWidget == FirstItem)
+					{
+						return FNavigationReply::Stop();
+					}
+					if (InNavigationEvent.GetNavigationType() == EUINavigation::Down && &InEntryWidget == LastItem)
+					{
+						return FNavigationReply::Stop();
+					}
+					if (InNavigationEvent.GetNavigationType() == EUINavigation::Left || InNavigationEvent.GetNavigationType() == EUINavigation::Right
+						|| InNavigationEvent.GetNavigationType() == EUINavigation::Next || InNavigationEvent.GetNavigationType() == EUINavigation::Previous)
+					{
+						return FNavigationReply::Stop();
+					}
+				}
+
+				return InDefaultReply;
+			});
+		}
+	});
+
+	RegisterAddFriendsUIAction();
+}
+
 void UServerDetailsAllowedPlayersSection::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -154,7 +259,7 @@ void UServerDetailsAllowedPlayersSection::NativeConstruct()
 		RefreshAllowsList(Allows);
 	}));
 
-	ListView->ClearListItems();
+	AllAllowsListView->ClearListItems();
 	Alert->Hide();
 }
 
@@ -173,18 +278,23 @@ void UServerDetailsAllowedPlayersSection::NativeOnActivated()
 	{
 		LoadAllowsFromServer();
 	}
+
+	AllAllowsListView->OnEntryWidgetGenerated().AddWeakLambda(this, [this](UWidget& EntryWidget)
+	{
+		EntryWidget.SetFocus();
+		AllAllowsListView->OnEntryWidgetGenerated().RemoveAll(this);
+	});
 }
 
 void UServerDetailsAllowedPlayersSection::NativeOnDeactivated()
 {
 	Super::NativeOnDeactivated();
-	ListView->ClearListItems();
-	AddFriendsButton->OnClicked().Clear();
+	AllAllowsListView->ClearListItems();
 }
 
 void UServerDetailsAllowedPlayersSection::RefreshAllowsList(const TArray<UAllowsDataObject*>& Allows)
 {
-	ListView->ClearListItems();
+	AllAllowsListView->ClearListItems();
 	FriendsWithPendingOrAcceptedAllow.Empty();
 
 	TArray<UAllowsViewModel*> AllowsViewModels;
@@ -197,5 +307,20 @@ void UServerDetailsAllowedPlayersSection::RefreshAllowsList(const TArray<UAllows
 		UAllowsViewModel* AllowsViewModel = UAllowsViewModel::FromDataObjects(Allow, ServerDataObject);
 		AllowsViewModels.Add(AllowsViewModel);
 	}
-	ListView->SetListItems(AllowsViewModels);
+	AllAllowsListView->SetListItems(AllowsViewModels);
+}
+
+void UServerDetailsAllowedPlayersSection::RegisterAddFriendsUIAction()
+{
+	if (AddFriendsInputActionData.IsNull() || AddFriendsUIActionHandle.IsValid())
+	{
+		return;
+	}
+	
+	FBindUIActionArgs BindUIActionArgs = FBindUIActionArgs(AddFriendsInputActionData, true,
+		FSimpleDelegate::CreateWeakLambda(this, [this]
+		{
+			AddFriendsButton->OnClicked().Broadcast();
+		}));
+	AddFriendsUIActionHandle = RegisterUIActionBinding(BindUIActionArgs);
 }

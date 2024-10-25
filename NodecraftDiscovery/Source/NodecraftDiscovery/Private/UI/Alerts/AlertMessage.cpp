@@ -3,6 +3,7 @@
 
 #include "UI/Alerts/AlertMessage.h"
 
+#include "Engine/Texture2D.h"
 #include "CommonBorder.h"
 #include "CommonTextBlock.h"
 #include "Components/Image.h"
@@ -13,7 +14,7 @@ void UAlertMessage::Show(const FText& Message, const EAlertType AlertType)
 	MessageText->SetText(Message);
 
 	FAlertStyle Style = AlertStyles.FindChecked(AlertType);
-	UAssetStreamerSubsystem::Get().LoadAssetAsync(Style.Icon, FStreamableDelegate::CreateWeakLambda(this, [this, Style]()
+	UAssetStreamerSubsystem::Get().LoadAssetAsync(Style.Icon.ToSoftObjectPath(), FStreamableDelegate::CreateWeakLambda(this, [this, Style]()
 	{
 		Icon->SetBrushFromTexture(Style.Icon.Get());
 	}));

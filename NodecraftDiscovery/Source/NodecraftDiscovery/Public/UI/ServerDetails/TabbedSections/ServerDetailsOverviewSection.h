@@ -20,15 +20,32 @@ class NODECRAFTDISCOVERY_API UServerDetailsOverviewSection : public UCommonUserW
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UNodecraftLoadGuard* LoadGuard;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* OverviewText;
-	
+
+	// void SetListeningForInput(bool bShouldListen);
+	//
+	// void UServerDetailsOverviewSection::UpdateBindings();
+
+	/** The input action to listen for causing the rules to scroll down */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Nodecraft UI|Input", meta = (RowType = "/Script/CommonUI.CommonInputActionDataBase"))
+	FDataTableRowHandle ScrollDownInputActionData;
+
+	/** The input action to listen for causing the rules to scroll up */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Nodecraft UI|Input", meta = (RowType = "/Script/CommonUI.CommonInputActionDataBase"))
+	FDataTableRowHandle ScrollUpInputActionData;
+
 public:
 	virtual void SetServerData(UServerDataObject* InServerDataObject) override;
 	void SetLoading(bool bLoading);
 
 	virtual void NativeOnInitialized() override;
+
+private:
+	bool bIsListeningForInput = false;
+	FUIActionBindingHandle ScrollDownActionHandle;
+	FUIActionBindingHandle ScrollUpActionHandle;
 };

@@ -3,18 +3,21 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CommonActivatableWidget.h"
 #include "CommonUserWidget.h"
 #include "ServerDetailsSection.h"
-#include "Models/ServerDataObject.h"
+#include "Components/ScrollBox.h"
+#include "UI/ServerDetails/TagsList.h"
 #include "UObject/Object.h"
 #include "ServerDetailsAboutSection.generated.h"
 
+class UNodecraftButtonBase;
+class UTagButton;
 class UNodecraftLoadGuard;
 enum class ESocialLinkType : uint8;
 class UWrapBox;
 class USocialLinksList;
 class UCommonListView;
-class UNodecraftButtonBase;
 class UCommonTextBlock;
 /**
  * 
@@ -31,35 +34,41 @@ private:
 	UServerDataObject* ServerDataObject;
 	
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UNodecraftLoadGuard* LoadGuard;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* SummaryText;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* ServerCreatedByText;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* ServerTypeCreatedByText;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UNodecraftButtonBase* ServerCreatedByButton;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	USocialLinksList* SocialLinksList;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* ServerTagsTitle;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UWrapBox* ServerTags;
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
+	UScrollBox* ContentScrollBox;
 	
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
-	TSoftClassPtr<UNodecraftButtonBase> ServerTagButtonClass;
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
+	UTagsList* ServerTags;
+	
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Nodecraft UI|Server Details")
+	TSoftClassPtr<UTagButton> ServerTagButtonClass;
 	
 public:
 	virtual void SetServerData(UServerDataObject* InServerDataObject) override;
 
 	void SetServerId(const FString& InServerId);
+
+	virtual void NativeConstruct() override;
+
 };

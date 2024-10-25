@@ -73,9 +73,9 @@ void URulesDataObject::Update(const URulesDataObject* InRules)
 URulesDataObject* URulesDataObject::FromJson(const TSharedRef<FJsonObject> Json)
 {
 	URulesDataObject* RulesDataObject = NewObject<URulesDataObject>();
-	RulesDataObject->Content = Json->GetStringField("content");
-	RulesDataObject->StatusRaw = Json->GetStringField("status_all");
-	Json->TryGetStringField("date_all_signed", RulesDataObject->DateAllSigned);
+	RulesDataObject->Content = Json->GetStringField(TEXT("content"));
+	RulesDataObject->StatusRaw = Json->GetStringField(TEXT("status_all"));
+	Json->TryGetStringField(TEXT("date_all_signed"), RulesDataObject->DateAllSigned);
 	RulesDataObject->Consents = FGameConsents::FromDataJson(Json);
 	
 	return RulesDataObject;

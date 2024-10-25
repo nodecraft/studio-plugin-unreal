@@ -1,49 +1,55 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "0.0.1",
+	"VersionName": "1.0",
 	"FriendlyName": "Nodecraft Studio",
-	"Description": "",
+	"Description": "Monetize Player-Created Game Servers In-App",
 	"Category": "Other",
 	"CreatedBy": "Nodecraft",
-	"CreatedByURL": "",
-	"DocsURL": "",
-	"MarketplaceURL": "",
-	"SupportURL": "",
+	"CreatedByURL": "https://nodecraft.studio",
+	"DocsURL": "https://docs.nodecraft.studio/",
+	"FabURL": "",
+	"SupportURL": "https://docs.nodecraft.studio/docs/need-more-support",
 	"CanContainContent": true,
-	"IsBetaVersion": true,
-	"IsExperimentalVersion": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
 	"Installed": false,
 	"Modules": [
 		{
 			"Name": "NodecraftDiscovery",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [ "Win64", "Linux" ]
 		},
 		{
 			"Name": "NodecraftStudioEditor",
 			"Type": "Editor",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [ "Win64", "Linux" ]
 		},
 		{
 			"Name": "NodecraftCommon",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [ "Win64", "Linux" ]
 		},
 		{
 			"Name": "NodecraftAuthCommon",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [ "Win64", "Linux" ]
 		},
 		{
 			"Name": "NodecraftSteamAuth",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [ "Win64", "Linux" ]
 		},
 		{
 			"Name": "NodecraftGame",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [ "Win64", "Linux" ]
 		}
 		
 	],

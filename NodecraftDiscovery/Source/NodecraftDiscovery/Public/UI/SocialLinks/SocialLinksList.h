@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "CommonListView.h"
 #include "SocialLinksList.generated.h"
 
 class USocialLinkDataObject;
@@ -21,14 +22,22 @@ class NODECRAFTDISCOVERY_API USocialLinksList : public UUserWidget
 public:
 	void ShowLinksVisuals(bool bShowLinks);
 	void SetListItems(const TArray<USocialLinkDataObject*>& ListItems);
+	UListViewBase::FOnListEntryGenerated& OnEntryWidgetGenerated();
+
+	virtual void NativeConstruct() override;
+
+	UWidget* GetFirstWidget() const;
+
+	FSimpleDelegate OnControllerMovedUpFromFirstItem;
+	FSimpleDelegate OnControllerMovedDownFromLastItem;
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Social", meta=(BindWidget))
 	UImage* NoLinksImage;
 	
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Social", meta=(BindWidget))
 	UCommonTextBlock* NoLinksText;
 	
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Social", meta=(BindWidget))
 	UCommonListView* ListView;
 };

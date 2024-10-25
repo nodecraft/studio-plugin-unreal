@@ -42,6 +42,7 @@ void UAllowsListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 		if (AllowsDataObject->GetDateExpires().GetTicks() != 0 && AllowsDataObject->GetDateExpires() < FDateTime::UtcNow())
 		{
 			// pending but expired
+			bShowActionsInActionBar = false;
 			ButtonsBox->SetVisibility(ESlateVisibility::Collapsed);
 			RevokedOrExpiredText->SetText(FText::Format(LOCTEXT("ExpiredOnDate", "Expired {0}"),
 				FText::AsDate(AllowsDataObject->GetDateExpires())));
@@ -49,31 +50,35 @@ void UAllowsListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 		}
 		else
 		{
+			bShowActionsInActionBar = true;
 			ButtonsBox->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 			RevokedOrExpiredText->SetVisibility(ESlateVisibility::Collapsed);
-			AcceptButton->SetButtonText(LOCTEXT_ACCEPT);
-			DeclineButton->SetButtonText(LOCTEXT_DECLINE);
-			AcceptButton->SetIsEnabled(true);
-			DeclineButton->SetIsEnabled(true);
+			PrimaryActionButton->SetButtonText(LOCTEXT_ACCEPT);
+			SecondaryActionButton->SetButtonText(LOCTEXT_DECLINE);
+			PrimaryActionButton->SetIsEnabled(true);
+			SecondaryActionButton->SetIsEnabled(true);
 		}
 		break;
 	case EAllowStatus::Accepted:
+		bShowActionsInActionBar = true;
 		ButtonsBox->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		RevokedOrExpiredText->SetVisibility(ESlateVisibility::Collapsed);
-		AcceptButton->SetButtonText(LOCTEXT_ACCEPTED);
-		DeclineButton->SetButtonText(LOCTEXT_LEAVE_AND_DECLINE);
-		AcceptButton->SetIsEnabled(false);
-		DeclineButton->SetIsEnabled(true);
+		PrimaryActionButton->SetButtonText(LOCTEXT_ACCEPTED);
+		SecondaryActionButton->SetButtonText(LOCTEXT_LEAVE_AND_DECLINE);
+		PrimaryActionButton->SetIsEnabled(false);
+		SecondaryActionButton->SetIsEnabled(true);
 		break;
 	case EAllowStatus::Declined:
+		bShowActionsInActionBar = true;
 		ButtonsBox->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		RevokedOrExpiredText->SetVisibility(ESlateVisibility::Collapsed);
-		AcceptButton->SetButtonText(LOCTEXT_ACCEPT);
-		DeclineButton->SetButtonText(LOCTEXT_DECLINED);
-		AcceptButton->SetIsEnabled(true);
-		DeclineButton->SetIsEnabled(false);
+		PrimaryActionButton->SetButtonText(LOCTEXT_ACCEPT);
+		SecondaryActionButton->SetButtonText(LOCTEXT_DECLINED);
+		PrimaryActionButton->SetIsEnabled(true);
+		SecondaryActionButton->SetIsEnabled(false);
 		break;
 	case EAllowStatus::Revoked:
+		bShowActionsInActionBar = false;
 		ButtonsBox->SetVisibility(ESlateVisibility::Collapsed);
 		RevokedOrExpiredText->SetText(LOCTEXT("InviteWasRevoked", "This invite was revoked by the server owner."));
 		RevokedOrExpiredText->SetVisibility(ESlateVisibility::HitTestInvisible);
@@ -81,10 +86,10 @@ void UAllowsListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 	default: ;
 	}
 
-	AcceptButton->OnClicked().Clear();
-	DeclineButton->OnClicked().Clear();
+	PrimaryActionButton->OnClicked().Clear();
+	SecondaryActionButton->OnClicked().Clear();
 
-	AcceptButton->OnClicked().AddWeakLambda(this, [this, AllowsDataObject]
+	PrimaryActionButton->OnClicked().AddWeakLambda(this, [this, AllowsDataObject]
 	{
 		LoadGuard->SetIsLoading(true);
 		
@@ -97,18 +102,19 @@ void UAllowsListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 				{
 					ListItem->SetStatus(EAllowStatus::Accepted);
 				}
-				AcceptButton->SetIsEnabled(false);
-				AcceptButton->SetButtonText(LOCTEXT_ACCEPTED);
-				DeclineButton->SetIsSelected(false);
-				DeclineButton->SetIsEnabled(true);
-				DeclineButton->SetButtonText(LOCTEXT_LEAVE_AND_DECLINE);
+				PrimaryActionButton->SetIsEnabled(false);
+				PrimaryActionButton->SetButtonText(LOCTEXT_ACCEPTED);
+				SecondaryActionButton->SetIsSelected(false);
+				SecondaryActionButton->SetIsEnabled(true);
+				SecondaryActionButton->SetButtonText(LOCTEXT_LEAVE_AND_DECLINE);
 			}
 			LoadGuard->SetIsLoading(false);
+			UpdateActionBar();
 		});
 		UAllowsService::Get().AcceptAllow(AllowsDataObject->GetID(), OnAcceptAllow);
 	});
 
-	DeclineButton->OnClicked().AddWeakLambda(this, [this, AllowsDataObject]
+	SecondaryActionButton->OnClicked().AddWeakLambda(this, [this, AllowsDataObject]
 	{
 		LoadGuard->SetIsLoading(true);
 		
@@ -121,16 +127,60 @@ void UAllowsListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 				{
 					ListItem->SetStatus(EAllowStatus::Declined);
 				}
-				AcceptButton->SetIsEnabled(true);
-				AcceptButton->SetIsSelected(false);
-				AcceptButton->SetButtonText(LOCTEXT_ACCEPT);
-				DeclineButton->SetIsEnabled(false);
-				DeclineButton->SetButtonText(LOCTEXT_DECLINED);
+				PrimaryActionButton->SetIsEnabled(true);
+				PrimaryActionButton->SetIsSelected(false);
+				PrimaryActionButton->SetButtonText(LOCTEXT_ACCEPT);
+				SecondaryActionButton->SetIsEnabled(false);
+				SecondaryActionButton->SetButtonText(LOCTEXT_DECLINED);
 			}
 			LoadGuard->SetIsLoading(false);
+			UpdateActionBar();
 		});
 		UAllowsService::Get().DeclineAllow(AllowsDataObject->GetID(), OnDeclineALlow);
 	});
+}
+
+void UAllowsListItem::UpdateActionBar()
+{
+	if (bShowActionsInActionBar)
+	{
+		if (PrimaryActionButton->GetIsEnabled())
+		{
+			if (PrimaryUIActionHandle.IsValid() == false)
+			{
+				RegisterActionBinding(EUIActionBindingType::Primary);
+			}
+		}
+		else
+		{
+			PrimaryUIActionHandle.Unregister();
+		}
+		
+		if (SecondaryActionButton->GetIsEnabled())
+		{
+			if (SecondaryUIActionHandle.IsValid() == false)
+			{
+				RegisterActionBinding(EUIActionBindingType::Secondary);
+			}
+		}
+		else
+		{
+			SecondaryUIActionHandle.Unregister();
+		}
+	}
+}
+
+FReply UAllowsListItem::NativeOnFocusReceived(const FGeometry& InGeometry, const FFocusEvent& InFocusEvent)
+{
+	UpdateActionBar();
+	
+	return Super::NativeOnFocusReceived(InGeometry, InFocusEvent);
+}
+
+void UAllowsListItem::NativeOnFocusLost(const FFocusEvent& InFocusEvent)
+{
+	UnregisterUIActionBindings();
+	Super::NativeOnFocusLost(InFocusEvent);
 }
 
 #undef LOCTEXT_NAMESPACE

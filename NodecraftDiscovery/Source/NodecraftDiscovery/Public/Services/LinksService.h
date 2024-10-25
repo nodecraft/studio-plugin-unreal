@@ -6,6 +6,7 @@
 #include "DataTypes/LinkTypes.h"
 #include "DataTypes/PlayerConnectionSubjects.h"
 #include "Subsystems/EngineSubsystem.h"
+#include "Engine/Engine.h"
 #include "LinksService.generated.h"
 
 class UPlayerConnectionDataObject;

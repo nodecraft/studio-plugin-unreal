@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 using System.IO;
 using UnrealBuildTool;
@@ -59,8 +59,8 @@ public class NodecraftSteamAuth : ModuleRules
 			PublicAdditionalLibraries.Add(Path.Combine(RedistributableBinFolder, "libsteam_api.so"));
 
 			RuntimeDependencies.Add(Path.Combine(SdkEncryptedAppTicketFolder, "libsdkencryptedappticket.so"),
-				StagedFileType.UFS);
-			RuntimeDependencies.Add(Path.Combine(RedistributableBinFolder, "libsteam_api.so"), StagedFileType.UFS);
+				StagedFileType.NonUFS);
+			RuntimeDependencies.Add(Path.Combine(RedistributableBinFolder, "libsteam_api.so"), StagedFileType.NonUFS);
 
 			// If the dll is not present in the bin path, copy it over
 			if (!File.Exists(Path.Combine(binDirPath, "libsteam_api.so")))

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "PlayerSession.h"
 #include "UObject/Object.h"
+#include "Dom/JsonObject.h"
 #include "ServerQueueDataObject.generated.h"
 
 class UServerSessionDataObject;

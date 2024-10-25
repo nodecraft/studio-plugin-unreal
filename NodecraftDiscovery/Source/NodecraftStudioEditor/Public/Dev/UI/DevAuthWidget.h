@@ -36,41 +36,41 @@ class NODECRAFTSTUDIOEDITOR_API UDevAuthWidget : public UEditorUtilityWidget
 	virtual void NativeConstruct() override;
 
 protected:
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UEditableTextBox* RootTextBox;
 
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UButton* SendRequestButton;
 
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UEditableTextBox* EndpointTextBox;
 
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UComboBoxString* HttpMethodSelector;
 
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UComboBoxString* HeaderTokenSelector;
 	
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UEditableTextBox* JsonBodyTextBox;
 
 	// JSON Response readouts
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UCommonTextBlock* ResponseTextBlock;
 
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UCommonTextBlock* ResponseStatusTextBlock;
 
 	// Auth / Ident
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UEditableTextBox* EmailAddressTextBox;
 
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UEditableTextBox* TokenTextBox;
 	
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UButton* ManualChallengeButton;
 
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UButton* SendTokenButton;
 };

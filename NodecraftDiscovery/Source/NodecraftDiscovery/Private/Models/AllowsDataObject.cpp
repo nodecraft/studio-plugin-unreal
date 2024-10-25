@@ -10,9 +10,9 @@ UAllowsDataObject* UAllowsDataObject::FromJson(const TSharedRef<FJsonObject>& Js
 {
 	UAllowsDataObject* AllowsDataObject = NewObject<UAllowsDataObject>();
 
-	AllowsDataObject->ID = Json->GetStringField("id");
+	AllowsDataObject->ID = Json->GetStringField(TEXT("id"));
 
-	const FString Status = Json->GetStringField("status");
+	const FString Status = Json->GetStringField(TEXT("status"));
 	if (Status.Equals("pending", ESearchCase::IgnoreCase))
 	{
 		AllowsDataObject->AllowStatus = EAllowStatus::Pending;
@@ -31,7 +31,7 @@ UAllowsDataObject* UAllowsDataObject::FromJson(const TSharedRef<FJsonObject>& Js
 	}
 
 	FString DateString;
-	if (Json->TryGetStringField("date_expires", DateString))
+	if (Json->TryGetStringField(TEXT("date_expires"), DateString))
 	{
 		FDateTime::ParseIso8601(*DateString, AllowsDataObject->DateExpires);
 	}
@@ -40,11 +40,11 @@ UAllowsDataObject* UAllowsDataObject::FromJson(const TSharedRef<FJsonObject>& Js
 		AllowsDataObject->DateExpires = FDateTime();
 	}
 	
-	AllowsDataObject->Server = UServerDataObject::FromJson(Json->GetObjectField("server").ToSharedRef());
-	AllowsDataObject->Sender = UPlayerDataObject::FromJson(Json->GetObjectField("sender").ToSharedRef());
+	AllowsDataObject->Server = UServerDataObject::FromJson(Json->GetObjectField(TEXT("server")).ToSharedRef());
+	AllowsDataObject->Sender = UPlayerDataObject::FromJson(Json->GetObjectField(TEXT("sender")).ToSharedRef());
 
 	const TSharedPtr<FJsonObject>* OutReceiver;
-	if (Json->TryGetObjectField("player", OutReceiver))
+	if (Json->TryGetObjectField(TEXT("player"), OutReceiver))
 	{
 		AllowsDataObject->Receiver = UPlayerDataObject::FromJson(OutReceiver->ToSharedRef());
 	}

@@ -7,6 +7,7 @@
 #include "ServerDetailsSection.h"
 #include "ServerDetailsAllowedPlayersSection.generated.h"
 
+class UAllowedPlayersListView;
 class UIconTextLoadingButton;
 class UAllowsDataObject;
 class UAlertMessage;
@@ -25,48 +26,57 @@ class NODECRAFTDISCOVERY_API UServerDetailsAllowedPlayersSection : public UCommo
 
 public:
 	virtual void SetServerData(UServerDataObject* InServerDataObject) override;
+	bool ShouldProcessBackAction() const;
+	bool ProcessBackAction();
 
 protected:
+	virtual void NativeOnInitialized() override;
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
 	virtual void NativeOnActivated() override;
 	virtual void NativeOnDeactivated() override;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UNodecraftLoadGuard* LoadGuard;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonBorder* ServerOwnerHeader;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UVerticalBox* OwnerEmptyListContainer;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UVerticalBox* NonOwnerEmptyListContainer;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UCommonListView* ListView;
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
+	UAllowedPlayersListView* AllAllowsListView;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UAlertMessage* Alert;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UIconTextLoadingButton* AddFriendsButton;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonBorder* AddFriendsPopupContainer;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonListView* AddFriendsListView;
+
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Input", meta=(RowType="/Script/CommonUI.CommonInputActionDataBase"))
+	FDataTableRowHandle AddFriendsInputActionData;
 
 private:
 	// Updates the list of allows. Doesn't contact a server. This is just for updating UI.
 	void RefreshAllowsList(const TArray<UAllowsDataObject*>& Allows);
-	
+	void RegisterAddFriendsUIAction();
 	void LoadAllowsFromServer();
 	void RefreshHeaderVisibility();
+	void SetAddFriendsPopupVisibility(const ESlateVisibility InVisibility);
 
 	FDelegateHandle AllowsListenerHandle;
+	FUIActionBindingHandle AddFriendsUIActionHandle;
+	FDelegateHandle OnAddFriendsListWidgetGeneratedHandle;
 	
 	UPROPERTY()
 	UServerDataObject* ServerDataObject;

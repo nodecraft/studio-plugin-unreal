@@ -5,9 +5,11 @@
 
 #include "CommonBorder.h"
 #include "CommonTextBlock.h"
+#include "Components/HorizontalBox.h"
 #include "Models/ServerDataObject.h"
 #include "Subsystems/AssetStreamerSubsystem.h"
 #include "UI/Common/AsyncImage.h"
+#include "UI/Common/TagButton.h"
 
 #define LOCTEXT_NAMESPACE "ServerDetailsHeaderCard"
 
@@ -58,20 +60,33 @@ void UServerDetailsHeaderCard::SetServerData(UServerDataObject* ServerDataObject
 		}
 		ServerRegionTextBlock->SetText(ServerDataObject->GetRegionTitle());
 		GameVersionTextBlock->SetText(ServerDataObject->GetGameVersion());
+		
+		TagsBox->ClearChildren();
+		if (ServerTagButtonClass.IsNull() == false)
+		{
+			constexpr int32 MaxTagsToShow = 3;
 
-		TagsTextBlock->SetText(FText::GetEmpty());
-		FString Tags = "";
-		for (FString Tag : ServerDataObject->GetTags())
-		{
-			Tags.Append(Tag);
-			Tags.Append(", ");
-		}
-		TagsTextBlock->SetText(FText::GetEmpty());
-		if (Tags.IsEmpty() == false)
-		{
-			Tags = Tags.TrimEnd();
-            Tags.RemoveFromEnd(",");
-            TagsTextBlock->SetText(FText::FromString(Tags));
+			for (FString Tag : ServerDataObject->GetTags())
+			{
+				UClass* TagClass = ServerTagButtonClass.LoadSynchronous();
+				UTagButton* TagWidget = CreateWidget<UTagButton>(this, TagClass);
+				TagWidget->Configure(ServerDataObject, Tag, ETagType::TagText);
+				TagsBox->AddChild(TagWidget);
+                if (TagsBox->GetChildrenCount() >= MaxTagsToShow)
+                {
+                	break;
+                }
+            }
+			
+			const int32 ExtraTagsCount = ServerDataObject->GetTags().Num() - MaxTagsToShow;
+			if (ExtraTagsCount > 0)
+			{
+				// create a +X tags button
+				UClass* TagClass = ServerTagButtonClass.LoadSynchronous();
+				UTagButton* TagWidget = CreateWidget<UTagButton>(this, TagClass);
+				TagWidget->Configure(ServerDataObject, "+" + FString::FromInt(ExtraTagsCount), ETagType::TagExtra);
+				TagsBox->AddChild(TagWidget);
+			}
 		}
 	}
 	LoadGuard->SetIsLoading(bIsAwaitingMoreCompleteData == true);

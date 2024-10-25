@@ -7,6 +7,7 @@
 #include "Subsystems/EngineSubsystem.h"
 #include "ThirdParty/SteamAuthLibrary/sdk/public/steam/isteamuser.h"
 #include "ThirdParty/SteamAuthLibrary/sdk/public/steam/steam_api_common.h"
+#include "Engine/Engine.h"
 #include "SteamAuthSubsystem.generated.h"
 
 

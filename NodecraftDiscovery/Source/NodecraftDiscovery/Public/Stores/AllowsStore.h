@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Models/AllowsDataObject.h"
+#include "Engine/Engine.h"
 #include "AllowsStore.generated.h"
 
 class UAllowsDataObject;

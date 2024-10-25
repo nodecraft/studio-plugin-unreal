@@ -3,15 +3,20 @@
 
 #include "UI/Redirects/InternalRedirectModal.h"
 
+#include "CommonInputSubsystem.h"
+#include "NodecraftLogCategories.h"
 #include "API/NodecraftMessageCodes.h"
+#include "DataTypes/ImageBackgroundTypes.h"
 #include "DataTypes/LinkTypes.h"
 #include "DataTypes/PlayerConnectionStatus.h"
 #include "DataTypes/PlayerConnectionSubjects.h"
+#include "Input/CommonUIInputTypes.h"
 #include "Services/LinksService.h"
 #include "Services/ServiceDelegates.h"
 #include "Subsystems/MessageRouterSubsystem.h"
 #include "UI/Common/AsyncImage.h"
 #include "UI/Foundation/NodecraftButtonBase.h"
+#include "Utility/NodecraftMacros.h"
 #include "Utility/NodecraftUtility.h"
 
 #define LOCTEXT_NAMESPACE "NodecraftDiscovery"
@@ -44,18 +49,33 @@ void UInternalRedirectModal::Configure(FSimpleDelegate OnClosed, EPlayerConnecti
 			RefreshUI(PlayerConnectionDataObject->GetConnectionStatus());
 			QRCode->LoadImageAsyncSkipCache(
 				UNodecraftUtility::GetQrCodeUrl(PlayerConnectionDataObject->GetUrl(), ELinkType::Internal),
-				OnQrCodeLoaded);
+				OnQrCodeLoaded, ETransparentPixelOverrides::FillWhite);
 
 			ULinksService::Get().StartPollingForPlayerConnectionStatus(GetWorld());
 	
 			OpenInBrowserButton->OnClicked().Clear();
 			OpenInBrowserButton->OnClicked().AddWeakLambda(this, [this, PlayerConnectionDataObject]
 			{
-				ULinksService::Get().OpenURLInBrowser(ELinkType::Internal, PlayerConnectionDataObject->GetUrl());
+				if (PlayerConnectionDataObject)
+				{
+					if (PlayerConnectionDataObject->GetUrl().IsEmpty() == false)
+					{
+						UE_LOG(LogTemp, Log, TEXT("Trying to open URI in browser. Supposedly it's not empty! It is : %s"), *PlayerConnectionDataObject->GetUrl());
+						ULinksService::Get().OpenURLInBrowser(ELinkType::Internal, PlayerConnectionDataObject->GetUrl());
+					}
+					else
+					{
+						UE_LOG(LogNodecraft_QrCodeLinks, Error, TEXT("Cannot open URI in browser. URL is empty!"));
+					}
+				}
+				else
+				{
+					UE_LOG(LogNodecraft_QrCodeLinks, Error, TEXT("Cannot open URI in browser. PlayerConnectionDataObject is null!"));
+				}
 			});
 
 			SubmitButton->OnClicked().Clear();
-			SubmitButton->OnClicked().AddWeakLambda(this, [this, PlayerConnectionDataObject]
+			SubmitButton->OnClicked().AddWeakLambda(this, [this]
 			{
 				ULinksService::Get().ConsumeChallengeResponse(CodeChallengeInput->GetText().ToString());
 			});
@@ -89,6 +109,13 @@ void UInternalRedirectModal::Configure(FSimpleDelegate OnClosed, EPlayerConnecti
 	{
 		OnClosed.ExecuteIfBound();
 	});
+}
+
+void UInternalRedirectModal::NativeOnInitialized()
+{
+	Super::NativeOnInitialized();
+	
+	ON_INPUT_METHOD_CHANGED(UpdateActionBindings)
 }
 
 void UInternalRedirectModal::NativeOnActivated()
@@ -133,6 +160,12 @@ void UInternalRedirectModal::NativeOnDeactivated()
 	Super::NativeOnDeactivated();
 }
 
+bool UInternalRedirectModal::NativeOnHandleBackAction()
+{
+	CloseButtonBottom->OnClicked().Broadcast();
+	return Super::NativeOnHandleBackAction();
+}
+
 void UInternalRedirectModal::RefreshUI(EPlayerConnectionStatus Status)
 {
 	PendingContainer->SetVisibility(ESlateVisibility::Collapsed);
@@ -170,6 +203,51 @@ void UInternalRedirectModal::ShowErrorUI(const FText& ErrorMsg)
 	CodeChallengeContainer->SetVisibility(ESlateVisibility::Collapsed);
 	OpenInBrowserButton->SetVisibility(ESlateVisibility::Collapsed);
 	AlertMessage->Show(ErrorMsg, EAlertType::Error);
+}
+
+void UInternalRedirectModal::UpdateActionBindings(ECommonInputType CurrentInputType)
+{
+	if (CurrentInputType == ECommonInputType::Gamepad)
+	{
+		if (OpenInBrowserActionData.IsNull() == false)
+		{
+			FBindUIActionArgs Args = FBindUIActionArgs(OpenInBrowserActionData, bDisplayInActionBar,
+				FSimpleDelegate::CreateWeakLambda(this, [this]
+				{
+					OpenInBrowserButton->OnClicked().Broadcast();
+				}));
+			if (OpenInBrowserButton->GetInputActionNameOverride().IsEmptyOrWhitespace() == false)
+			{
+				Args.OverrideDisplayName = OpenInBrowserButton->GetInputActionNameOverride();
+			}
+			OpenInBrowserActionHandle = RegisterUIActionBinding(Args);
+		}
+
+		if (CodeChallengeContainer->IsVisible() && SubmitActionData.IsNull() == false)
+		{
+			FBindUIActionArgs Args = FBindUIActionArgs(SubmitActionData, bDisplayInActionBar,
+				FSimpleDelegate::CreateWeakLambda(this, [this]
+				{
+					SubmitButton->OnClicked().Broadcast();
+				}));
+			if (SubmitButton->GetInputActionNameOverride().IsEmptyOrWhitespace() == false)
+			{
+				Args.OverrideDisplayName = SubmitButton->GetInputActionNameOverride();
+			}
+			SubmitActionHandle = RegisterUIActionBinding(Args);
+		}
+	}
+	else
+	{
+		if (OpenInBrowserActionHandle.IsValid())
+		{
+			OpenInBrowserActionHandle.Unregister();
+		}
+		if (SubmitActionHandle.IsValid())
+		{
+			SubmitActionHandle.Unregister();
+		}
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

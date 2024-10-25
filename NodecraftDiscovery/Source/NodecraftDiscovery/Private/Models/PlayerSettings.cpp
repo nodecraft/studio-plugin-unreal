@@ -7,8 +7,8 @@ UPlayerSettings* UPlayerSettings::FromJson(const TSharedRef<FJsonObject>& Json)
 {
 	UPlayerSettings* PlayerSettings = NewObject<UPlayerSettings>();
 
-	Json->TryGetBoolField("analytics_opt_out", PlayerSettings->AnalyticsOptOut);
-	Json->TryGetStringField("default_server_region_id", PlayerSettings->DefaultServerRegionID);
+	Json->TryGetBoolField(TEXT("analytics_opt_out"), PlayerSettings->AnalyticsOptOut);
+	Json->TryGetStringField(TEXT("default_server_region_id"), PlayerSettings->DefaultServerRegionID);
 
 	return PlayerSettings;
 }

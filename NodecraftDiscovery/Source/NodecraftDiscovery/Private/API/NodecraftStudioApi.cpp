@@ -2,6 +2,9 @@
 
 #include "API/NodecraftStudioApi.h"
 
+#include "Policies/CondensedJsonPrintPolicy.h"
+#include "Serialization/JsonWriter.h"
+#include "NodecraftLogCategories.h"
 #include "Models/Server/ServerStatus.h"
 
 TSharedRef<IHttpRequest> UNodecraftStudioApi::SendIdentToken(const UObject* WeakContext,
@@ -18,7 +21,7 @@ TSharedRef<IHttpRequest> UNodecraftStudioApi::SendIdentToken(const UObject* Weak
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
 					UNodecraftStudioSessionManager& SessionManager = UNodecraftStudioSessionManager::Get();
 					SessionManager.SetPlayerSession(FPlayerSession::FromJson(Data));
@@ -85,32 +88,32 @@ TSharedRef<IHttpRequest> UNodecraftStudioApi::GetGameLegalConsents(const UObject
 	return MakeRequest(WeakContext, UNodecraftStudioApiSettings::Get().GetApiRoot() + "consents/game/legal?ident_type=" + IdentType, "GET", UNodecraftStudioSessionManager::Get().GetGameAccessToken(), JsonObj, OnComplete);
 }
 
-TSharedRef<IHttpRequest> UNodecraftStudioApi::ListPopularServers(const UObject* WeakContext,
+TSharedRef<IHttpRequest> UNodecraftStudioApi::ListPopularServers(const UObject* WeakContext, int32 PageNumber,
                                                            FHttpRequestCompleteDelegate& OnComplete)
 {
 	FJsonObjectWrapper JsonObj;
-	return MakeRequest(WeakContext, UNodecraftStudioApiSettings::Get().GetApiRoot() + "discovery/popular", "GET", UNodecraftStudioSessionManager::Get().GetPlayerAccessToken(), JsonObj, OnComplete);
+	return MakeRequest(WeakContext, UNodecraftStudioApiSettings::Get().GetApiRoot() + "discovery/popular?page=" + FString::FromInt(PageNumber), "GET", UNodecraftStudioSessionManager::Get().GetPlayerAccessToken(), JsonObj, OnComplete);
 }
 
-TSharedRef<IHttpRequest> UNodecraftStudioApi::ListRecommendedServers(const UObject* WeakContext,
+TSharedRef<IHttpRequest> UNodecraftStudioApi::ListRecommendedServers(const UObject* WeakContext, int32 PageNumber,
                                                                FHttpRequestCompleteDelegate& OnComplete)
 {
 	FJsonObjectWrapper JsonObj;
-	return MakeRequest(WeakContext, UNodecraftStudioApiSettings::Get().GetApiRoot() + "discovery/recommended", "GET", UNodecraftStudioSessionManager::Get().GetPlayerAccessToken(), JsonObj, OnComplete);
+	return MakeRequest(WeakContext, UNodecraftStudioApiSettings::Get().GetApiRoot() + "discovery/recommended?page=" + FString::FromInt(PageNumber), "GET", UNodecraftStudioSessionManager::Get().GetPlayerAccessToken(), JsonObj, OnComplete);
 }
 
-TSharedRef<IHttpRequest> UNodecraftStudioApi::ListPlayerOwnedServers(const UObject* WeakContext,
+TSharedRef<IHttpRequest> UNodecraftStudioApi::ListPlayerOwnedServers(const UObject* WeakContext, int32 PageNumber,
                                                                FHttpRequestCompleteDelegate& OnComplete)
 {
 	FJsonObjectWrapper JsonObj;
-	return MakeRequest(WeakContext, UNodecraftStudioApiSettings::Get().GetApiRoot() + "discovery/friends", "GET", UNodecraftStudioSessionManager::Get().GetPlayerAccessToken(), JsonObj, OnComplete);
+	return MakeRequest(WeakContext, UNodecraftStudioApiSettings::Get().GetApiRoot() + "discovery/friends?page=" + FString::FromInt(PageNumber), "GET", UNodecraftStudioSessionManager::Get().GetPlayerAccessToken(), JsonObj, OnComplete);
 }
 
-TSharedRef<IHttpRequest> UNodecraftStudioApi::ListFavoriteServers(const UObject* WeakContext,
+TSharedRef<IHttpRequest> UNodecraftStudioApi::ListFavoriteServers(const UObject* WeakContext, int32 PageNumber,
                                                             FHttpRequestCompleteDelegate& OnComplete)
 {
 	FJsonObjectWrapper JsonObj;
-	return MakeRequest(WeakContext, UNodecraftStudioApiSettings::Get().GetApiRoot() + "discovery/favorite", "GET", UNodecraftStudioSessionManager::Get().GetPlayerAccessToken(), JsonObj, OnComplete);
+	return MakeRequest(WeakContext, UNodecraftStudioApiSettings::Get().GetApiRoot() + "discovery/favorite?page=" + FString::FromInt(PageNumber), "GET", UNodecraftStudioSessionManager::Get().GetPlayerAccessToken(), JsonObj, OnComplete);
 }
 
 TSharedRef<IHttpRequest> UNodecraftStudioApi::ListInvitableServers(const UObject* WeakContext, const FString& InviteeID,
@@ -121,8 +124,17 @@ TSharedRef<IHttpRequest> UNodecraftStudioApi::ListInvitableServers(const UObject
 		"GET", UNodecraftStudioSessionManager::Get().GetPlayerAccessToken(), JsonObj, OnComplete);
 }
 
+TSharedRef<IHttpRequest> UNodecraftStudioApi::SearchServers(const UObject* WeakContext, const FString& SearchQuery,
+	TOptional<uint32> Page, FHttpRequestCompleteDelegate& OnComplete)
+{
+	FJsonObjectWrapper JsonObj;
+	return MakeRequest(WeakContext, UNodecraftStudioApiSettings::Get().GetApiRoot() + "discovery/search?" +
+		"page=" + (Page.IsSet() ? FString::FromInt(Page.GetValue()) : "1") + "&q=" + SearchQuery, 
+		"GET", UNodecraftStudioSessionManager::Get().GetPlayerAccessToken(), JsonObj, OnComplete);
+}
+
 TSharedRef<IHttpRequest> UNodecraftStudioApi::GetServerQueue(const UObject* WeakContext, const FString& Token,
-FHttpRequestCompleteDelegate& OnComplete)
+                                                             FHttpRequestCompleteDelegate& OnComplete)
 {
 	FJsonObjectWrapper JsonObj;
 	return MakeRequest(WeakContext, UNodecraftStudioApiSettings::Get().GetApiRoot() + "queue/" + Token,
@@ -149,7 +161,7 @@ TSharedRef<IHttpRequest> UNodecraftStudioApi::JoinServer(const UObject* WeakCont
 	FHttpRequestCompleteDelegate& OnComplete)
 {
 	FJsonObjectWrapper JsonObj;
-	if (ServerPassword.IsSet())
+	if (ServerPassword.IsSet() && ServerPassword.GetValue().Len() > 0)
 	{
 		JsonObj.JsonObject->SetStringField("password", ServerPassword.GetValue());
 	}
@@ -678,6 +690,8 @@ TSharedRef<IHttpRequest> UNodecraftStudioApi::MakeRequest(const UObject* WeakCon
 	{
 		OnCompleteCallback.ExecuteIfBound(Req, Res, bConnectedSuccessfully);
 	});
+
+	UE_LOG(LogNodecraftHTTP, Verbose, TEXT("Making request to %s\tContent: %s"), *Request->GetURL(), *JsonText);
 
 	return Request;
 }

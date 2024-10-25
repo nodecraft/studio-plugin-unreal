@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "CommonListView.h"
 #include "CommonTextBlock.h"
 #include "CommonUserWidget.h"
@@ -18,41 +19,41 @@ class NODECRAFTDISCOVERY_API UServerModerationConsolePlayerListSection : public 
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details|Moderation Console", meta = (BindWidget))
 	UImage* SectionHeaderIcon;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details|Moderation Console", meta = (BindWidget))
 	UCommonTextBlock* SectionHeaderTextBlock;
 
 	// START Players list
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details|Moderation Console", meta = (BindWidget))
 	UPanelWidget* PlayerListContainer;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details|Moderation Console", meta = (BindWidget))
 	UCommonListView* PlayerList;
 	// END Players list
 
 	// START No Players
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details|Moderation Console", meta = (BindWidget))
 	UPanelWidget* NoPlayersContainer;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details|Moderation Console", meta = (BindWidget))
 	UCommonTextBlock* NoPlayersTextBlock;
 
-	UPROPERTY(BlueprintReadOnly, EditInstanceOnly, Category = "Player List Section")
+	UPROPERTY(BlueprintReadOnly, EditInstanceOnly, Category = "Nodecraft UI|Server Details")
 	FText NoPlayersText = FText::FromString("No players to display");
 	// END No Players
 
-	UPROPERTY(BlueprintReadOnly, EditInstanceOnly, Category = "Player List Section")
+	UPROPERTY(BlueprintReadOnly, EditInstanceOnly, Category = "Nodecraft UI|Server Details")
 	bool bAreChildrenSelectable = true;
 
-	UPROPERTY(BlueprintReadOnly, EditInstanceOnly, Category = "Player List Section")
+	UPROPERTY(BlueprintReadOnly, EditInstanceOnly, Category = "Nodecraft UI|Server Details")
 	TSoftObjectPtr<UTexture2D> HeaderIconTexture;
 	
-	UPROPERTY(BlueprintReadOnly, EditInstanceOnly, Category = "Player List Section")
+	UPROPERTY(BlueprintReadOnly, EditInstanceOnly, Category = "Nodecraft UI|Server Details")
 	FText HeaderText = FText::FromString("OWNER");
 
-	UPROPERTY(BlueprintReadOnly, EditInstanceOnly, Category = "Player List Section")
+	UPROPERTY(BlueprintReadOnly, EditInstanceOnly, Category = "Nodecraft UI|Server Details")
 	FLinearColor HeaderIconTint;
 
 public:
@@ -67,4 +68,6 @@ public:
 	FOnPlayerSelectionChanged OnPlayerSelectionChanged;
 
 	FOnPlayerSelectedExclusive OnPlayerSelectedExclusive;
+
+	FOnPlayerItemReceivedFocus OnPlayerItemReceivedFocus;
 };

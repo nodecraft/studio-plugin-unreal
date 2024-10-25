@@ -5,12 +5,14 @@
 
 #include "CommonTextBlock.h"
 #include "API/NodecraftStudioSessionManagerSubsystem.h"
+#include "Components/ListView.h"
 #include "DeveloperSettings/NodecraftStudioIdentitySettings.h"
 #include "Models/AllowsDataObject.h"
 #include "Models/AllowStatus.h"
 #include "Models/AllowsViewModel.h"
 #include "Models/ServerDataObject.h"
 #include "Services/AllowsService.h"
+#include "Stores/ServersStore.h"
 #include "UI/Common/AsyncImage.h"
 #include "UI/Common/NodecraftLoadGuard.h"
 #include "UI/Foundation/NodecraftButtonBase.h"
@@ -39,22 +41,24 @@ void UAllowedPlayersListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 		StatusIcon->SetBrushFromSoftTexture(StatusIcons.FindChecked(AllowsDataObject->GetStatus()));
 		StatusText->SetText(StatusMessage.FindChecked(AllowsDataObject->GetStatus()));
 		
-		RevokeButton->SetVisibility(CurrentServer->GetPlayer()->GetId() == UNodecraftStudioSessionManager::Get().GetPlayerId()
+		PrimaryActionButton->SetVisibility(CurrentServer->GetPlayer()->GetId() == UNodecraftStudioSessionManager::Get().GetPlayerId()
 			&& AllowsDataObject->GetStatus() != EAllowStatus::Revoked
-			? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-		if (RevokeButton->IsVisible())
+			&& AllowsDataObject->GetStatus() != EAllowStatus::Declined
+			? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
+		if (PrimaryActionButton->IsVisible())
 		{
-			RevokeButton->OnClicked().Clear();
-			RevokeButton->OnClicked().AddWeakLambda(this, [this, CurrentServer, AllowsDataObject]
+			PrimaryActionButton->OnClicked().Clear();
+			PrimaryActionButton->OnClicked().AddWeakLambda(this, [this, CurrentServer, AllowsDataObject]
 			{
 				LoadGuard->SetIsLoading(true);
 				FUpdateAllowResponseDelegate OnComplete;
 				OnComplete.BindWeakLambda(this, [this, CurrentServer](UAllowsDataObject* AllowsDataObject, bool bSuccess, TOptional<FText> Error)
 				{
-					if (bSuccess)
+					if (bSuccess && UServersStore::Get().GetCurrentServerId() == CurrentServer->GetId())
 					{
 						UAllowsViewModel* ViewModel = UAllowsViewModel::FromDataObjects(AllowsDataObject, CurrentServer);
 						NativeOnListItemObjectSet(ViewModel);
+						UpdateActionBar();
 					}
 					LoadGuard->SetIsLoading(false);
 				});
@@ -81,5 +85,47 @@ void UAllowedPlayersListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 			StatusText->SetStyle(RevokedStyle.TextStyle);
 			break;
 		}
+	}
+}
+
+FReply UAllowedPlayersListItem::NativeOnFocusReceived(const FGeometry& InGeometry, const FFocusEvent& InFocusEvent)
+{
+	UpdateActionBar();
+	
+	if (UListView* OwningListView = Cast<UListView>(GetOwningListView()))
+	{
+		OwningListView->SetSelectedItem(GetListItem<UAllowsViewModel>());
+	}
+	return Super::NativeOnFocusReceived(InGeometry, InFocusEvent);
+}
+
+void UAllowedPlayersListItem::NativeOnFocusLost(const FFocusEvent& InFocusEvent)
+{
+	UnregisterUIActionBindings();
+	Super::NativeOnFocusLost(InFocusEvent);
+}
+
+FNavigationReply UAllowedPlayersListItem::NativeOnNavigation(const FGeometry& MyGeometry,
+	const FNavigationEvent& InNavigationEvent, const FNavigationReply& InDefaultReply)
+{
+	if (OnNavDelegate.IsBound())
+	{
+		return OnNavDelegate.Execute(MyGeometry, InNavigationEvent, InDefaultReply);
+	}
+	return Super::NativeOnNavigation(MyGeometry, InNavigationEvent, InDefaultReply);
+}
+
+void UAllowedPlayersListItem::UpdateActionBar()
+{
+	if (PrimaryActionButton && PrimaryActionButton->IsVisible())
+	{
+		if (PrimaryUIActionHandle.IsValid() == false)
+		{
+			RegisterActionBinding(EUIActionBindingType::Primary);
+		}
+	}
+	else
+	{
+		UnregisterUIActionBindings();
 	}
 }

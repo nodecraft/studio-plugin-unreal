@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "ServiceDelegates.h"
 #include "Subsystems/EngineSubsystem.h"
+#include "Engine/Engine.h"
 #include "InvitesService.generated.h"
 
 

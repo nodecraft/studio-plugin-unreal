@@ -26,24 +26,27 @@ public:
 	void Configure(const TArray<UServerDataObject*>& Servers, const UFriendDataObject* InInvitee, FSimpleDelegate OnPopupClosed);
 
 protected:
+	virtual void NativeOnInitialized() override;
 	virtual void NativeConstruct() override;
 	virtual void NativeOnActivated() override;
+	virtual UWidget* NativeGetDesiredFocusTarget() const override;
+	virtual bool NativeOnHandleBackAction() override;
 	
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Invites", meta=(BindWidget))
 	UNodecraftLoadGuard* LoadGuard;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Invites", meta=(BindWidget))
 	UCommonListView* ListView;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Invites", meta=(BindWidget))
 	UCommonTextBlock* Title;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Invites", meta=(BindWidget))
 	UNodecraftButtonBase* CloseButtonTop;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Invites", meta=(BindWidget))
 	UNodecraftButtonBase* CloseButtonBottom;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Invites", meta=(BindWidget))
 	UAlertMessage* Alert;
 };

@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Subsystems/EngineSubsystem.h"
+#include "Engine/Engine.h"
 #include "IdentityCommon.h"
 #include "JsonObjectWrapper.h"
 #include "Interfaces/IHttpRequest.h"

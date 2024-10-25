@@ -36,9 +36,9 @@ void UUserSettingsLegal::NativeConstruct()
 	{
 		UMenuManagerSubsystem::Get().ShowRedirectModal("https://nodecraft.com/legal/privacy-policy", ELinkType::Internal);
 	});
-	
-	SoftwareLicenses->OnClicked().AddWeakLambda(this, [this]
-	{
-		// TODO: show software licenses
-	});
+}
+
+UWidget* UUserSettingsLegal::NativeGetDesiredFocusTarget() const
+{
+	return TermsOfService;
 }

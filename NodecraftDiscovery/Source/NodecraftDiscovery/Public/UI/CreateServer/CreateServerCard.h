@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "CommonActivatableWidget.h"
+#include "Common/NodecraftDelegates.h"
+#include "UI/ServerLists/ServerCardBase.h"
 #include "CreateServerCard.generated.h"
 
 class UCommonBorder;
@@ -12,7 +14,7 @@ class UNodecraftButtonBase;
  * 
  */
 UCLASS()
-class NODECRAFTDISCOVERY_API UCreateServerCard : public UCommonActivatableWidget
+class NODECRAFTDISCOVERY_API UCreateServerCard : public UServerCardBase
 {
 	GENERATED_BODY()
 
@@ -25,12 +27,12 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	UCommonBorder* CardContentsContainer;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category="Nodecraft UI|Style")
 	FLinearColor ContentTintOnHover;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category="Nodecraft UI|Style")
 	FLinearColor ContentTintOnUnhover;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category="Nodecraft UI")
 	TSoftClassPtr<UCommonActivatableWidget> CreateServerModalClass;
 };

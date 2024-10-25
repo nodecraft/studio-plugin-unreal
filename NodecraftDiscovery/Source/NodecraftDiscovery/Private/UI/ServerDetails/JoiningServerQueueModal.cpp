@@ -8,7 +8,10 @@
 #include "Models/ServerQueueDataObject.h"
 #include "Models/ServerSessionDataObject.h"
 #include "Services/ServerQueueService.h"
+#include "Subsystems/MenuManagerSubsystem.h"
 #include "UI/Foundation/NodecraftButtonBase.h"
+#include "UI/ServerDetails/ServerQueueIdleCheckModal.h"
+#include "TimerManager.h"
 
 #define LOCTEXT_NAMESPACE "JoiningServerQueueModal"
 
@@ -26,7 +29,13 @@ void UJoiningServerQueueModal::Configure(FSimpleDelegate& OnPopupClosed)
 		{
 			UServerQueueService::Get(World)->CancelServerQueue();
 		}
+		// TODO: do we need to execute the OnPopupClosed delegate here? It's already being executed in the OnServerQueueCancelled delegate on successful cancellation via the Queue Service.
 		OnPopupClosed.ExecuteIfBound();
+	});
+
+	UServerQueueService::Get(GetWorld())->OnServerQueueCancelled.AddWeakLambda(this, [OnPopupClosed]
+	{
+ 		OnPopupClosed.ExecuteIfBound();
 	});
 }
 
@@ -58,9 +67,15 @@ void UJoiningServerQueueModal::NativeOnInitialized()
 			}
 		}
 	}));
+	QueueService->OnIdleCheckinRequired.AddWeakLambda(this, [this]
+	{
+		if (ServerQueueIdleCheckModalClass.IsNull() == false)
+		{
+			UMenuManagerSubsystem::Get().ShowIdleCheckModal(ServerQueueIdleCheckModalClass);
+		}
+	});
 
-	QueuePositionText->SetText(LOCTEXT("WaitingToJoinQueue", "Waiting to join queue..."));
-	EstimatedWaitTime->SetText(FText::GetEmpty());
+	ResetModal();
 }
 
 void UJoiningServerQueueModal::CountdownTimerTick()
@@ -97,6 +112,13 @@ void UJoiningServerQueueModal::UpdateWaitTimeUI(float TimeLeftSeconds)
 	{
 		EstimatedWaitTime->SetText(FText::Format(LOCTEXT("EstimatedWaitTime", "Estimated wait time: {0}"), WaitTimeInSeconds));
 	}
+}
+
+void UJoiningServerQueueModal::ResetModal()
+{
+	QueuePositionText->SetText(LOCTEXT("WaitingToJoinQueue", "Waiting to join queue..."));
+	EstimatedWaitTime->SetText(FText::GetEmpty());
+	ProgressBar->SetPercent(0.f);
 }
 
 #undef LOCTEXT_NAMESPACE

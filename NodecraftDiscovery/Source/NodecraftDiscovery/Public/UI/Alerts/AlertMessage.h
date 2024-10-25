@@ -24,13 +24,13 @@ struct FAlertStyle
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Alerts")
 	TSoftObjectPtr<UTexture2D> Icon;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Alerts")
 	TSoftClassPtr<UCommonBorderStyle> OuterBorderStyle;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Alerts")
 	TSoftClassPtr<UCommonBorderStyle> InnerBorderStyle;
 };
 
@@ -47,18 +47,18 @@ public:
 	void Hide();
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Alerts", meta = (BindWidget))
 	UImage* Icon;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Alerts", meta = (BindWidget))
 	UCommonTextBlock* MessageText;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Alerts", meta = (BindWidget))
 	UCommonBorder* OuterBorder;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Alerts", meta = (BindWidget))
 	UCommonBorder* InnerBorder;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Alerts")
 	TMap<EAlertType, FAlertStyle> AlertStyles;
 };

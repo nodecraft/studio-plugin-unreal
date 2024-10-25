@@ -16,7 +16,7 @@ UPlayerServerDetailsDataObject* UPlayerServerDetailsDataObject::FromJson(const T
 {
 	UPlayerServerDetailsDataObject* PlayerServerDetailsDataObject = NewObject<UPlayerServerDetailsDataObject>();
 	PlayerServerDetailsDataObject->Player = UPlayerDataObject::FromJson(Json);
-	if (const TSharedPtr<FJsonObject>* BanObject; Json->TryGetObjectField("ban", BanObject))
+	if (const TSharedPtr<FJsonObject>* BanObject; Json->TryGetObjectField(TEXT("ban"), BanObject))
 	{
 		PlayerServerDetailsDataObject->Ban = UBanDataObject::FromJson(BanObject->ToSharedRef());
 	}

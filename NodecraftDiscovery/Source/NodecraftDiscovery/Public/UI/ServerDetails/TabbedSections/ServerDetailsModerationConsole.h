@@ -8,8 +8,8 @@
 #include "ServerDetailsModerationHistorySection.h"
 #include "Common/HTTP/HTTPRequestQueue.h"
 #include "UI/Alerts/AlertMessage.h"
-#include "UI/Common/NodecraftLoadGuard.h"
-#include "UI/Foundation/NodecraftButtonBase.h"
+#include "UI/Common/NodecraftScrollBox.h"
+#include "UI/Common/NodecraftTabListWidgetBase.h"
 #include "UI/ServerDetails/ModerationConsolePlayerSelector.h"
 #include "ServerDetailsModerationConsole.generated.h"
 
@@ -19,35 +19,26 @@ class NODECRAFTDISCOVERY_API UServerDetailsModerationConsole : public UCommonAct
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UNodecraftLoadGuard* LoadGuard;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UServerDetailsModerationHistorySection* ModerationHistorySection;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UModerationConsolePlayerSelector* PlayerSelector;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonActivatableWidgetSwitcher* TabContentSwitcher;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UNodecraftButtonBase* AllButton;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UNodecraftButtonBase* StaffButton;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UNodecraftButtonBase* PlayersButton;
-	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UNodecraftButtonBase* BannedButton;
-	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UNodecraftButtonBase* LogButton;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UAlertMessage* AlertMessage;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
+	UNodecraftTabListWidgetBase* FiltersTabList;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
+	UNodecraftScrollBox* ScrollBox;
 	
 	TSharedPtr<FHTTPRequestQueue> RequestQueue;
 
@@ -60,14 +51,23 @@ protected:
 	FString ServerId;
 
 public:
+	UFUNCTION()
+	void SelectFilterTab(FName TabId);
+
+	UFUNCTION()
+	void OnPlayerSelected(UWidget* PlayerWidget);
+
 	virtual void NativeOnInitialized() override;
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
 	virtual void NativeOnActivated() override;
-	void SelectButton(UNodecraftButtonBase* Button);
+	virtual void NativeOnDeactivated() override;
 	void LoadData(const FString& InServerId);
 	void ClearPlayerSelection();
 	void ReloadData();
+	void SetupNavigation(const FGetFocusDestination& Delegate);
+	
+	UWidget* GetFirstFocusablePlayerWidget();
 
 	FOnSelectedPlayersChanged OnSelectedPlayersChanged;
 };

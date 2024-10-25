@@ -3,22 +3,25 @@
 
 #include "UI/Settings/UserSettingsServerRegion.h"
 
+#include "CommonInputSubsystem.h"
 #include "API/NodecraftStudioApi.h"
 #include "Components/CheckBox.h"
-#include "Components/VerticalBox.h"
+#include "Input/CommonUIInputTypes.h"
 #include "Models/PlayerSettings.h"
 #include "Models/ServerRegionDataObject.h"
 #include "Services/GameService.h"
 #include "Services/PlayerSettingsService.h"
-#include "Subsystems/AssetStreamerSubsystem.h"
 #include "UI/Alerts/AlertMessage.h"
 #include "UI/Common/NodecraftLoadGuard.h"
+#include "UI/Common/NodecraftRadioButtonGroup.h"
 #include "UI/Foundation/NodecraftButtonBase.h"
-#include "UI/Settings/ServerRegionRow.h"
 #include "UI/Settings/UserSettings.h"
+#include "Utility/NodecraftMacros.h"
 
 
 #define LOCTEXT_NAMESPACE "UserSettingsServerRegion"
+#define LOCTEXT_CURRENT_REGION LOCTEXT("CurrentRegion", "Current")
+#define LOCTEXT_DEFAULT_REGION LOCTEXT("DefaultRegion", "Default")
 
 void UUserSettingsServerRegion::NativeConstruct()
 {
@@ -57,11 +60,12 @@ void UUserSettingsServerRegion::NativeConstruct()
 
 	// update the Change Region Button state when checkbox changes
 	SetAsDefaultCheckBox->OnCheckStateChanged.AddDynamic(this, &ThisClass::OnDefaultRegionCheckboxStateChanged);
-	
 
 	// on Change Region button clicked: update the current region. check for setting a region as Default.
 	ChangeRegionButton->OnClicked().AddWeakLambda(this, [this]()
 	{
+		FString PreviousDefaultRegion = DefaultRegion;
+		
 		if (SetAsDefaultCheckBox->IsChecked())
 		{
 			DefaultRegion = SelectedRegion;
@@ -70,40 +74,39 @@ void UUserSettingsServerRegion::NativeConstruct()
 		// todo: we should try to do these calls in parallel
 		// takes 2 api calls to update current and default player region
 		FPlayerSessionResponseDelegate OnUpdateCurrentRegionComplete;
-		OnUpdateCurrentRegionComplete.BindWeakLambda(this, [this](FPlayerSession PlayerSession, bool bSuccess, FText Error)
+		OnUpdateCurrentRegionComplete.BindWeakLambda(this, [this, PreviousDefaultRegion](FPlayerSession PlayerSession, bool bConnectedSuccessfully, FText Error)
 		{
-			if (bSuccess)
+			if (bConnectedSuccessfully)
 			{
 				FText Text = LOCTEXT("SessionUpdateSuccess", "Successfully updated session.");
 				AlertMessage->Show(Text, EAlertType::Success);
 				
 				SelectedRegion = PlayerSession.ServerRegionId;
+				if (UNodecraftRadioButton* RadioButton = Cast<UNodecraftRadioButton>(RadioButtonGroup->GetChildById(CurrentRegion)))
+				{
+					RadioButton->SetSecondaryLabelText(FText::GetEmpty());
+				}
 				CurrentRegion = SelectedRegion;
+				if (UNodecraftRadioButton* RadioButton = Cast<UNodecraftRadioButton>(RadioButtonGroup->GetChildById(CurrentRegion)))
+				{
+					RadioButton->SetSecondaryLabelText(LOCTEXT_CURRENT_REGION);
+				}
 				
 				UpdateChangeRegionButtonEnabledState();
 
-				for (UWidget* Child : RegionsVerticalBox->GetAllChildren())
-				{
-					if (UServerRegionRow* ServerRegionRow = Cast<UServerRegionRow>(Child))
-					{
-						// todo: would be better with store pattern
-						ServerRegionRow->SetIsCurrent(ServerRegionRow->GetRegionID() == SelectedRegion, true);
-					}
-				}
-
 				// update default region if default region checkbox is checked
 				FGetPlayerSettingsDelegate OnUpdateDefaultRegionSettings;
-				OnUpdateDefaultRegionSettings.BindWeakLambda(this, [this](UPlayerSettings* PlayerSettings, bool bSuccess, FText Error)
+				OnUpdateDefaultRegionSettings.BindWeakLambda(this, [this, PreviousDefaultRegion](UPlayerSettings* PlayerSettings, bool bSuccess, FText Error)
 				{
 					if (bSuccess)
 					{
-						for (UWidget* Child : RegionsVerticalBox->GetAllChildren())
+						if (UNodecraftRadioButton* RadioButton = Cast<UNodecraftRadioButton>(RadioButtonGroup->GetChildById(PreviousDefaultRegion)))
 						{
-						   if (UServerRegionRow* ServerRegionRow = Cast<UServerRegionRow>(Child))
-						   {
-						   		ServerRegionRow->SetIsCurrent(ServerRegionRow->GetRegionID() == SelectedRegion, true);
-								ServerRegionRow->SetIsDefault(ServerRegionRow->GetRegionID() == DefaultRegion);
-						   }
+							RadioButton->SetTertiaryLabelText(FText::GetEmpty());
+						}
+						if (UNodecraftRadioButton* RadioButton = Cast<UNodecraftRadioButton>(RadioButtonGroup->GetChildById(DefaultRegion)))
+						{
+							RadioButton->SetTertiaryLabelText(LOCTEXT_DEFAULT_REGION);
 						}
 					}
 				});
@@ -119,38 +122,24 @@ void UUserSettingsServerRegion::NativeConstruct()
 			}
 		});
 		UPlayerSettingsService::Get().UpdateCurrentPlayerRegion(SelectedRegion, OnUpdateCurrentRegionComplete);
-
 	});
 }
 
 void UUserSettingsServerRegion::CreateServerRegionRows(const TArray<UServerRegionDataObject*>& Regions)
 {
-	UAssetStreamerSubsystem::Get().LoadAssetAsync(RegionRowWidget.ToSoftObjectPath(), FStreamableDelegate::CreateWeakLambda(this, [this, Regions]
+	for (UServerRegionDataObject* Region : Regions)
 	{
-		for (UServerRegionDataObject* Region : Regions)
-		{
-			if (UServerRegionRow* Row = CreateWidget<UServerRegionRow>(GetOwningPlayer(), RegionRowWidget.Get()); IsValid(Row))
-			{
-				Row->Configure(Region, Region->GetID() == DefaultRegion, Region->GetID() == SelectedRegion);
-				RegionsVerticalBox->AddChild(Row);
-
-				// On Region Row clicked: update visuals to set selected server region
-				Row->OnServerRegionButtonClicked.BindWeakLambda(this, [this](FString RegionID)
-				{
-					SelectedRegion = RegionID;
-					UpdateChangeRegionButtonEnabledState();
-					
-					for (UWidget* Child : RegionsVerticalBox->GetAllChildren())
-					{
-						if (UServerRegionRow* ServerRegionRow = Cast<UServerRegionRow>(Child))
-						{
-							ServerRegionRow->SetIsCurrent(ServerRegionRow->GetRegionID() == RegionID, false);
-						}
-					}
-				});
-			}
-		}
-	}));
+		FNodecraftRadioButtonConfiguration Descriptor = FNodecraftRadioButtonConfiguration();
+		Descriptor.Id = FName(Region->GetID());
+		Descriptor.PrimaryLabel = Region->GetTitle();
+		Descriptor.SecondaryLabel = Region->GetID() == CurrentRegion ? LOCTEXT_CURRENT_REGION : FText::GetEmpty();
+		Descriptor.TertiaryLabel = Region->GetID() == DefaultRegion ? LOCTEXT_DEFAULT_REGION : FText::GetEmpty();
+		RadioButtonGroup->AddChildRadioButton(Descriptor, Region->GetID() == CurrentRegion);
+	}
+	if (RadioButtonGroup->HasAnyChildren())
+	{
+		RadioButtonGroup->OnRadioButtonSelected.AddUniqueDynamic(this, &ThisClass::UpdateSelectedRegion);
+	}
 }
 
 void UUserSettingsServerRegion::OnDefaultRegionCheckboxStateChanged(bool bIsChecked)
@@ -161,6 +150,45 @@ void UUserSettingsServerRegion::OnDefaultRegionCheckboxStateChanged(bool bIsChec
 void UUserSettingsServerRegion::UpdateChangeRegionButtonEnabledState()
 {
 	ChangeRegionButton->SetIsEnabled((CurrentRegion != SelectedRegion) || SetAsDefaultCheckBox->IsChecked());
+	
+	if (ULocalPlayer* LocalPlayer = GetOwningLocalPlayer())
+	{
+		UpdateActionBindings(UCommonInputSubsystem::Get(LocalPlayer)->GetCurrentInputType());
+	}
+}
+
+UWidget* UUserSettingsServerRegion::NavRule_NavigateToLastServerRegion(EUINavigation InNavigation)
+{
+	if (RadioButtonGroup->HasAnyChildren())
+	{
+		return RadioButtonGroup->GetChildAt(RadioButtonGroup->GetChildrenCount() - 1);
+	}
+	return nullptr;
+}
+
+void UUserSettingsServerRegion::UpdateActionBindings(ECommonInputType CurrentInputType)
+{
+	ChangeRegionButton->SetVisibility(CurrentInputType == ECommonInputType::MouseAndKeyboard ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	
+	if (ChangeRegionButton->GetIsEnabled() == false && ConfirmUIActionHandle.IsValid())
+	{
+		ConfirmUIActionHandle.Unregister();
+	}
+	else if (ChangeRegionButton->GetIsEnabled() && ConfirmInputActionData.IsNull() == false && ConfirmUIActionHandle.IsValid() == false)
+	{
+		ConfirmUIActionHandle = RegisterUIActionBinding(
+			FBindUIActionArgs(ConfirmInputActionData, bDisplayInActionBar,
+				FSimpleDelegate::CreateWeakLambda(this, [this]
+				{
+					ChangeRegionButton->OnClicked().Broadcast();
+				})));
+	}
+}
+
+void UUserSettingsServerRegion::UpdateSelectedRegion(int32 Index)
+{
+	SelectedRegion = RadioButtonGroup->GetSelectedId();
+	UpdateChangeRegionButtonEnabledState();
 }
 
 UAlertMessage* UUserSettingsServerRegion::GetAlertMessage()
@@ -168,4 +196,28 @@ UAlertMessage* UUserSettingsServerRegion::GetAlertMessage()
 	return AlertMessage;
 }
 
+void UUserSettingsServerRegion::NativeOnInitialized()
+{
+	Super::NativeOnInitialized();
+
+	ON_INPUT_METHOD_CHANGED(UpdateActionBindings)
+}
+
+void UUserSettingsServerRegion::NativeDestruct()
+{
+	Super::NativeDestruct();
+	if (ConfirmUIActionHandle.IsValid())
+	{
+		ConfirmUIActionHandle.Unregister();
+	}
+	RadioButtonGroup->OnRadioButtonSelected.RemoveAll(this);
+}
+
+UWidget* UUserSettingsServerRegion::NativeGetDesiredFocusTarget() const
+{
+	return RadioButtonGroup ? RadioButtonGroup : Super::NativeGetDesiredFocusTarget();
+}
+
 #undef LOCTEXT_NAMESPACE
+#undef LOCTEXT_CURRENT_REGION
+#undef LOCTEXT_DEFAULT_REGION

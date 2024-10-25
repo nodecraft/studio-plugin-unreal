@@ -3,11 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Core/Public/Delegates/Delegate.h"
 #include "CommonActivatableWidgetSwitcher.h"
+#include "CommonBorder.h"
 #include "CommonLazyImage.h"
 #include "CommonUserWidget.h"
 #include "NodecraftAuthProvider.h"
+#include "Input/CommonBoundActionBar.h"
 #include "UI/Common/AsyncImage.h"
 #include "AuthScreen.generated.h"
 
@@ -55,12 +56,22 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	UAuth_TermsOfServicePrompt* ConsentsPrompt;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Auth", meta=(BindWidget))
+	UWidget* ActionBarContainer;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Auth", meta=(BindWidget))
+	UCommonBoundActionBar* ActionBar;
+
 	UPROPERTY(meta=(BindWidget))
 	UImage* LoadingSpinner;
 
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAuthComplete);
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category = "Nodecraft UI|Auth")
 	FOnAuthComplete OnAuthComplete;
 
 	FSimpleDelegate OnCallFailed;
+
+private:
+	void UpdateActionBindings(ECommonInputType CurrentInputType);
+
 };

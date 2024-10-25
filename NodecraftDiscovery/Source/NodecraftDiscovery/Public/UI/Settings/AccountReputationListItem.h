@@ -3,8 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CommonActivatableWidget.h"
-#include "Blueprint/IUserObjectListEntry.h"
+#include "UI/Common/NodecraftListItemBase.h"
 #include "AccountReputationListItem.generated.h"
 
 class UCommonTextStyle;
@@ -14,7 +13,7 @@ class UCommonTextBlock;
  * 
  */
 UCLASS()
-class NODECRAFTDISCOVERY_API UAccountReputationListItem : public UCommonActivatableWidget, public IUserObjectListEntry
+class NODECRAFTDISCOVERY_API UAccountReputationListItem : public UNodecraftListItemBase
 {
 	GENERATED_BODY()
 
@@ -24,18 +23,18 @@ protected:
 	// IUserObjectListEntry
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Account Reputation", meta = (BindWidget))
 	UCommonTextBlock* BanScope;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Account Reputation", meta = (BindWidget))
 	UCommonTextBlock* ServerOrCommunityName;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Account Reputation", meta = (BindWidget))
 	UCommonTextBlock* ModerationDate;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Account Reputation", meta = (BindWidget))
 	UCommonTextBlock* ExpirationText;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Styles")
 	TMap<EModerationDuration, TSoftClassPtr<UCommonTextStyle>> ExpirationTextStyle;
 };

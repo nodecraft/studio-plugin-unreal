@@ -5,7 +5,6 @@
 
 #include "CommonTextBlock.h"
 #include "DataTypes/ModerationTypes.h"
-#include "DeveloperSettings/NodecraftStudioStyleSettings.h"
 #include "Models/AccountReputationEntryDataObject.h"
 #include "Models/ServerDataObject.h"
 #include "Subsystems/AssetStreamerSubsystem.h"
@@ -49,12 +48,12 @@ void UAccountReputationListItem::NativeOnListItemObjectSet(UObject* ListItemObje
 		ServerOrCommunityName->SetText(Community->GetTitle());
 	}
 	
-	ModerationDate->SetText(FText::FromString(AccountReputationEntryDataObject->GetDateCreated().ToFormattedString(*UNodecraftStudioStyleSettings::GetDateFormat())));
+	ModerationDate->SetText(FText::AsDate(AccountReputationEntryDataObject->GetDateCreated()));
 
 	switch (AccountReputationEntryDataObject->GetModerationDuration())
 	{
 	case EModerationDuration::Temporary:
-		ExpirationText->SetText(FText::FromString(AccountReputationEntryDataObject->GetDateExpires().ToFormattedString(*UNodecraftStudioStyleSettings::GetDateFormat())));
+		ExpirationText->SetText(FText::AsDate(AccountReputationEntryDataObject->GetDateExpires()));
 		break;
 	case EModerationDuration::Permanent:
 		ExpirationText->SetText(LOCTEXT("PermanentBan", "Permanent"));

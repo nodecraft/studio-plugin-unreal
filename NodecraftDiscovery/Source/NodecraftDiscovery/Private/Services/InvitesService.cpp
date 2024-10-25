@@ -3,7 +3,7 @@
 
 #include "Services/InvitesService.h"
 
-#include "Api/NodecraftStudioApi.h"
+#include "API/NodecraftStudioApi.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Models/InviteDataObject.h"
 #include "Models/ServerDataObject.h"
@@ -75,7 +75,7 @@ bool UInvitesService::ListInvitableServers(const FString& FriendID, FOnListInvit
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Response.Get()->GetContentAsString());
-				if (const TArray<TSharedPtr<FJsonValue>>& Data = ResJson.JsonObject->GetArrayField("data"); Data.Num() > 0)
+				if (const TArray<TSharedPtr<FJsonValue>>& Data = ResJson.JsonObject->GetArrayField(TEXT("data")); Data.Num() > 0)
 				{
 					TArray<UServerDataObject*> Servers;
 					for (TSharedPtr<FJsonValue, ESPMode::ThreadSafe> JsonValue : Data)
@@ -120,7 +120,7 @@ bool UInvitesService::CreateInvite(const FString& ServerID, const FString& Frien
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Response.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject> Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject> Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
 					const UInviteDataObject* InviteDataObject = UInviteDataObject::FromJson(Data.ToSharedRef());
 					OnComplete.ExecuteIfBound(InviteDataObject, true, TOptional<FText>());

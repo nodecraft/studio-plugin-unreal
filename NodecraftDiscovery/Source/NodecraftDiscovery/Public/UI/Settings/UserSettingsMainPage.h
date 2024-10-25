@@ -6,7 +6,7 @@
 #include "CommonActivatableWidget.h"
 #include "UserSettingsMainPage.generated.h"
 
-class UNodecraftButtonBase;
+class UIconTextLoadingButton;
 class UCommonTextBlock;
 class UImage;
 class UAsyncImage;
@@ -26,28 +26,29 @@ public:
 	
 protected:
 	virtual void NativeConstruct() override;
+	virtual UWidget* NativeGetDesiredFocusTarget() const override;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|User Settings", meta = (BindWidget))
 	UAsyncImage* PlayerImage;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|User Settings", meta = (BindWidget))
 	UImage* IdentTypeImage;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|User Settings", meta = (BindWidget))
 	UCommonTextBlock* Username;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UNodecraftButtonBase* ChangeServerRegionButton;
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|User Settings", meta = (BindWidget))
+	UIconTextLoadingButton* ChangeServerRegionButton;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UNodecraftButtonBase* PlayerReputationButton;
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|User Settings", meta = (BindWidget))
+	UIconTextLoadingButton* PlayerReputationButton;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UNodecraftButtonBase* DataPrivacyButton;
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|User Settings", meta = (BindWidget))
+	UIconTextLoadingButton* DataPrivacyButton;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UNodecraftButtonBase* LegalStuffButton;
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|User Settings", meta = (BindWidget))
+	UIconTextLoadingButton* LegalStuffButton;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UNodecraftButtonBase* ExitMultiplayerButton;
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|User Settings", meta = (BindWidget))
+	UIconTextLoadingButton* ExitMultiplayerButton;
 };

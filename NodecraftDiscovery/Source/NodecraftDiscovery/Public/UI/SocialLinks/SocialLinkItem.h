@@ -3,19 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CommonActivatableWidget.h"
-#include "Blueprint/IUserObjectListEntry.h"
+#include "Common/NodecraftDelegates.h"
+#include "UI/Common/NodecraftListItemBase.h"
 #include "SocialLinkItem.generated.h"
 
 enum class ESocialLinkType : uint8;
-class UNodecraftButtonBase;
 class UCommonTextBlock;
 class UImage;
-/**
- * 
- */
+
+
 UCLASS()
-class NODECRAFTDISCOVERY_API USocialLinkItem : public UCommonActivatableWidget, public IUserObjectListEntry
+class NODECRAFTDISCOVERY_API USocialLinkItem : public UNodecraftListItemBase
 {
 	GENERATED_BODY()
 
@@ -23,21 +21,25 @@ class NODECRAFTDISCOVERY_API USocialLinkItem : public UCommonActivatableWidget, 
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
 	// IUserObjectListEntry
 
-protected:
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-	UNodecraftButtonBase* Button;
+	virtual FNavigationReply NativeOnNavigation(const FGeometry& MyGeometry, const FNavigationEvent& InNavigationEvent, const FNavigationReply& InDefaultReply) override;
+	virtual FReply NativeOnFocusReceived(const FGeometry& InGeometry, const FFocusEvent& InFocusEvent) override;
+	virtual void NativeOnFocusLost(const FFocusEvent& InFocusEvent) override;
+
+public:
+	FOnNavigationDelegate OnNavDelegate;
 	
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+protected:	
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Social", meta=(BindWidget))
 	UImage* LinkIconLeft;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Social", meta=(BindWidget))
 	UCommonTextBlock* Label;
 	
 	// Set in blueprint and never changes
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Social", meta=(BindWidget))
 	UImage* LinkIconRight;
 	
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Social")
 	TMap<ESocialLinkType, TSoftObjectPtr<UTexture2D>> IconMap;
 	
 	FString URL;

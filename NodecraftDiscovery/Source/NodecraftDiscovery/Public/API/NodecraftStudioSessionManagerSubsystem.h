@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/Engine.h"
+#include "Subsystems/EngineSubsystem.h"
 #include "Components/EditableTextBox.h"
 #include "Services/IdentService.h"
 #include "UObject/Object.h"

@@ -20,9 +20,23 @@ void UAllowsDrawerWidget::NativeOnActivated()
 	{
 		if (bSuccess)
 		{
+			ListView->OnEntryWidgetGenerated().AddWeakLambda(this, [this](UWidget& EntryWidget)
+			{
+				EntryWidget.SetFocus();
+				ListView->OnEntryWidgetGenerated().RemoveAll(this);
+			});
 			ListView->SetListItems(Allows);
 		}
 		LoadGuard->SetIsLoading(false);
 	});
 	UAllowsService::Get().ListPlayerAllows(OnListPlayerAllows);
+}
+
+UWidget* UAllowsDrawerWidget::NativeGetDesiredFocusTarget() const
+{
+	if (ListView->GetDisplayedEntryWidgets().IsValidIndex(0))
+	{
+		return ListView->GetDisplayedEntryWidgets()[0];
+	}
+	return Super::NativeGetDesiredFocusTarget();
 }

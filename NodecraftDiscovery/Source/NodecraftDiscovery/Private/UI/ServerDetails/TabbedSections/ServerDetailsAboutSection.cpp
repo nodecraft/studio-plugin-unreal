@@ -7,9 +7,7 @@
 #include "CommonTextBlock.h"
 #include "Components/WrapBox.h"
 #include "UI/SocialLinks/SocialLinksList.h"
-// #include "Models/SocialLinkDataObject.h"
 #include "UI/Common/NodecraftLoadGuard.h"
-#include "UI/Foundation/NodecraftButtonBase.h"
 
 #define LOCTEXT_NAMESPACE "ServerDetailsAboutSection"
 DEFINE_LOG_CATEGORY_STATIC(LogServerAboutSection, All, All);
@@ -18,6 +16,40 @@ void UServerDetailsAboutSection::SetServerId(const FString& InServerId)
 {
 	ServerId = InServerId;
 }
+
+void UServerDetailsAboutSection::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	SocialLinksList->OnEntryWidgetGenerated().AddWeakLambda(this, [this](UWidget& EntryWidget)
+	{
+		EntryWidget.SetFocus();
+		SocialLinksList->OnEntryWidgetGenerated().RemoveAll(this);
+	});
+
+	SocialLinksList->OnControllerMovedUpFromFirstItem.BindWeakLambda(this, [this]
+	{
+		ContentScrollBox->ScrollToStart();
+	});
+
+	SocialLinksList->OnControllerMovedDownFromLastItem.BindWeakLambda(this, [this]
+	{
+		ContentScrollBox->ScrollToEnd();
+		if (ServerTags->HasAnyChildren())
+		{
+			ServerTags->GetChildAt(0)->SetFocus();
+		}
+	});
+}
+
+// UWidget* UServerDetailsAboutSection::NativeGetDesiredFocusTarget() const
+// {
+// 	if (SocialLinksList->GetFirstWidget())
+// 	{
+// 		return SocialLinksList->GetFirstWidget();
+// 	}
+// 	return Super::NativeGetDesiredFocusTarget();
+// }
 
 void UServerDetailsAboutSection::SetServerData(UServerDataObject* InServerDataObject)
 {
@@ -41,18 +73,8 @@ void UServerDetailsAboutSection::SetServerData(UServerDataObject* InServerDataOb
 	
 	SocialLinksList->SetListItems(ServerDataObject->GetSocialLinks());
 
-	if (ServerTagButtonClass.IsNull() == false)
-	{
-		ServerTags->ClearChildren();
-		for (FString Tag : ServerDataObject->GetTags())
-		{
-			UClass* ButtonClass = ServerTagButtonClass.LoadSynchronous();
-			UNodecraftButtonBase* TagWidget = CreateWidget<UNodecraftButtonBase>(this, ButtonClass);
-			TagWidget->SetButtonText(FText::FromString(Tag));
-			ServerTags->AddChild(TagWidget);
-		}
-		ServerTagsTitle->SetVisibility(ServerTags->GetChildrenCount() > 0 ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-	}
+	ServerTags->CreateTags(ServerDataObject);
+	ServerTagsTitle->SetVisibility(ServerTags->GetChildrenCount() > 0 ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 	
 	LoadGuard->SetIsLoading(false);
 }

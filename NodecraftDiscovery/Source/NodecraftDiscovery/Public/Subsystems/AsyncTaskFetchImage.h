@@ -7,6 +7,8 @@
 #include "Interfaces/IHttpRequest.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
 #include "UObject/Object.h"
+#include "Engine/Texture2D.h"
+
 #include "AsyncTaskFetchImage.generated.h"
 
 class UTexture2DDynamic;
@@ -22,7 +24,7 @@ class NODECRAFTDISCOVERY_API UAsyncTaskFetchImage : public UBlueprintAsyncAction
 	GENERATED_UCLASS_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, meta=( BlueprintInternalUseOnly="true" ))
+	UFUNCTION(BlueprintCallable, Category = "Nodecraft Subsystems", meta=( BlueprintInternalUseOnly="true" ))
 	static UAsyncTaskFetchImage* DownloadImage(FString URL);
 
 public:

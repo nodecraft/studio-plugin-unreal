@@ -11,6 +11,7 @@
 #include "GenericPlatform/GenericPlatformHttp.h"
 #include "Models/PlayerConnectionDataObject.h"
 #include "Subsystems/MessageRouterSubsystem.h"
+#include "TimerManager.h"
 #include "Utility/NodecraftUtility.h"
 
 #define POLL_RATE 5.0f
@@ -48,7 +49,7 @@ bool ULinksService::CreatePlayerConnection_Internal(const FString& SubjectStr, F
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Response.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject> Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject> Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
 					UPlayerConnectionDataObject* PlayerConnectionDataObject = UPlayerConnectionDataObject::FromJson(Data.ToSharedRef());
 					CurrentConnectionId = PlayerConnectionDataObject->GetId();
@@ -135,7 +136,7 @@ bool ULinksService::GetPlayerConnection(const FString& ConnectionId, FOnPlayerCo
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Response.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject> Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject> Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
 					UPlayerConnectionDataObject* PlayerConnectionDataObject = UPlayerConnectionDataObject::FromJson(Data.ToSharedRef());
 					OnComplete.ExecuteIfBound(PlayerConnectionDataObject, true, TOptional<FText>());
