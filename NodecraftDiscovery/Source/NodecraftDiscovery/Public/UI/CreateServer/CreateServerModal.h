@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "CommonActivatableWidget.h"
+#include "CommonInputTypeEnum.h"
 #include "CreateServerModal.generated.h"
 
 class UNodecraftScrollBox;

@@ -4,6 +4,7 @@
 
 #include "DeveloperSettings/NodecraftStudioInputSettings.h"
 #include "Input/CommonUIActionRouterBase.h"
+#include "Input/CommonUIInputTypes.h"
 #include "Subsystems/NodecraftUIManagerSubsystem.h"
 
 void UNodecraftScrollBox::SetListeningForInput(bool bShouldListen, TOptional<FText> InDisplayName)
