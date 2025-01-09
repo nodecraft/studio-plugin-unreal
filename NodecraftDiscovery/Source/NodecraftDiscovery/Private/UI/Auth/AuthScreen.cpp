@@ -118,6 +118,11 @@ void UAuthScreen::NativeConstruct()
 	if (UTexture2D* CachedGameBG = RemoteImageSubsystem.GetCachedGameBackground())
 	{
 		LazyGameBackgroundImage->SetBrushFromTexture(CachedGameBG);
+		LazyGameBackgroundImage->SetColorAndOpacity(FLinearColor::White);
+	}
+	else
+	{
+		LazyGameBackgroundImage->SetColorAndOpacity(FLinearColor::Black);
 	}
 
 	// Actually start auth process
@@ -147,6 +152,7 @@ void UAuthScreen::AttemptAutoAuth()
 		if (bSuccess)
 		{
 			LazyGameBackgroundImage->LoadImageAsync(GameDataObject->GetImageBackgroundURL(), NC_CACHED_GAME_BACKGROUND_FILENAME);
+			LazyGameBackgroundImage->SetColorAndOpacity(GameDataObject->GetImageBackgroundURL().IsEmpty() ? FLinearColor::Black : FLinearColor::White);
 
 			if (UIdentService::Get().IsAutoAuthAvailable())
 			{

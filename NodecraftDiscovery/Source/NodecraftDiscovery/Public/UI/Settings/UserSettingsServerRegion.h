@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/DataTable.h"
 #include "CommonActivatableWidget.h"
 #include "CommonInputTypeEnum.h"
 #include "UserSettingsServerRegion.generated.h"

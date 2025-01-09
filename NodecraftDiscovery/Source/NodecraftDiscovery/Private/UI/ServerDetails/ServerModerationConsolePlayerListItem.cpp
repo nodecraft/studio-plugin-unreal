@@ -13,8 +13,8 @@
 
 void UServerModerationConsolePlayerListItem::NativePreConstruct()
 {
-	UnselectedStyle.BorderStyle = BorderStyleDefault;
-	SelectedStyle.BorderStyle = BorderStyleFocused;
+	UnselectedStyle.BorderStyle = bUseKeyboardAndMouseStyles ? BorderStyleDefault_MouseAndKeyboard : BorderStyleDefault_Gamepad;
+	SelectedStyle.BorderStyle = bUseKeyboardAndMouseStyles ? BorderStyleFocused_MouseAndKeyboard : BorderStyleFocused_Gamepad;
 	Super::NativePreConstruct();
 }
 

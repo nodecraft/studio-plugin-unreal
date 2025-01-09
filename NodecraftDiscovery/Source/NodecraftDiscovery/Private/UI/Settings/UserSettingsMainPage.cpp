@@ -7,6 +7,7 @@
 #include "API/NodecraftStudioSessionManagerSubsystem.h"
 #include "DeveloperSettings/NodecraftStudioIdentitySettings.h"
 #include "Services/IdentService.h"
+#include "Subsystems/MenuManagerSubsystem.h"
 #include "UI/Common/AsyncImage.h"
 #include "UI/Common/IconTextLoadingButton.h"
 
@@ -32,6 +33,15 @@ void UUserSettingsMainPage::NativeConstruct()
 		OnButtonClicked.ExecuteIfBound(4);
 	});
 
+	CustomerSupportButton->OnClicked().AddWeakLambda(this, [this]()
+	{
+		UMenuManagerSubsystem::Get().ShowInternalRedirectModal(EPlayerConnectionSubject::Support);
+	});
+	BillingButton->OnClicked().AddWeakLambda(this, [this]()
+	{
+		UMenuManagerSubsystem::Get().ShowInternalRedirectModal(EPlayerConnectionSubject::Billing);
+	});
+	
 	// get player name, avatar and ident type
 	const FPlayerSession PlayerSession = UNodecraftStudioSessionManager::Get().GetPlayerSession();
 	const FText User = FText::FromString(PlayerSession.PlayerData->GetUsername().IsEmpty() ?

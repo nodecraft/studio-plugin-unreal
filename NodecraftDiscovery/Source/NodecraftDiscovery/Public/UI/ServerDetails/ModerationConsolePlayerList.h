@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/DataTable.h"
 #include "ServerModerationConsolePlayerListSection.h"
 #include "Common/NodecraftDelegates.h"
 #include "Components/CheckBox.h"
@@ -17,6 +18,17 @@ enum class EPlayerSelectorMode : uint8
 	Players,
 	Staff,
 	Banned
+};
+
+UENUM()
+enum class EModerationConsolePlayerListType : uint8
+{
+	None,
+	Owner,
+	Moderators,
+	OnlinePlayers,
+	OfflinePlayers,
+	BannedPlayers
 };
 
 USTRUCT()
@@ -49,6 +61,19 @@ UCLASS()
 class NODECRAFTDISCOVERY_API UNoPlayersFoundItemData : public UObject
 {
 	GENERATED_BODY()
+
+public:
+	static UNoPlayersFoundItemData* Create(EModerationConsolePlayerListType InItemType)
+	{
+		UNoPlayersFoundItemData* NoPlayersFoundItemData = NewObject<UNoPlayersFoundItemData>();
+		NoPlayersFoundItemData->ItemType = InItemType;
+		return NoPlayersFoundItemData;
+	}
+
+	EModerationConsolePlayerListType GetListType() const { return ItemType; }
+	
+private:
+	EModerationConsolePlayerListType ItemType = EModerationConsolePlayerListType::None;
 };
 
 
@@ -132,7 +157,7 @@ public:
 
 private:
 	void AddSectionHeader(const FText& HeaderText, const FModerationConsoleHeaderIcon& IconData);
-	void AddPlayersToList(const TArray<UPlayerServerDetailsDataObject*>& Players, bool bAreChildrenSelectable);
+	void AddPlayersToList(const TArray<UPlayerServerDetailsDataObject*>& Players, bool bAreChildrenSelectable, const TOptional<EModerationConsolePlayerListType>& PlayerListType = TOptional<EModerationConsolePlayerListType>());
 	
 	UPROPERTY()
 	UPlayerServerDetailsDataObject* Owner;

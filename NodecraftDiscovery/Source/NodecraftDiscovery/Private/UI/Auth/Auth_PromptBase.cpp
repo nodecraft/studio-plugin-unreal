@@ -86,7 +86,7 @@ void UAuth_PromptBase::SubmitRequest()
 
 void UAuth_PromptBase::RefreshActions(ECommonInputType InputType)
 {
-	if (InputType == ECommonInputType::Gamepad)
+	if (InputType == ECommonInputType::Gamepad && SubmitButtonActionData.IsNull() == false && SubmitButtonActionHandle.IsValid() == false)
 	{
 		FBindUIActionArgs Args = FBindUIActionArgs(SubmitButtonActionData, bDisplayInActionBar,
 					FSimpleDelegate::CreateWeakLambda(this, [this]

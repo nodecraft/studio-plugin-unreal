@@ -61,11 +61,19 @@ void UModerationActionsSection::ConfigureForPlayerServerDetails(TArray<UPlayerSe
 		UE_LOG(LogModerationActionsSection, Error, TEXT("UModerationActionsSection::ConfigureForPlayerServerDetails: Failed to get world"));
 	}
 
-	// Kick button is enabled if all players are online
-	KickButton->SetIsEnabled(bAllPlayersOnline);
-	// Ban button is enabled if all players are not banned (i.e. if the ban is null)
-	BanButton->SetIsEnabled(bNoPlayersAreBanned);
-	BanButton->SetVisibility(bNoPlayersAreBanned ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	// Kick button is enabled if all players are online, and if, 
+	// in the event that any players are moderators, the server's Owner is performing this action. 
+	// Moderators can't kick other moderators.
+	const bool bCanPerformKick = bAllPlayersOnline
+		&& (PlayerRole == EPlayerRole::Owner || bNoPlayersAreModerators);
+	KickButton->SetIsEnabled(bCanPerformKick);
+	// Ban button is enabled if all players are not banned (i.e. if the ban is null), and if,
+	// in the event that any players are moderators, the server's Owner is performing this action.
+	// Moderators can't ban other moderators.
+	const bool bCanPerformBan = bNoPlayersAreBanned
+		&& (PlayerRole == EPlayerRole::Owner || bNoPlayersAreModerators);
+	BanButton->SetIsEnabled(bCanPerformBan);
+	BanButton->SetVisibility(bCanPerformBan ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 	// Unban button is enabled if all players are banned
 	// If players are a mix of banned and unbanned, both buttons are hidden
 	UnbanButton->SetIsEnabled(bAllPlayersAreBanned);

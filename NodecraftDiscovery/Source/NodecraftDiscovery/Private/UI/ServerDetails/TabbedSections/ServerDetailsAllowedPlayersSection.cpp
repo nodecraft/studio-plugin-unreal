@@ -76,41 +76,44 @@ void UServerDetailsAllowedPlayersSection::SetAddFriendsPopupVisibility(const ESl
 {
 	AddFriendsPopupContainer->SetVisibility(InVisibility);
 
-	if (InVisibility == ESlateVisibility::Collapsed || InVisibility == ESlateVisibility::Hidden)
+	if (ServerDataObject && ServerDataObject->GetRole() == EPlayerRole::Owner)
 	{
-		RegisterAddFriendsUIAction();
+		if (InVisibility == ESlateVisibility::Collapsed || InVisibility == ESlateVisibility::Hidden)
+		{
+			RegisterAddFriendsUIAction();
 
-		if (UAllowsViewModel* SelectedItem = AllAllowsListView->GetSelectedItem<UAllowsViewModel>())
-		{
-			AllAllowsListView->RequestNavigateToItem(SelectedItem);
-		}
-		else if (AllAllowsListView->GetDisplayedEntryWidgets().IsValidIndex(0))
-		{
-			AllAllowsListView->NavigateToIndex(0);
-		}
-	}
-	else
-	{
-		if (AddFriendsUIActionHandle.IsValid())
-		{
-			AddFriendsUIActionHandle.Unregister();
-		}
-		
-		if (AddFriendsListView->GetDisplayedEntryWidgets().IsValidIndex(0))
-		{
-			AddFriendsListView->NavigateToIndex(0);
+			if (UAllowsViewModel* SelectedItem = AllAllowsListView->GetSelectedItem<UAllowsViewModel>())
+			{
+				AllAllowsListView->RequestNavigateToItem(SelectedItem);
+			}
+			else if (AllAllowsListView->GetDisplayedEntryWidgets().IsValidIndex(0))
+			{
+				AllAllowsListView->NavigateToIndex(0);
+			}
 		}
 		else
 		{
-			 OnAddFriendsListWidgetGeneratedHandle = AddFriendsListView->OnEntryWidgetGenerated().AddWeakLambda(
-				this, [&](UWidget& InEntryWidget) mutable
-				{
-					if (AddFriendsListView->GetDisplayedEntryWidgets().IsValidIndex(0) && OnAddFriendsListWidgetGeneratedHandle.IsValid())
+			if (AddFriendsUIActionHandle.IsValid())
+			{
+				AddFriendsUIActionHandle.Unregister();
+			}
+		
+			if (AddFriendsListView->GetDisplayedEntryWidgets().IsValidIndex(0))
+			{
+				AddFriendsListView->NavigateToIndex(0);
+			}
+			else
+			{
+				OnAddFriendsListWidgetGeneratedHandle = AddFriendsListView->OnEntryWidgetGenerated().AddWeakLambda(
+					this, [&](UWidget& InEntryWidget) mutable
 					{
-						AddFriendsListView->NavigateToIndex(0);
-						OnAddFriendsListWidgetGeneratedHandle.Reset();
-					}
-				});
+						if (AddFriendsListView->GetDisplayedEntryWidgets().IsValidIndex(0) && OnAddFriendsListWidgetGeneratedHandle.IsValid())
+						{
+							AddFriendsListView->NavigateToIndex(0);
+							OnAddFriendsListWidgetGeneratedHandle.Reset();
+						}
+					});
+			}
 		}
 	}
 }
@@ -135,6 +138,7 @@ void UServerDetailsAllowedPlayersSection::SetServerData(UServerDataObject* InSer
 	if (bIsSameServer)
 	{
 		RefreshHeaderVisibility();
+		RegisterAddFriendsUIAction();
 	}
 	else
 	{
@@ -245,8 +249,6 @@ void UServerDetailsAllowedPlayersSection::NativeOnInitialized()
 			});
 		}
 	});
-
-	RegisterAddFriendsUIAction();
 }
 
 void UServerDetailsAllowedPlayersSection::NativeConstruct()
@@ -316,11 +318,14 @@ void UServerDetailsAllowedPlayersSection::RegisterAddFriendsUIAction()
 	{
 		return;
 	}
-	
-	FBindUIActionArgs BindUIActionArgs = FBindUIActionArgs(AddFriendsInputActionData, true,
-		FSimpleDelegate::CreateWeakLambda(this, [this]
-		{
-			AddFriendsButton->OnClicked().Broadcast();
-		}));
-	AddFriendsUIActionHandle = RegisterUIActionBinding(BindUIActionArgs);
+
+	if (ServerDataObject && ServerDataObject->GetRole() == EPlayerRole::Owner)
+	{
+		const FBindUIActionArgs BindUIActionArgs = FBindUIActionArgs(AddFriendsInputActionData, bDisplayInActionBar,
+		                                                             FSimpleDelegate::CreateWeakLambda(this, [this]
+		                                                             {
+			                                                             AddFriendsButton->OnClicked().Broadcast();
+		                                                             }));
+		AddFriendsUIActionHandle = RegisterUIActionBinding(BindUIActionArgs);
+	}
 }

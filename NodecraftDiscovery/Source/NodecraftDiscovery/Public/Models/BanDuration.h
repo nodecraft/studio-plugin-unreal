@@ -34,7 +34,7 @@ struct NODECRAFTDISCOVERY_API FBanDuration
 		}
 		else
 		{
-			return FTimespan(Days, Hours, Minutes);
+			return FTimespan(Days, Hours, Minutes, 0);
 		}
 	}
 };

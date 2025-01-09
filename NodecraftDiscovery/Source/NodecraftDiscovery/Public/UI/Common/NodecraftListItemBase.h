@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CommonInputTypeEnum.h"
 #include "Engine/DataTable.h"
 #include "CommonUserWidget.h"
 #include "Blueprint/IUserObjectListEntry.h"
@@ -46,19 +47,34 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI", meta=(BindWidgetOptional))
 	UCommonBorder* Border;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Nodecraft UI|Appearance")
-	TSubclassOf<UCommonBorderStyle> BorderStyleDefault;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Nodecraft UI|Appearance", meta=(InlineEditConditionToggle))
+	bool bUseKeyboardAndMouseStyles = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Nodecraft UI|Appearance")
-	TSubclassOf<UCommonBorderStyle> BorderStyleFocused;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Nodecraft UI|Appearance")
+	TSubclassOf<UCommonBorderStyle> BorderStyleDefault_Gamepad;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Nodecraft UI|Appearance")
-	FMargin BorderPaddingDefault = FMargin(0.f);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Nodecraft UI|Appearance")
+	TSubclassOf<UCommonBorderStyle> BorderStyleFocused_Gamepad;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Nodecraft UI|Appearance")
-	FMargin BorderPaddingFocused = FMargin(0.f);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Nodecraft UI|Appearance", meta=(EditCondition="bUseKeyboardAndMouseStyles"))
+	TSubclassOf<UCommonBorderStyle> BorderStyleDefault_MouseAndKeyboard;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Nodecraft UI|Appearance", meta=(EditCondition="bUseKeyboardAndMouseStyles"))
+	TSubclassOf<UCommonBorderStyle> BorderStyleFocused_MouseAndKeyboard;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Nodecraft UI|Appearance")
+	FMargin BorderPaddingDefault_Gamepad = FMargin(0.f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Nodecraft UI|Appearance")
+	FMargin BorderPaddingFocused_Gamepad = FMargin(0.f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Nodecraft UI|Appearance", meta=(EditCondition="bUseKeyboardAndMouseStyles"))
+	FMargin BorderPaddingDefault_MouseAndKeyboard = FMargin(0.f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Nodecraft UI|Appearance", meta=(EditCondition="bUseKeyboardAndMouseStyles"))
+	FMargin BorderPaddingFocused_MouseAndKeyboard = FMargin(0.f);
 	
-	UPROPERTY(EditAnywhere, Category = Input, meta=(RowType="/Script/CommonUI.CommonInputActionDataBase"))
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Input", meta=(RowType="/Script/CommonUI.CommonInputActionDataBase"))
 	FDataTableRowHandle PrimaryInputActionData;
 
 	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Input", meta=(RowType="/Script/CommonUI.CommonInputActionDataBase"))
@@ -73,6 +89,25 @@ protected:
 	FUIActionBindingHandle PrimaryUIActionHandle;
 	FUIActionBindingHandle SecondaryUIActionHandle;
 
-	UFUNCTION(BlueprintCallable, Category = "Nodecraft UI")
-	void ResetBorderStyle();
+	void ResetStyles(ECommonInputType InputType);
+
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Debug", meta=(InlineEditConditionToggle))
+	bool bPreviewStyles = true;
+	
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Debug", meta=(EditCondition="bPreviewStyles"))
+	ECommonInputType PreviewInputType = ECommonInputType::Gamepad;
+
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Debug", meta=(EditCondition="PreviewInputType == ECommonInputType::MouseAndKeyboard"))
+	bool bPreviewDefaultMouseAndKeyboardStyles = false;
+
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Debug", meta=(EditCondition="PreviewInputType == ECommonInputType::MouseAndKeyboard"))
+	bool bPreviewFocusedMouseAndKeyboardStyles = false;
+	
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Debug", meta=(EditCondition="PreviewInputType == ECommonInputType::Gamepad"))
+	bool bPreviewDefaultControllerStyles = false;
+
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Debug", meta=(EditCondition="PreviewInputType == ECommonInputType::Gamepad"))
+	bool bPreviewFocusedControllerStyles = false;
+#endif
 };

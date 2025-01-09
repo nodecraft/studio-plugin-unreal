@@ -49,7 +49,35 @@ void UServerModerationHistoryListItem::NativeOnListItemObjectSet(UObject* ListIt
 			switch (ModerationLogEntryDataObject->GetModerationDuration())
 			{
 			case EModerationDuration::Temporary:
-				Expires->SetText(FText::AsDate(ModerationLogEntryDataObject->GetDateExpires()));
+				{
+					const FTimespan TimeLeft = ModerationLogEntryDataObject->GetDateExpires() - FDateTime::UtcNow();
+					if (TimeLeft < FTimespan::FromMinutes(1))
+					{
+                        Expires->SetText(LOCTEXT("ExpiresInLessThanMinute", "in less than a minute"));
+					}
+					else if (TimeLeft < FTimespan::FromHours(1))
+					{
+						Expires->SetText(FText::FormatOrdered(LOCTEXT("ExpiresInMinutes", "in {0} {0}|plural(one=minute, other=minutes)"), TimeLeft.GetMinutes()));
+					}
+					else if (TimeLeft < FTimespan::FromDays(1))
+					{
+						Expires->SetText(FText::FormatOrdered(
+							LOCTEXT("ExpiresInHoursAndMinutes",
+							        "in {0} {0}|plural(one=hour, other=hours) {1} {1}|plural(one=minute, other=minutes)"),
+							TimeLeft.GetHours(), TimeLeft.GetMinutes()));
+					}
+					else if (TimeLeft <= FTimespan::FromDays(7))
+					{
+						Expires->SetText(FText::FormatOrdered(
+							LOCTEXT("ExpiresInDaysAndHours",
+							        "in {0} {0}|plural(one=day, other=days) {1} {1}|plural(one=hour, other=hours)"),
+							TimeLeft.GetDays(), TimeLeft.GetHours()));
+					}
+					else
+					{
+						Expires->SetText(FText::AsDate(ModerationLogEntryDataObject->GetDateExpires(), EDateTimeStyle::Type::Short));
+					}
+				}
 				break;
 			case EModerationDuration::Permanent:
 				Expires->SetText(LOCTEXT("PermanentBanOrKick", "Permanent"));

@@ -49,6 +49,6 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Nodecraft UI|Friends List Item|Styles")
 	TMap<FString, TSoftClassPtr<UCommonTextStyle>> StatusStyle;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Nodecraft UI|Friends List Item|Styles")
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Nodecraft UI|Friends List Item")
 	TSoftClassPtr<UServerInvitesModal> ServerInvitesModalClass;
 };

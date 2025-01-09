@@ -125,7 +125,7 @@ protected:
 private:
 	void SetupTabs();
 
-	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Tab List", meta=(TitleProperty="TabId"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Nodecraft UI|Tab List", meta=(TitleProperty="TabId", AllowPrivateAccess))
 	TArray<FNodecraftTabDescriptor> PreregisteredTabInfoArray;
 	
 	/**

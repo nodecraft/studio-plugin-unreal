@@ -191,7 +191,15 @@ void UModerationReasonsSection::NativeOnInitialized()
 	{
 		LoadGuard->SetIsLoading(false);
 	}));
+}
 
+void UModerationReasonsSection::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	// The following code cannot be in NativeOnInitialized because the combobox is not yet created,
+	// which causes default values not to be set correctly and the event not to be fired.
+	
 	// Setup Ban Duration combobox
 	BanDurationComboBox->ClearOptions();
 	BanDurationComboBox->ClearSelection();
@@ -199,14 +207,23 @@ void UModerationReasonsSection::NativeOnInitialized()
 	{
 		BanDurationComboBox->AddOption(BanDuration.DisplayText.ToString());
 	}
-
+	
 	BanDurationComboBox->OnSelectionChanged.AddDynamic(this, &UModerationReasonsSection::OnBanDurationChanged);
 	
 	BanDurationComboBox->SetSelectedIndex(DefaultBanDurationIndex);
 	// Make sure event is fired
 	BanDurationComboBox->OnSelectionChanged.Broadcast(BanDurationComboBox->GetSelectedOption(), ESelectInfo::Direct);
-
+	
 	PrivateNotesBlock->OnTextChanged.AddDynamic(this, &UModerationReasonsSection::OnPrivateNotesChanged);
+}
+
+void UModerationReasonsSection::NativeDestruct()
+{
+	BanDurationComboBox->OnSelectionChanged.RemoveAll(this);
+	BanDurationComboBox->OnSelectionChanged.Clear();
+	PrivateNotesBlock->OnTextChanged.RemoveAll(this);
+	
+	Super::NativeDestruct();
 }
 
 void UModerationReasonsSection::GetSelectedBanDuration(FBanDuration& OutBanDuration)

@@ -293,27 +293,27 @@ void UModerationConsolePlayerList::RefreshList()
 		}
 		else
 		{
-			UNoPlayersFoundItemData* NoOwner = NewObject<UNoPlayersFoundItemData>();
+			UNoPlayersFoundItemData* NoOwner = UNoPlayersFoundItemData::Create(EModerationConsolePlayerListType::Owner);
 			AddItem(NoOwner);
 		}
 
 		AddSectionHeader(LOCTEXT("ModeratorsHeader", "Moderators"), PlayerRoleIcons.FindRef("Moderator"));
-		AddPlayersToList(Moderators, true);
+		AddPlayersToList(Moderators, true, TOptional(EModerationConsolePlayerListType::Moderators));
 	}
 
 	if (DisplayMode == EPlayerSelectorMode::All || DisplayMode == EPlayerSelectorMode::Players)
 	{
 		AddSectionHeader(LOCTEXT("OnlinePlayersHeader", "Online Players"), PlayerRoleIcons.FindRef("Online"));
-		AddPlayersToList(OnlinePlayers, true);
+		AddPlayersToList(OnlinePlayers, true, TOptional(EModerationConsolePlayerListType::OnlinePlayers));
 
 		AddSectionHeader(LOCTEXT("OfflinePlayersHeader", "Offline Players"), PlayerRoleIcons.FindRef("Offline"));
-		AddPlayersToList(OfflinePlayers, true);
+		AddPlayersToList(OfflinePlayers, true, TOptional(EModerationConsolePlayerListType::OfflinePlayers));
 	}
 	
 	if (DisplayMode == EPlayerSelectorMode::All || DisplayMode == EPlayerSelectorMode::Banned)
 	{
 		AddSectionHeader(LOCTEXT("BannedPlayersHeader", "Banned Players"), PlayerRoleIcons.FindRef("Banned"));
-		AddPlayersToList(BannedPlayers, true);
+		AddPlayersToList(BannedPlayers, true, TOptional(EModerationConsolePlayerListType::BannedPlayers));
 	}
 }
 
@@ -325,7 +325,8 @@ void UModerationConsolePlayerList::AddSectionHeader(const FText& HeaderText, con
 	AddItem(HeaderVm);
 }
 
-void UModerationConsolePlayerList::AddPlayersToList(const TArray<UPlayerServerDetailsDataObject*>& Players, const bool bAreChildrenSelectable)
+void UModerationConsolePlayerList::AddPlayersToList(const TArray<UPlayerServerDetailsDataObject*>& Players, const bool bAreChildrenSelectable,
+                                                    const TOptional<EModerationConsolePlayerListType>& PlayerListType)
 {
 	TArray<UPlayerServerDetailsViewModel*> PlayerViewModels = {};
 
@@ -344,8 +345,8 @@ void UModerationConsolePlayerList::AddPlayersToList(const TArray<UPlayerServerDe
 	}
 	else
 	{
-		UNoPlayersFoundItemData* NoModerators = NewObject<UNoPlayersFoundItemData>();
-		AddItem(NoModerators);
+		UNoPlayersFoundItemData* NoPlayers = UNoPlayersFoundItemData::Create(PlayerListType.Get(EModerationConsolePlayerListType::None));
+		AddItem(NoPlayers);
 	}
 }
 

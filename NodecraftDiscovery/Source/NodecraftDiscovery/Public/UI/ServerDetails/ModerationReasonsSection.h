@@ -24,6 +24,10 @@ class NODECRAFTDISCOVERY_API UModerationReasonsSection : public UCommonUserWidge
 	GENERATED_BODY()
 
 protected:
+	virtual void NativeOnInitialized() override;
+	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
+	
 	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UMultiLineEditableText* PrivateNotesBlock;
 
@@ -81,7 +85,6 @@ public:
 
 	UFUNCTION()
 	UWidget* HandleTileNavLeftFromLeftColumn(EUINavigation Direction);
-	virtual void NativeOnInitialized() override;
 
 	void SetConfirmButtonEnabled(bool bActive);
 	void ClearPrivateNotes();

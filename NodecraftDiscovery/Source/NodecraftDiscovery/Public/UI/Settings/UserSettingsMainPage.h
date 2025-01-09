@@ -44,6 +44,12 @@ protected:
 	UIconTextLoadingButton* PlayerReputationButton;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|User Settings", meta = (BindWidget))
+	UIconTextLoadingButton* CustomerSupportButton;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|User Settings", meta = (BindWidget))
+	UIconTextLoadingButton* BillingButton;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|User Settings", meta = (BindWidget))
 	UIconTextLoadingButton* DataPrivacyButton;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|User Settings", meta = (BindWidget))

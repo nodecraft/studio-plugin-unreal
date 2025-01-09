@@ -10,6 +10,26 @@
 
 #define LOCTEXT_NAMESPACE "PlayerList"
 
+void UPlayerList::NativePreConstruct()
+{
+	Super::NativePreConstruct();
+	if (NoPlayersImageAsset)
+	{
+		NoPlayersImage->SetBrushFromTexture(NoPlayersImageAsset);
+	}
+}
+
+void UPlayerList::NativeConstruct()
+{
+	Super::NativeConstruct();
+	NoPlayersImage->SetVisibility(ESlateVisibility::Hidden);
+	NoPlayersTextBlock->SetVisibility(ESlateVisibility::Hidden);
+	if (NoPlayersSubTextBlock)
+	{
+		NoPlayersSubTextBlock->SetVisibility(ESlateVisibility::Hidden);
+	}
+}
+
 void UPlayerList::SetTitleText(const FText Text)
 {
 	TitleTextBlock->SetText(Text);
@@ -43,11 +63,26 @@ void UPlayerList::LoadData(EPlayerListType PlayerListType, UServerDataObject* Se
 			{
 				NoPlayersImage->SetVisibility(ESlateVisibility::Hidden);
 				NoPlayersTextBlock->SetVisibility(ESlateVisibility::Hidden);
+				if (NoPlayersSubTextBlock)
+				{
+					NoPlayersSubTextBlock->SetVisibility(ESlateVisibility::Hidden);
+				}
 			}
 			else
 			{
 				NoPlayersImage->SetVisibility(ESlateVisibility::HitTestInvisible);
 				NoPlayersTextBlock->SetVisibility(ESlateVisibility::HitTestInvisible);
+				if (PlayerListType == EPlayerListType::Recent)
+				{
+					if (NoPlayersSubTextBlock)
+					{
+						NoPlayersSubTextBlock->SetVisibility(ESlateVisibility::Hidden);
+					}
+				}
+				else if (NoPlayersSubTextBlock)
+				{
+					NoPlayersSubTextBlock->SetVisibility(ESlateVisibility::HitTestInvisible);
+				}
 			}
 			SetServerData(PlayerListType, PlayerListDataObject);
 
@@ -61,11 +96,15 @@ void UPlayerList::LoadData(EPlayerListType PlayerListType, UServerDataObject* Se
 	case EPlayerListType::Online:
 		ServersService.GetOnlinePlayers(ServerDataObject->GetId(), OnComplete);
 		NoPlayersTextBlock->SetText(LOCTEXT("NoOnlinePlayers", "No Players Online"));
+		if (NoPlayersSubTextBlock)
+		{
+			NoPlayersSubTextBlock->SetText(LOCTEXT("JoinToBeFirstInServer", "Join to be the first player in this server!"));
+		}
 		break;
 		
 	case EPlayerListType::Recent:
 		ServersService.GetRecentPLayers(ServerDataObject->GetId(), OnComplete);
-		NoPlayersTextBlock->SetText(LOCTEXT("NoRecentPlayers", "No Recent Players"));
+		NoPlayersTextBlock->SetText(LOCTEXT("NoServerHistory", "No Server History"));
 		break;
 		
 	default:

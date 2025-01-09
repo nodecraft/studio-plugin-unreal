@@ -24,6 +24,10 @@ class NODECRAFTDISCOVERY_API UPlayerList : public UCommonActivatableWidget
 	GENERATED_BODY()
 
 protected:
+	virtual void NativePreConstruct() override;
+	virtual void NativeConstruct() override;
+
+protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Player List", meta=(BindWidget))
 	UCommonLoadGuard* LoadGuard;
 	
@@ -47,6 +51,12 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Player List", meta=(BindWidget))
 	UNodecraftScrollBox* ScrollBox;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Player List", meta=(BindWidgetOptional))
+	UCommonTextBlock* NoPlayersSubTextBlock;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Nodecraft UI|Player List")
+	UTexture2D* NoPlayersImageAsset;
 
 public:
 	UFUNCTION(BlueprintCallable,  Category = "Nodecraft UI|Player List")

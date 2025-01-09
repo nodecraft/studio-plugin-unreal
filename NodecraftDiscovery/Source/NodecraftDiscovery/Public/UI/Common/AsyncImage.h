@@ -27,4 +27,8 @@ public:
 	void LoadPlayerAvatarAsync(const UPlayerDataObject* PlayerDataObject);
 
 	void SetLoading(bool bIsLoading);
+
+private:
+	// We need to keep track of the loading state here because UCommonLazyImage::IsLoading() is not reliable for our purposes
+	bool bIsCurrentlyLoading = false;
 };

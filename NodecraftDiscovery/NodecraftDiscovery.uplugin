@@ -2,6 +2,7 @@
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "1.0",
+	"EngineVersion": "5.1.0",
 	"FriendlyName": "Nodecraft Studio",
 	"Description": "Monetize Player-Created Game Servers In-App",
 	"Category": "Other",

@@ -65,5 +65,11 @@ void UAsyncImage::LoadPlayerAvatarAsync(const UPlayerDataObject* PlayerDataObjec
 
 void UAsyncImage::SetLoading(bool bIsLoading)
 {
+	const bool bLoadingStateChanged = bIsCurrentlyLoading != bIsLoading;
 	SetIsLoading(bIsLoading);
+	bIsCurrentlyLoading = bIsLoading;
+	if (bLoadingStateChanged)
+	{
+		OnLoadingStateChanged().Broadcast(bIsLoading);
+	}
 }

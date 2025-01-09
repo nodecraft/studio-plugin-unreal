@@ -9,6 +9,7 @@
 #include "Services/ServersService.h"
 #include "Subsystems/MenuManagerSubsystem.h"
 #include "Components/Border.h"
+#include "Components/SizeBox.h"
 #include "Input/CommonUIInputTypes.h"
 #include "Services/ServerQueueService.h"
 #include "UI/Foundation/NodecraftLoadingButton.h"
@@ -18,6 +19,24 @@ void UServerCard::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
 	SetServerData(Cast<UServerDataObject>(ListItemObject));
  }
+
+void UServerCard::NativePreConstruct()
+{
+	Super::NativePreConstruct();
+	
+	if (bOverride_MaxDesiredWidth)
+	{
+		ServerImageSizeBox->SetMaxDesiredWidth(LoadingImageMaxDesiredWidth);
+	}
+	if (bOverride_MaxDesiredHeight)
+	{
+		ServerImageSizeBox->SetMaxDesiredHeight(LoadingImageMaxDesiredHeight);
+	}
+	if (bOverride_MaxAspectRatio)
+	{
+		ServerImageSizeBox->SetMaxAspectRatio(LoadingImageMaxAspectRatio);
+	}
+}
 
 void UServerCard::SetServerData(UServerDataObject* InServerData)
 {
@@ -56,6 +75,31 @@ void UServerCard::SetServerData(UServerDataObject* InServerData)
 
 	if (ServerDataObject->GetImageUrl().IsEmpty() == false)
 	{
+		ServerImage->OnLoadingStateChanged().RemoveAll(this);
+		ServerImage->OnLoadingStateChanged().AddWeakLambda(this, [this](bool bIsLoading)
+		{
+			if (bIsLoading == false)
+			{
+				ServerImageSizeBox->ClearMaxDesiredHeight();
+				ServerImageSizeBox->ClearMaxDesiredWidth();
+				ServerImageSizeBox->ClearMaxAspectRatio();
+			}
+			else
+			{
+				if (bOverride_MaxDesiredWidth)
+				{
+					ServerImageSizeBox->SetMaxDesiredWidth(LoadingImageMaxDesiredWidth);
+				}
+				if (bOverride_MaxDesiredHeight)
+				{
+					ServerImageSizeBox->SetMaxDesiredHeight(LoadingImageMaxDesiredHeight);
+				}
+				if (bOverride_MaxAspectRatio)
+				{
+					ServerImageSizeBox->SetMaxAspectRatio(LoadingImageMaxAspectRatio);
+				}
+			}
+		});
 		ServerImage->LoadImageAsync(ServerDataObject->GetImageUrl(), ServerDataObject->GetImageFilenameForCache());
 	}
 

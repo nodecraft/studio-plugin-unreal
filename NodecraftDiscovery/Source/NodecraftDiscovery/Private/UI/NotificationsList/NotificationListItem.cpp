@@ -239,8 +239,10 @@ void UNotificationListItem::UpdateBorderStyles()
 	if (const UNotificationDataObject* NotificationDataObject = GetListItem<UNotificationDataObject>())
 	{
 		FNotificationListItemConfig ListItemConfig = *NotificationTypeConfigs.Find(NotificationDataObject->GetType());
-		BorderStyleDefault = ListItemConfig.BorderStyleDefault;
-		BorderStyleFocused = ListItemConfig.BorderStyleFocused;
+		BorderStyleDefault_Gamepad = ListItemConfig.BorderStyleDefault;
+		BorderStyleFocused_Gamepad = ListItemConfig.BorderStyleFocused;
+		BorderStyleDefault_MouseAndKeyboard = ListItemConfig.BorderStyleDefault;
+		BorderStyleFocused_MouseAndKeyboard = ListItemConfig.BorderStyleFocused;
 	}
 }
 
