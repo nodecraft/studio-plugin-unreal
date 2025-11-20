@@ -77,10 +77,10 @@ bool UAllowsService::ListPlayerAllows(FListPlayerAllowsResponseDelegate OnComple
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Response.Get()->GetContentAsString());
-				if (const TArray<TSharedPtr<FJsonValue>> Data = ResJson.JsonObject->GetArrayField("data"); Data.Num() > 0)
+				if (const TArray<TSharedPtr<FJsonValue>> Data = ResJson.JsonObject->GetArrayField(TEXT("data")); Data.Num() > 0)
 				{
 					TArray<UAllowsDataObject*> Allows;
-					for (const TSharedPtr<FJsonValue> JsonValue : Data)
+					for (const TSharedPtr<FJsonValue>& JsonValue : Data)
 					{
 						UAllowsDataObject* Allow = UAllowsDataObject::FromJson(JsonValue->AsObject().ToSharedRef());
 						Allows.Add(Allow);
@@ -123,7 +123,7 @@ bool UAllowsService::UpdateAllow(const FString& ServerId, const FString& AllowId
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Response.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject> Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject> Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
 					UAllowsDataObject* Allow = UAllowsDataObject::FromJson(Data.ToSharedRef());
 					UAllowsStore::Get().UpdateAllow(Allow);
@@ -163,10 +163,10 @@ bool UAllowsService::ListAllowsByServer(const FString& ServerId, FListPlayerAllo
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Response.Get()->GetContentAsString());
-				if (const TArray<TSharedPtr<FJsonValue>> Data = ResJson.JsonObject->GetArrayField("data"); Data.Num() > 0)
+				if (const TArray<TSharedPtr<FJsonValue>> Data = ResJson.JsonObject->GetArrayField(TEXT("data")); Data.Num() > 0)
 				{
 					TArray<UAllowsDataObject*> Allows;
-					for (const TSharedPtr<FJsonValue> JsonValue : Data)
+					for (const TSharedPtr<FJsonValue>& JsonValue : Data)
 					{
 						UAllowsDataObject* Allow = UAllowsDataObject::FromJson(JsonValue->AsObject().ToSharedRef());
 						Allows.Add(Allow);
@@ -209,7 +209,7 @@ bool UAllowsService::CreateAllow(const FString& ServerId, const FString& PlayerI
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Response.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject> Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject> Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
 					UAllowsDataObject* Allow = UAllowsDataObject::FromJson(Data.ToSharedRef());
 					UAllowsStore::Get().AddAllowToCurrentServer(Allow);

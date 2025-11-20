@@ -3,15 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CommonActivatableWidget.h"
-#include "Blueprint/IUserObjectListEntry.h"
+#include "Common/NodecraftDelegates.h"
+#include "UI/Common/NodecraftListItemBase.h"
 #include "AllowedPlayersListItem.generated.h"
 
 class UHorizontalBox;
 class UNodecraftLoadGuard;
 enum class EAllowStatus : uint8;
 class UCommonTextStyle;
-class UNodecraftButtonBase;
 class UImage;
 class UCommonTextBlock;
 class UAsyncImage;
@@ -21,62 +20,68 @@ struct FAllowStatusStyle
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Styles")
 	TSubclassOf<UCommonTextStyle> TextStyle;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Styles")
 	FLinearColor TintColor = FLinearColor::Transparent;
 };
 /**
  * 
  */
 UCLASS()
-class NODECRAFTDISCOVERY_API UAllowedPlayersListItem : public UCommonActivatableWidget, public IUserObjectListEntry
+class NODECRAFTDISCOVERY_API UAllowedPlayersListItem : public UNodecraftListItemBase
 {
 	GENERATED_BODY()
 
+public:
+	FOnNavigationDelegate OnNavDelegate;
+
 protected:
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
+	virtual FReply NativeOnFocusReceived(const FGeometry& InGeometry, const FFocusEvent& InFocusEvent) override;
+	virtual void NativeOnFocusLost(const FFocusEvent& InFocusEvent) override;
+	virtual FNavigationReply NativeOnNavigation(const FGeometry& MyGeometry, const FNavigationEvent& InNavigationEvent, const FNavigationReply& InDefaultReply) override;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UNodecraftLoadGuard* LoadGuard;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UAsyncImage* Avatar;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* Username;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UImage* IdentImage;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* IdentText;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UImage* StatusIcon;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* StatusText;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UNodecraftButtonBase* RevokeButton;
 	
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Server Details")
 	FAllowStatusStyle PendingStyle;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Server Details")
 	FAllowStatusStyle AcceptedStyle;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Server Details")
 	FAllowStatusStyle DeclinedStyle;
 	
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Server Details")
 	FAllowStatusStyle RevokedStyle;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Server Details")
 	TMap<EAllowStatus, TSoftObjectPtr<UTexture2D>> StatusIcons;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Server Details")
 	TMap<EAllowStatus, FText> StatusMessage;
+
+private:
+	void UpdateActionBar();
 };

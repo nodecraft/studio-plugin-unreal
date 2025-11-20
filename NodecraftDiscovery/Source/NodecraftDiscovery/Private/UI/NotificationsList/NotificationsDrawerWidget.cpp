@@ -76,7 +76,26 @@ void UNotificationsDrawerWidget::NativeConstruct()
 		UE_LOG(LogNotificationsDrawerWidget, Error, TEXT("UNotificationsDrawerWidget::NativeConstruct: Tried to add live notifications listener, but failed to get notifications store"));
 	}
 	
-	
+	ActiveNotificationsList->OnNativeVisibilityChanged.AddWeakLambda(this, [this](ESlateVisibility InVisibility)
+	{
+		if (InVisibility == ESlateVisibility::Visible || InVisibility == ESlateVisibility::HitTestInvisible || InVisibility == ESlateVisibility::SelfHitTestInvisible)
+		{
+			if (ActiveNotificationsList->GetListView()->GetDisplayedEntryWidgets().IsValidIndex(0))
+			{
+				ActiveNotificationsList->GetListView()->GetDisplayedEntryWidgets()[0]->SetFocus();
+			}
+		}
+	});
+	HistoricNotificationsList->OnNativeVisibilityChanged.AddWeakLambda(this, [this](ESlateVisibility InVisibility)
+	{
+		if (InVisibility == ESlateVisibility::Visible || InVisibility == ESlateVisibility::HitTestInvisible || InVisibility == ESlateVisibility::SelfHitTestInvisible)
+		{
+			if (HistoricNotificationsList->GetListView()->GetDisplayedEntryWidgets().IsValidIndex(0))
+			{
+				HistoricNotificationsList->GetListView()->GetDisplayedEntryWidgets()[0]->SetFocus();
+			}
+		}
+	});
 }
 
 void UNotificationsDrawerWidget::NativeDestruct()
@@ -94,6 +113,19 @@ void UNotificationsDrawerWidget::NativeDestruct()
 	}
 
 	Super::NativeDestruct();
+}
+
+UWidget* UNotificationsDrawerWidget::NativeGetDesiredFocusTarget() const
+{
+	if (ActiveNotificationsList->IsVisible() && ActiveNotificationsList->GetListView()->GetDisplayedEntryWidgets().IsValidIndex(0))
+	{
+		return ActiveNotificationsList->GetListView()->GetDisplayedEntryWidgets()[0];
+	}
+	if (HistoricNotificationsList->IsVisible() && HistoricNotificationsList->GetListView()->GetDisplayedEntryWidgets().IsValidIndex(0))
+	{
+		return HistoricNotificationsList->GetListView()->GetDisplayedEntryWidgets()[0];
+	}
+	return Super::NativeGetDesiredFocusTarget();
 }
 
 void UNotificationsDrawerWidget::ShowNotifsPage(const ENotificationListType NotifListType)

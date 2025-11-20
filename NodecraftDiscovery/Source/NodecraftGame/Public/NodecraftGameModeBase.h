@@ -29,6 +29,8 @@ public:
 
 	virtual void StartToLeaveMap() override;
 
+	virtual void SwapPlayerControllers(APlayerController* OldPC, APlayerController* NewPC) override;
+
 private:
 	// While this is true, any player leave events will be marked as "reconnecting", which will
 	// prevent their session token from being automatically invalidated.

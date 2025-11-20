@@ -11,25 +11,25 @@ UAccountReputationEntryDataObject* UAccountReputationEntryDataObject::FromJson(c
 	UAccountReputationEntryDataObject* AccountReputationEntryDataObject = NewObject<UAccountReputationEntryDataObject>();
 
 	const TSharedPtr<FJsonObject>* Server;
-	if (Json->TryGetObjectField("server", Server))
+	if (Json->TryGetObjectField(TEXT("server"), Server))
 	{
 		AccountReputationEntryDataObject->ServerDataObject = UServerDataObject::FromJson(Server->ToSharedRef());
 	}
 
 	const TSharedPtr<FJsonObject>* Community;
-	if (Json->TryGetObjectField("community", Community))
+	if (Json->TryGetObjectField(TEXT("community"), Community))
 	{
 		AccountReputationEntryDataObject->CommunityDataObject = UCommunityDataObject::FromJson(Community->ToSharedRef());
 	}
 	
 	FString DateCreatedString;
-	if (Json->TryGetStringField("date_created", DateCreatedString))
+	if (Json->TryGetStringField(TEXT("date_created"), DateCreatedString))
 	{
 		FDateTime::ParseIso8601(*DateCreatedString, AccountReputationEntryDataObject->DateCreated);
 	}
 
 	FString DateExpiresString;
-	if (Json->TryGetStringField("date_expires", DateExpiresString))
+	if (Json->TryGetStringField(TEXT("date_expires"), DateExpiresString))
 	{
 		FDateTime::ParseIso8601(*DateExpiresString, AccountReputationEntryDataObject->DateExpires);
 	}
@@ -42,7 +42,7 @@ UAccountReputationEntryDataObject* UAccountReputationEntryDataObject::FromJson(c
 		AccountReputationEntryDataObject->ModerationDuration = EModerationDuration::Expired;
 	}
 
-	const FString Scope = Json->GetStringField("scope");
+	const FString Scope = Json->GetStringField(TEXT("scope"));
 	if (Scope.Equals("server", ESearchCase::IgnoreCase))
 	{
 		AccountReputationEntryDataObject->ModerationScope = EModerationScope::Server;

@@ -3,13 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CommonActivatableWidget.h"
-#include "Blueprint/IUserObjectListEntry.h"
+#include "UI/Common/NodecraftListItemBase.h"
 #include "AllowsListItem.generated.h"
 
+class UAllowsDataObject;
 class UNodecraftLoadGuard;
 class UHorizontalBox;
-class UNodecraftButtonBase;
 class UCommonTextBlock;
 class UImage;
 class UAsyncImage;
@@ -17,7 +16,7 @@ class UAsyncImage;
  * 
  */
 UCLASS()
-class NODECRAFTDISCOVERY_API UAllowsListItem : public UCommonActivatableWidget, public IUserObjectListEntry
+class NODECRAFTDISCOVERY_API UAllowsListItem : public UNodecraftListItemBase
 {
 	GENERATED_BODY()
 
@@ -26,30 +25,31 @@ protected:
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
 	// IUserObjectListEntry
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	virtual FReply NativeOnFocusReceived(const FGeometry& InGeometry, const FFocusEvent& InFocusEvent) override;
+	virtual void NativeOnFocusLost(const FFocusEvent& InFocusEvent) override;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Allows", meta=(BindWidget))
 	UNodecraftLoadGuard* LoadGuard;
 	
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Allows", meta=(BindWidget))
 	UAsyncImage* PlayerImage;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Allows", meta=(BindWidget))
 	UImage* IdentImage;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Allows", meta=(BindWidget))
 	UCommonTextBlock* Username;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Allows", meta=(BindWidget))
 	UCommonTextBlock* ServerName;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Allows", meta=(BindWidget))
 	UCommonTextBlock* RevokedOrExpiredText;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Allows", meta=(BindWidget))
 	UHorizontalBox* ButtonsBox;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-	UNodecraftButtonBase* AcceptButton;
-
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-	UNodecraftButtonBase* DeclineButton;
+private:
+	void UpdateActionBar();
+	bool bShowActionsInActionBar = false;
 };

@@ -6,6 +6,7 @@
 #include "ServerStatus.h"
 #include "Models/KickDataObject.h"
 #include "UObject/Object.h"
+#include "Dom/JsonObject.h"
 #include "HeartbeatDataObjects.generated.h"
 
 USTRUCT()
@@ -36,13 +37,13 @@ struct NODECRAFTDISCOVERY_API FHeartbeatResponseDataObject
 	TOptional<FDateTime> Since;
 
 	// An array of active session IDs for validation.
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft Data")
 	TArray<FString> SessionsActive;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft Data")
 	TArray<FString> SessionsStale;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft Data")
 	TArray<FPlayerKickDataObject> Kicks;
 	
 	static FHeartbeatResponseDataObject FromJson(const TSharedRef<FJsonObject>& Json);

@@ -18,10 +18,11 @@ class NODECRAFTDISCOVERY_API UAllowsDrawerWidget : public UCommonActivatableWidg
 
 protected:
 	virtual void NativeOnActivated() override;
+	virtual UWidget* NativeGetDesiredFocusTarget() const override;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Allows", meta=(BindWidget))
 	UNodecraftLoadGuard* LoadGuard;
 	
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Allows", meta=(BindWidget))
 	UCommonListView* ListView;
 };

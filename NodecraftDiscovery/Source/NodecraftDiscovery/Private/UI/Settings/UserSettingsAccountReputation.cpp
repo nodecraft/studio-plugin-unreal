@@ -24,9 +24,10 @@ void UUserSettingsAccountReputation::NativeOnActivated()
 		if (bSuccess)
 		{
 			ListView->SetListItems(ReputationEntries);
+			ListView->SetFocus();
 		}
-		BansContent->SetVisibility(ReputationEntries.Num() > 0 ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-		NoBansContent->SetVisibility(ReputationEntries.Num() > 0 ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+		BansContent->SetVisibility(ReputationEntries.Num() > 0 ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+		NoBansContent->SetVisibility(ReputationEntries.Num() > 0 ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
 		LoadGuard->SetIsLoading(false);
 	});
 	UPlayerReputationService::Get().GetPlayerReputation(OnGetPlayerReputation);

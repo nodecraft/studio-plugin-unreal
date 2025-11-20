@@ -21,15 +21,15 @@ class NODECRAFTDISCOVERY_API UUserSettingsAccountReputation : public UCommonActi
 protected:
 	virtual void NativeOnActivated() override;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Account Reputation", meta = (BindWidget))
 	UNodecraftLoadGuard* LoadGuard;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Account Reputation", meta = (BindWidget))
 	UCommonListView* ListView;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Account Reputation", meta = (BindWidget))
 	UVerticalBox* BansContent;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Account Reputation", meta = (BindWidget))
 	UCommonBorder* NoBansContent;
 };

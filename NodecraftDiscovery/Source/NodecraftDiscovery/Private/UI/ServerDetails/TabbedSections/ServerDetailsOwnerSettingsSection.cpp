@@ -19,10 +19,20 @@ void UServerDetailsOwnerSettingsSection::NativeConstruct()
 {
 	Super::NativeConstruct();
 	OpenServerControlPanelButton->SetIsEnabled(false);
+	OpenServerControlPanelButton->SetAllNavigationRules(EUINavigationRule::Stop, OpenServerControlPanelButton->GetFName());
 }
 
 void UServerDetailsOwnerSettingsSection::NativeDestruct()
 {
 	Super::NativeDestruct();
 	OpenServerControlPanelButton->OnClicked().Clear();
+}
+
+UWidget* UServerDetailsOwnerSettingsSection::NativeGetDesiredFocusTarget() const
+{
+	if (OpenServerControlPanelButton && OpenServerControlPanelButton->GetIsEnabled())
+	{
+		return OpenServerControlPanelButton;
+	}
+	return Super::NativeGetDesiredFocusTarget();
 }

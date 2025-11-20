@@ -35,28 +35,28 @@ FHeartbeatResponseDataObject FHeartbeatResponseDataObject::FromJson(const TShare
 	FHeartbeatResponseDataObject HeartbeatData = FHeartbeatResponseDataObject();
 
 	// Parse SessionActive, an array of strings
-	const TArray<TSharedPtr<FJsonValue>> SessionsActive = Json->GetArrayField("sessions_active");
+	const TArray<TSharedPtr<FJsonValue>> SessionsActive = Json->GetArrayField(TEXT("sessions_active"));
 	for (TSharedPtr<FJsonValue> Session : SessionsActive)
 	{
 		HeartbeatData.SessionsActive.Add(Session->AsString());
 	}
 
 	// Parse SessionStale
-	const TArray<TSharedPtr<FJsonValue>> SessionsStale = Json->GetArrayField("sessions_stale");
+	const TArray<TSharedPtr<FJsonValue>> SessionsStale = Json->GetArrayField(TEXT("sessions_stale"));
 	for (TSharedPtr<FJsonValue> Session : SessionsStale)
 	{
 		HeartbeatData.SessionsStale.Add(Session->AsString());
 	}
 
 	// Parse Kicks
-	const TArray<TSharedPtr<FJsonValue>> Kicks = Json->GetArrayField("kicks");
+	const TArray<TSharedPtr<FJsonValue>> Kicks = Json->GetArrayField(TEXT("kicks"));
 	for (TSharedPtr<FJsonValue> Kick : Kicks)
 	{
 		HeartbeatData.Kicks.Add(FPlayerKickDataObject::FromJson(Kick->AsObject().ToSharedRef()));
 	}
 
 	// Parse Since, which comes in as a string if at all
-	if (FString SinceString; Json->TryGetStringField("since", SinceString))
+	if (FString SinceString; Json->TryGetStringField(TEXT("since"), SinceString))
 	{
 		FDateTime SinceDateTime;
 		if (FDateTime::ParseIso8601(*SinceString, SinceDateTime))

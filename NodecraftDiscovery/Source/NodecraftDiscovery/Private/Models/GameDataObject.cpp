@@ -9,7 +9,7 @@ UGameDataObject* UGameDataObject::FromJson(const TSharedRef<FJsonObject>& Json)
 {
 	UGameDataObject* GameDataObject = NewObject<UGameDataObject>();
 
-	if (const TArray<TSharedPtr<FJsonValue>> Regions = Json->GetArrayField("server_regions"); Regions.Num() > 0)
+	if (const TArray<TSharedPtr<FJsonValue>> Regions = Json->GetArrayField(TEXT("server_regions")); Regions.Num() > 0)
 	{
 		GameDataObject->ServerRegions.Empty();
 		for (TSharedPtr<FJsonValue, ESPMode::ThreadSafe> JsonValue : Regions)
@@ -19,7 +19,7 @@ UGameDataObject* UGameDataObject::FromJson(const TSharedRef<FJsonObject>& Json)
 		}
 	}
 
-	const TArray<TSharedPtr<FJsonValue>> IdentTypesRaw = Json->GetArrayField("ident_types");
+	const TArray<TSharedPtr<FJsonValue>> IdentTypesRaw = Json->GetArrayField(TEXT("ident_types"));
 	GameDataObject->SupportedIdentTypes.Empty();
 	for (TSharedPtr<FJsonValue, ESPMode::ThreadSafe> IdentTypeRaw : IdentTypesRaw)
 	{
@@ -28,8 +28,8 @@ UGameDataObject* UGameDataObject::FromJson(const TSharedRef<FJsonObject>& Json)
 		GameDataObject->SupportedIdentTypes.Add(IdentType);
 	}
 	
-	Json->TryGetStringField("image_background", GameDataObject->ImageBackgroundURL);
-	Json->TryGetStringField("image_tile", GameDataObject->GameLogoUrl);
+	Json->TryGetStringField(TEXT("image_background"), GameDataObject->ImageBackgroundURL);
+	Json->TryGetStringField(TEXT("image_tile"), GameDataObject->GameLogoUrl);
 
 	return GameDataObject;
 }

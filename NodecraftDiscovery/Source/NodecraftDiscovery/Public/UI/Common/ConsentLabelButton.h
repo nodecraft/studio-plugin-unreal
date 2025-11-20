@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "CommonTextBlock.h"
-#include "CommonUserWidget.h"
 #include "Components/Image.h"
 #include "UI/Foundation/NodecraftButtonBase.h"
 #include "ConsentLabelButton.generated.h"
@@ -18,22 +18,22 @@ class NODECRAFTDISCOVERY_API UConsentLabelButton : public UNodecraftButtonBase
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI", meta = (BindWidget))
 	UWidget* ConsentStatusContainer;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI", meta = (BindWidget))
 	UCommonTextBlock* ConsentStatusTextBlock;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI", meta = (BindWidget))
 	UWidget* LoadingSpinnerContainer;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI", meta = (BindWidget))
 	UImage* TextIconDecorator;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI", EditAnywhere)
 	TSoftObjectPtr<UTexture2D> EnabledTextDecorator;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI", EditAnywhere)
 	TSoftObjectPtr<UTexture2D> DisasbledTextDecorator;
 
 public:

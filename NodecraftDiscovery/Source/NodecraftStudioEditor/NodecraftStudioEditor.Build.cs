@@ -1,6 +1,7 @@
 ﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 using UnrealBuildTool;
+using System.IO;
 
 public class NodecraftStudioEditor : ModuleRules
 {
@@ -48,6 +49,7 @@ public class NodecraftStudioEditor : ModuleRules
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
+				Path.Combine(ModuleDirectory, "Public"),
 			}
 		);
 				

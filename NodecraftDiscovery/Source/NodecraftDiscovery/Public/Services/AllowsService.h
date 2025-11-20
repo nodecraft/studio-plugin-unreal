@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "ServiceDelegates.h"
 #include "UObject/Object.h"
+#include "Engine/Engine.h"
 #include "AllowsService.generated.h"
 
 enum class EAllowStatus : uint8;

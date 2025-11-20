@@ -26,7 +26,9 @@ void FHTTPRequestQueue::RequestCompleted(FHttpRequestPtr Request, FHttpResponseP
 	TSharedRef<IHttpRequest> InRequest)
 {
 	Queue.Remove(InRequest);
-	if (bConnectedSuccessfully == false || EHttpResponseCodes::IsOk(Response.Get()->GetResponseCode()) == false)
+
+	// If we have an empty response, we are assuming that the request failed.
+	if (bConnectedSuccessfully == false || Response.IsValid() == false || EHttpResponseCodes::IsOk(Response.Get()->GetResponseCode()) == false)
 	{
 		bAllCallsSucceeded = false;
 	}
@@ -34,4 +36,15 @@ void FHTTPRequestQueue::RequestCompleted(FHttpRequestPtr Request, FHttpResponseP
 	{
 		FinishDelegate.ExecuteIfBound(bAllCallsSucceeded);
 	}
+}
+
+void FHTTPRequestQueue::CancelRequeusts()
+{
+	for (TSharedRef<IHttpRequest> RunningRequest : Queue)
+	{
+		RunningRequest.Get().OnProcessRequestComplete().Unbind();
+	}
+	// Say all requests finished but with a failure
+	FinishDelegate.ExecuteIfBound(false);
+	FinishDelegate.Unbind();
 }

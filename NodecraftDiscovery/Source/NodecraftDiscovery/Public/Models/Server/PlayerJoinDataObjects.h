@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Models/PlayerDataObject.h"
 #include "UObject/Object.h"
+#include "Dom/JsonObject.h"
 #include "PlayerJoinDataObjects.generated.h"
 
 USTRUCT()

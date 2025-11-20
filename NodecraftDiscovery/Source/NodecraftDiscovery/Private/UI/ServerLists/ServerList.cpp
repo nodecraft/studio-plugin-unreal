@@ -20,7 +20,7 @@ void UServerList::NativeConstruct()
 	FGetServersListDelegate OnComplete;
 	// Call BindLambda on OnComplete, and pass in a lambda that calls PopulateWithServerJson
 	//
-	OnComplete.BindWeakLambda(this, [this](TArray<UServerDataObject*> Servers, bool Success, TOptional<FText> Error)
+	OnComplete.BindWeakLambda(this, [this](TArray<UServerDataObject*> Servers, UPaginationDataObject* PaginationDataObject, bool Success, TOptional<FText> Error)
 	{
 		if (Success)
 		{
@@ -40,7 +40,7 @@ void UServerList::NativeConstruct()
 	// To start with, hide the server list and show the loading placeholders
 	ServerListView->SetVisibility(ESlateVisibility::Collapsed);
 	// We need to create a TArray of UObject pointers to pass to the SetListItems function,
-	// because nullptrs wont work.
+	// because nullptrs won't work.
 	// We use the CreateServerPlaceholder class to indicate that we want to show a create server button at the first index.
 	// The rest of the objects are just empty objects, which will be shown as animated placeholders
 	TArray<UObject*> LoadingPlaceholders = { NewObject<ULoadingServersPlaceholder>(), NewObject<ULoadingServersPlaceholder>(), NewObject<ULoadingServersPlaceholder>(), NewObject<ULoadingServersPlaceholder>(), NewObject<ULoadingServersPlaceholder>() };
@@ -51,6 +51,34 @@ void UServerList::NativeConstruct()
 	}
 	LoadingServersListView->SetListItems(LoadingPlaceholders);
 	LoadingServersListView->SetVisibility(ESlateVisibility::Visible);
+
+	UServersStore::Get().OnFavoriteServersUpdated.AddWeakLambda(
+		this, [this](UServerDataObject* UpdatedServer, TArray<UServerDataObject*> FavoriteServers)
+	{
+		// TODO: UE-497 clean up this split behavior between favorite and non-favorite lists  
+		if (ServerListType == EServerListType::Favorite)
+		{
+			ServerListView->SetVisibility(ESlateVisibility::Visible);
+			ServerListView->SetListItems(FavoriteServers);
+			LoadingServersListView->SetVisibility(ESlateVisibility::Collapsed);
+			// If we have no favorite servers, hide the widget
+			SetVisibility(FavoriteServers.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
+		}
+		else if (UpdatedServer)
+		{
+			TArray<UObject*> ListItems = ServerListView->GetListItems();
+			for (int32 i = 0; i < ListItems.Num(); i++)
+			{
+				UServerDataObject* ServerListItem = Cast<UServerDataObject>(ListItems[i]);
+				if (ServerListItem && ServerListItem->GetId() == UpdatedServer->GetId())
+				{
+					ListItems[i] = UpdatedServer;
+					ServerListView->SetListItems(ListItems);
+					break;
+				}
+			}
+		}
+	});
 
 	// Load the servers based on the type of list we're showing
 	switch (ServerListType)
@@ -63,14 +91,6 @@ void UServerList::NativeConstruct()
 		// Favorites list should start collapsed
 		SetVisibility(ESlateVisibility::Collapsed);
 		ServersService.GetFavoriteServers(OnComplete);
-		UServersStore::Get().OnFavoriteServersUpdated.AddWeakLambda(this, [this](TArray<UServerDataObject*> Servers)
-		{
-			ServerListView->SetVisibility(ESlateVisibility::Visible);
-			ServerListView->SetListItems(Servers);
-			LoadingServersListView->SetVisibility(ESlateVisibility::Collapsed);
-			// If we have no favorite servers, hide the widget
-			SetVisibility(Servers.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
-		});
 		break;
 
 	case EServerListType::Recommended:

@@ -3,38 +3,41 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CommonActivatableWidget.h"
-#include "Blueprint/IUserObjectListEntry.h"
+#include "Common/NodecraftDelegates.h"
+#include "UI/Common/NodecraftListItemBase.h"
 #include "ServerInvitesListItem.generated.h"
 
-class UNodecraftButtonBase;
 class UCommonTextBlock;
 class UAsyncImage;
 /**
  * 
  */
 UCLASS()
-class NODECRAFTDISCOVERY_API UServerInvitesListItem : public UCommonActivatableWidget, public IUserObjectListEntry
+class NODECRAFTDISCOVERY_API UServerInvitesListItem : public UNodecraftListItemBase
 {
 	GENERATED_BODY()
+
+public:
+	FOnNavigationDelegate OnNavDelegate;
 
 protected:
 	// IUserObjectListEntry
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
 	// IUserObjectListEntry
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	virtual FNavigationReply NativeOnNavigation(const FGeometry& MyGeometry, const FNavigationEvent& InNavigationEvent, const FNavigationReply& InDefaultReply) override;
+	virtual FReply NativeOnFocusReceived(const FGeometry& InGeometry, const FFocusEvent& InFocusEvent) override;
+	virtual void NativeOnFocusLost(const FFocusEvent& InFocusEvent) override;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Invites", meta=(BindWidget))
 	UAsyncImage* ServerImage;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Invites", meta=(BindWidget))
 	UCommonTextBlock* ServerTitle;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Invites", meta=(BindWidget))
 	UCommonTextBlock* ServerDescription;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Invites", meta=(BindWidget))
 	UCommonTextBlock* PlayerCount;
-
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-	UNodecraftButtonBase* InviteButton;
 };

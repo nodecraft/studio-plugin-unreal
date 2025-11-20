@@ -7,8 +7,8 @@ UServerRegionDataObject* UServerRegionDataObject::FromJson(const TSharedRef<FJso
 {
 	UServerRegionDataObject* ServerRegionDataObject = NewObject<UServerRegionDataObject>();
 
-	ServerRegionDataObject->Title = Json->GetStringField("title");
-	ServerRegionDataObject->ID = Json->GetStringField("id");
+	ServerRegionDataObject->Title = Json->GetStringField(TEXT("title"));
+	ServerRegionDataObject->ID = Json->GetStringField(TEXT("id"));
 
 	return ServerRegionDataObject;
 }

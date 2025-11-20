@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
+#include "Dom/JsonObject.h"
 #include "ServerSessionDataObject.generated.h"
 
 /**
@@ -17,16 +18,16 @@ class NODECRAFTDISCOVERY_API UServerSessionDataObject : public UObject
 public:
 	static UServerSessionDataObject* FromJson(const TSharedPtr<FJsonObject>& Json);
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Nodecraft Data")
 	FString GetToken() const;
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Nodecraft Data")
 	FDateTime GetDateExpires() const;
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Nodecraft Data")
 	FString GetPlayerAccessTokenID() const;
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Nodecraft Data")
 	FString GetServerConnection() const;
 
 protected:

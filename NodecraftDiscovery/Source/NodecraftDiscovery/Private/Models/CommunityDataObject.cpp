@@ -27,16 +27,16 @@ UCommunityDataObject* UCommunityDataObject::FromJson(const TSharedRef<FJsonObjec
 {
 	UCommunityDataObject* CommunityDataObject = NewObject<UCommunityDataObject>();
 
-	CommunityDataObject->Id = Json->GetStringField("id");
-	CommunityDataObject->Title = FText::FromString(Json->GetStringField("title"));
+	CommunityDataObject->Id = Json->GetStringField(TEXT("id"));
+	CommunityDataObject->Title = FText::FromString(Json->GetStringField(TEXT("title")));
 
 	FString SummaryString;
-	if (Json->TryGetStringField("summary", SummaryString))
+	if (Json->TryGetStringField(TEXT("summary"), SummaryString))
 	{
 		CommunityDataObject->Summary = FText::FromString(SummaryString);
 	}
 	
-	Json->TryGetStringField("image_avatar", CommunityDataObject->ImageUrl);
+	Json->TryGetStringField(TEXT("image_avatar"), CommunityDataObject->ImageUrl);
 
 	return CommunityDataObject;
 }

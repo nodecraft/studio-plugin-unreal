@@ -4,51 +4,46 @@
 #include "Services/ServersService.h"
 
 #include "JsonObjectWrapper.h"
+#include "TimerManager.h"
 #include "NodecraftLogCategories.h"
-#include "Api/NodecraftStudioApi.h"
+#include "API/NodecraftStudioApi.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Models/ModerationLogEntryDataObject.h"
+#include "Models/PaginationDataObject.h"
 #include "Models/PlayerListDataObject.h"
 #include "Services/ServerQueueService.h"
+#include "Stores/SearchStore.h"
 #include "Stores/ServersStore.h"
 #include "Subsystems/MenuManagerSubsystem.h"
 #include "Subsystems/MessageRouterSubsystem.h"
 
-bool UServersService::GetPopularServers(FGetServersListDelegate& OnComplete)
+bool UServersService::GetPopularServers(FGetServersListDelegate& OnComplete, int32 PageNumber)
 {
 	FHttpRequestCompleteDelegate ReqCallback;
-	CreateServerListDelegate(OnComplete, ReqCallback);
-	return UNodecraftStudioApi::ListPopularServers(this, ReqCallback)->ProcessRequest();
+	CreateServerListDelegate(EServerListType::Popular, OnComplete, ReqCallback);
+	return UNodecraftStudioApi::ListPopularServers(this, PageNumber, ReqCallback)->ProcessRequest();
 }
 
-bool UServersService::GetRecommendedServers(FGetServersListDelegate& OnComplete)
+bool UServersService::GetRecommendedServers(FGetServersListDelegate& OnComplete, int32 PageNumber)
 {
 	FHttpRequestCompleteDelegate ReqCallback;
-	CreateServerListDelegate(OnComplete, ReqCallback);
-	return UNodecraftStudioApi::ListRecommendedServers(this, ReqCallback)->ProcessRequest();
+	CreateServerListDelegate(EServerListType::Recommended, OnComplete, ReqCallback);
+	return UNodecraftStudioApi::ListRecommendedServers(this, PageNumber, ReqCallback)->ProcessRequest();
 }
 
-bool UServersService::GetOwnedServers(FGetServersListDelegate& OnComplete)
+bool UServersService::GetOwnedServers(FGetServersListDelegate& OnComplete, int32 PageNumber)
 {
 	FHttpRequestCompleteDelegate ReqCallback;
-	CreateServerListDelegate(OnComplete, ReqCallback);
-	return UNodecraftStudioApi::ListPlayerOwnedServers(this, ReqCallback)->ProcessRequest();
+	CreateServerListDelegate(EServerListType::Owned, OnComplete, ReqCallback);
+	return UNodecraftStudioApi::ListPlayerOwnedServers(this, PageNumber, ReqCallback)->ProcessRequest();
 }
 
-bool UServersService::GetFavoriteServers(FGetServersListDelegate& OnComplete)
+bool UServersService::GetFavoriteServers(FGetServersListDelegate& OnComplete, int32 PageNumber)
 {
 	FHttpRequestCompleteDelegate ReqCallback;
-	FGetServersListDelegate OnGetFavoritesComplete = FGetServersListDelegate::CreateWeakLambda(this, [OnComplete](TArray<UServerDataObject*> Servers, bool bSuccess, TOptional<FText> Error)
-	{
-		if (bSuccess)
-		{
-			UServersStore::Get().SetFavoriteServers(Servers);
-		}
-		OnComplete.ExecuteIfBound(Servers, bSuccess, Error);
-	});
-	CreateServerListDelegate(OnGetFavoritesComplete, ReqCallback);
-	return UNodecraftStudioApi::ListFavoriteServers(this, ReqCallback)->ProcessRequest();
+	CreateServerListDelegate(EServerListType::Favorite, OnComplete, ReqCallback);
+	return UNodecraftStudioApi::ListFavoriteServers(this, PageNumber, ReqCallback)->ProcessRequest();
 }
 
 bool UServersService::GetOnlinePlayers(const FString& ServerId, const FGetPlayersListDelegate& OnComplete)
@@ -65,7 +60,7 @@ bool UServersService::GetRecentPLayers(const FString& ServerId, const FGetPlayer
 	return UNodecraftStudioApi::GetRecentPlayers(this, ServerId, ReqCallback)->ProcessRequest();
 }
 
-bool UServersService::FavoriteServer(const UServerDataObject* Server, FSimpleServiceResponseDelegate& OnComplete)
+bool UServersService::FavoriteServer(UServerDataObject* Server, FSimpleServiceResponseDelegate& OnComplete)
 {
 	if (Server == nullptr)
 	{
@@ -75,18 +70,18 @@ bool UServersService::FavoriteServer(const UServerDataObject* Server, FSimpleSer
 	FHttpRequestCompleteDelegate ReqCallback;
 	FSimpleServiceResponseDelegate OnFavoriteComplete = FSimpleServiceResponseDelegate::CreateWeakLambda(this, [Server, OnComplete](bool bSuccess, TOptional<FText> Error)
 	{
+		OnComplete.ExecuteIfBound(bSuccess, Error);
 		if (bSuccess)
 		{
-			UServersStore::Get().AddFavoriteServer(const_cast<UServerDataObject*>(Server));
+			UServersStore::Get().AddFavoriteServer(Server);
 		}
-		OnComplete.ExecuteIfBound(bSuccess, Error);
 	});
 	CreateSimpleServiceResponseDelegate(OnFavoriteComplete, ReqCallback);
 	
 	return UNodecraftStudioApi::FavoriteServer(this, Server->GetId(), ReqCallback)->ProcessRequest();
 }
 
-bool UServersService::UnfavoriteServer(const UServerDataObject* Server, FSimpleServiceResponseDelegate& OnComplete)
+bool UServersService::UnfavoriteServer(UServerDataObject* Server, FSimpleServiceResponseDelegate& OnComplete)
 {
 	if (Server == nullptr)
 	{
@@ -97,7 +92,7 @@ bool UServersService::UnfavoriteServer(const UServerDataObject* Server, FSimpleS
 	{
 		if (bSuccess)
 		{
-			UServersStore::Get().RemoveFavoriteServer(const_cast<UServerDataObject*>(Server));
+			UServersStore::Get().RemoveFavoriteServer(Server);
 		}
 		OnComplete.ExecuteIfBound(bSuccess, Error);
 	});
@@ -113,6 +108,115 @@ bool UServersService::ListPublicServerModeration(const FString& ServerId, FListP
 	return UNodecraftStudioApi::ListPublicServerModeration(this, ServerId, ReqCallback)->ProcessRequest();
 }
 
+void UServersService::SearchServers(const UWorld* World, const FString& SearchQuery, TOptional<uint32> Page, TOptional<bool> bShouldDebounce)
+{
+	if (World == nullptr)
+	{
+		return;
+	}
+	
+	USearchStore::Get().SetSearchQuery(SearchQuery);
+	if (SearchQuery.Len() < 3)
+    {
+        return;
+    }
+	
+	if (bShouldDebounce.Get(true))
+	{
+		// If a search is already scheduled, unschedule it.
+        // We want to clear the timer even if the search query is < 3 characters
+        // because user stated intention to NOT perform the query as stated.
+        if (SearchDebounceTimer.IsValid())
+        {
+        	World->GetTimerManager().ClearTimer(SearchDebounceTimer);
+        }
+		
+        // Schedule the search to happen 1 second from now
+        constexpr float SearchDebounceTime = 1.0f;
+        World->GetTimerManager().SetTimer(SearchDebounceTimer, [this, SearchQuery, Page]()
+        {
+        	SearchServers_Internal(SearchQuery, Page);
+        }, SearchDebounceTime, false);
+	}
+	else
+	{
+		SearchServers_Internal(SearchQuery, Page);
+	}
+}
+
+bool UServersService::GetServersForList(EServerListType List, FGetServersListDelegate& OnComplete, int32 PageNumber)
+{
+	FHttpRequestCompleteDelegate ReqCallback;
+	CreateServerListDelegate(List, OnComplete, ReqCallback);
+
+	switch (List)
+	{
+	case EServerListType::Popular:
+		return UNodecraftStudioApi::ListPopularServers(this, PageNumber, ReqCallback)->ProcessRequest();
+	case EServerListType::Favorite:
+		return UNodecraftStudioApi::ListFavoriteServers(this, PageNumber, ReqCallback)->ProcessRequest();
+	case EServerListType::Recommended:
+		return UNodecraftStudioApi::ListRecommendedServers(this, PageNumber, ReqCallback)->ProcessRequest();
+	case EServerListType::Owned:
+		return UNodecraftStudioApi::ListPlayerOwnedServers(this, PageNumber, ReqCallback)->ProcessRequest();
+	default:
+		unimplemented()
+		return false;
+	}
+}
+
+bool UServersService::SearchServers_Internal(const FString& SearchQuery, TOptional<uint32> Page)
+{
+	FHttpRequestCompleteDelegate ReqCallback;
+	ReqCallback.BindWeakLambda(this, [](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bConnectedSuccessfully)
+	{
+		if (bConnectedSuccessfully)
+		{
+			if (EHttpResponseCodes::IsOk(Res.Get()->GetResponseCode()))
+			{
+				FJsonObjectWrapper ResJson;
+				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
+				USearchStore& SearchStore = USearchStore::Get();
+				TArray<UServerDataObject*> Servers;
+				if (const TArray<TSharedPtr<FJsonValue>>& Data = ResJson.JsonObject->GetArrayField(TEXT("data")); Data.Num() > 0)
+				{
+					for (TSharedPtr<FJsonValue, ESPMode::ThreadSafe> JsonValue : Data)
+					{
+						UServerDataObject* Server = UServerDataObject::FromJson(JsonValue.Get()->AsObject().ToSharedRef());
+						Servers.Add(Server);
+					}
+				}
+				if (const TSharedPtr<FJsonObject>& Pagination = ResJson.JsonObject->GetObjectField(TEXT("pagination")); Pagination.IsValid())
+				{
+					UPaginationDataObject* PaginationDataObject = UPaginationDataObject::FromJson(Pagination.ToSharedRef());
+					SearchStore.SetCurrentPageNumber(PaginationDataObject->GetPage());
+					SearchStore.SetMaxPages(PaginationDataObject->GetPagesMax());
+				}
+				SearchStore.SetSearchResults(Servers);
+			}
+			else
+			{
+				UE_LOG(LogNodecraft_Servers, Error, TEXT("Bad response when trying to search for servers. Response code: %d. Log message router for more details."), Res.Get()->GetResponseCode());
+				USearchStore::Get().SetSearchResults({});
+			}
+			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
+		}
+		else
+		{
+			UE_LOG(LogNodecraft_Servers, Error, TEXT("Failed to connect to server"));
+			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
+			USearchStore::Get().SetSearchResults({});
+		}
+	});
+	
+	OnSearchStarted.Broadcast();
+
+	// ideally, this would get called on search store initialization,
+	// but we can't do that because of the timing of initialization of search store and this as engine subsystems.
+	USearchStore::Get().ShowSearchResults();
+    return UNodecraftStudioApi::SearchServers(this, SearchQuery, Page, ReqCallback)->ProcessRequest();
+}
+
 void UServersService::JoinServer(UServerDataObject* ServerDataObject, const UWorld* World)
 {
 	if (ServerDataObject)
@@ -123,15 +227,33 @@ void UServersService::JoinServer(UServerDataObject* ServerDataObject, const UWor
 			if (Rules->GetConsentStatus() == EConsentStatus::Outdated)
 			{
 				UE_LOG(LogNodecraft_Servers, Log, TEXT("JoinServer: Server consent is outdated"));
-				UMenuManagerSubsystem::Get().ShowServerDetails(ServerDataObject, FText::FromString("Consent for server is outdated and must be signed"));
+				TMap<FString, FText> Argument;
+				Argument.Add("RulesError", FText::FromString("Consent for server is outdated and must be signed"));
+				UMenuManagerSubsystem::Get().ShowServerDetails(ServerDataObject, Argument);
 				return;
 			}
 			else if (Rules->GetConsentStatus() == EConsentStatus::NotSigned)
 			{
 				UE_LOG(LogNodecraft_Servers, Log, TEXT("JoinServer: Server consent is not signed"));
-				UMenuManagerSubsystem::Get().ShowServerDetails(ServerDataObject, FText::FromString("Consent for server is missing and must be signed"));
+				TMap<FString, FText> Argument;
+				Argument.Add("RulesError", FText::FromString("Consent for server is missing and must be signed"));
+				UMenuManagerSubsystem::Get().ShowServerDetails(ServerDataObject, Argument);
 				return;
 			}
+		}
+		else
+		{
+			// the server data object is incomplete. we need to finish loading it.
+			FGetServerDetailsDelegate OnGetFullServerDetails;
+			OnGetFullServerDetails.BindWeakLambda(this, [this, World](UServerDataObject* Server, bool bSuccess, TOptional<FText> Error)
+			{
+				if (bSuccess)
+				{
+					JoinServer(Server, World);
+				}
+			});
+			Get().GetServerDetails(OnGetFullServerDetails, ServerDataObject->GetId());
+			return;
 		}
 
 		if (ServerDataObject->HasPassword())
@@ -142,15 +264,21 @@ void UServersService::JoinServer(UServerDataObject* ServerDataObject, const UWor
 		else
 		{
 			UE_LOG(LogNodecraft_Servers, Log, TEXT("JoinServer: Server does not have password. Moving into server queue."));
-			UMenuManagerSubsystem::Get().ShowJoiningServerQueue();
-			UServerQueueService::Get(World)->JoinServer(ServerDataObject);
+			
+			UServerQueueService* ServerQueueService = UServerQueueService::Get(World);
+			ServerQueueService->OnStartedPollingServerQueue.RemoveAll(this);
+			ServerQueueService->OnStartedPollingServerQueue.AddWeakLambda(this, [this]()
+			{
+				UMenuManagerSubsystem::Get().ShowJoiningServerQueue();
+			});
+			ServerQueueService->JoinServer(ServerDataObject);
 		}
 	}
 }
 
-void UServersService::CreateServerListDelegate(const FGetServersListDelegate& OnComplete, 	FHttpRequestCompleteDelegate& ReqCallbackOut)
+void UServersService::CreateServerListDelegate(const EServerListType List, const FGetServersListDelegate& OnComplete, FHttpRequestCompleteDelegate& ReqCallbackOut)
 {
-	ReqCallbackOut.BindWeakLambda(this, [OnComplete](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bConnectedSuccessfully)
+	ReqCallbackOut.BindWeakLambda(this, [OnComplete, List](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bConnectedSuccessfully)
 	{
 		if (bConnectedSuccessfully)
 		{
@@ -159,7 +287,8 @@ void UServersService::CreateServerListDelegate(const FGetServersListDelegate& On
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
 				TArray<UServerDataObject*> Servers;
-				if (const TArray<TSharedPtr<FJsonValue>>& Data = ResJson.JsonObject->GetArrayField("data"); Data.Num() > 0)
+				UPaginationDataObject* PaginationDataObject = nullptr;
+				if (const TArray<TSharedPtr<FJsonValue>>& Data = ResJson.JsonObject->GetArrayField(TEXT("data")); Data.Num() > 0)
 				{
 					for (TSharedPtr<FJsonValue, ESPMode::ThreadSafe> JsonValue : Data)
 					{
@@ -167,12 +296,20 @@ void UServersService::CreateServerListDelegate(const FGetServersListDelegate& On
 						Servers.Add(Server);
 					}
 				}
-				OnComplete.ExecuteIfBound(Servers, true, TOptional<FText>());
+				if (const TSharedPtr<FJsonObject>& Pagination = ResJson.JsonObject->GetObjectField(TEXT("pagination")); Pagination.IsValid())
+				{
+					PaginationDataObject = UPaginationDataObject::FromJson(Pagination.ToSharedRef());
+				}
+
+				UServersStore::Get().AddServers(List, Servers, PaginationDataObject);
+
+				
+				OnComplete.ExecuteIfBound(Servers, PaginationDataObject, true, TOptional<FText>());
 			}
 			else
 			{
-				UE_LOG(LogNodecraft_Servers, Error, TEXT("Bad response when trying to join server. Response code: %d. Log message router for more details."), Res.Get()->GetResponseCode());
-				OnComplete.ExecuteIfBound({}, false, FText::FromString("Response wasn't okay I guess"));
+				UE_LOG(LogNodecraft_Servers, Error, TEXT("Bad response when trying to get list of servers. Response code: %d. Log message router for more details."), Res.Get()->GetResponseCode());
+				OnComplete.ExecuteIfBound({}, nullptr, false, FText::FromString("Response wasn't okay I guess"));
 			}
 			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
 		}
@@ -180,7 +317,7 @@ void UServersService::CreateServerListDelegate(const FGetServersListDelegate& On
 		{
 			UE_LOG(LogNodecraft_Servers, Error, TEXT("Failed to connect to server"));
 			UMessageRouterSubsystem::Get().RouteFailureToConnect(__FUNCTION__);
-			OnComplete.ExecuteIfBound({}, false, FText::FromString("Failed to connect to server"));
+			OnComplete.ExecuteIfBound({}, nullptr, false, FText::FromString("Failed to connect to server"));
 		}
 	});
 }
@@ -195,12 +332,12 @@ void UServersService::CreateServerDetailsDelegate(const FGetServerDetailsDelegat
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
-					if (const TSharedPtr<FJsonObject>& ServerData = Data->GetObjectField("server"); ServerData.IsValid())
+					if (const TSharedPtr<FJsonObject>& ServerData = Data->GetObjectField(TEXT("server")); ServerData.IsValid())
 					{
 						UServerDataObject* Server = UServerDataObject::FromJson(ServerData.ToSharedRef());
-						if (const TSharedPtr<FJsonObject>& RulesData = Data->GetObjectField("rules"); RulesData.IsValid())
+						if (const TSharedPtr<FJsonObject>& RulesData = Data->GetObjectField(TEXT("rules")); RulesData.IsValid())
 						{
 							URulesDataObject* Rules = URulesDataObject::FromJson(RulesData.ToSharedRef());
 							Server->SetRules(Rules);
@@ -255,7 +392,7 @@ void UServersService::CreateSimpleServiceResponseDelegate(const FSimpleServiceRe
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const FString Message = ResJson.JsonObject->GetStringField("message"); Message.IsEmpty() == false)
+				if (const FString Message = ResJson.JsonObject->GetStringField(TEXT("message")); Message.IsEmpty() == false)
 				{
 					const FString ErrorText = FString::Printf(TEXT("Error code: %d. Message: %ls"), Res.Get()->GetResponseCode(), *Message);
 					UE_LOG(LogNodecraft_Servers, Error, TEXT("%s"), *ErrorText);
@@ -289,7 +426,7 @@ void UServersService::CreateListPublicServerModerationDelegate(const FListPublic
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TArray<TSharedPtr<FJsonValue>>& Data = ResJson.JsonObject->GetArrayField("data"); Data.Num() > 0)
+				if (const TArray<TSharedPtr<FJsonValue>>& Data = ResJson.JsonObject->GetArrayField(TEXT("data")); Data.Num() > 0)
 				{
 					TArray<UModerationLogEntryDataObject*> ModerationLogEntryDataObjects;
 					for (TSharedPtr<FJsonValue, ESPMode::ThreadSafe> JsonValue : Data)
@@ -301,16 +438,14 @@ void UServersService::CreateListPublicServerModerationDelegate(const FListPublic
 				}
 				else
 				{
-					// TODO: should this be true or false?
-					UE_LOG(LogNodecraft_Servers, Error, TEXT("ServersService::CreateListPublicServerModerationDelegate: Error while grabbing data from response"));
-					OnComplete.ExecuteIfBound({}, true, FText::FromString("Error while grabbing data from response"));
+					OnComplete.ExecuteIfBound({}, true, TOptional<FText>());
 				}
 			}
 			else
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const FString Message = ResJson.JsonObject->GetStringField("message"); Message.IsEmpty() == false)
+				if (const FString Message = ResJson.JsonObject->GetStringField(TEXT("message")); Message.IsEmpty() == false)
 				{
 					const FString ErrorText = FString::Printf(TEXT("UServersService::CreateListPublicServerModerationDelegate: Error code: %d. Message: %ls"), Res.Get()->GetResponseCode(), *Message);
 					UE_LOG(LogNodecraft_Servers, Error, TEXT("%s"), *ErrorText);
@@ -344,11 +479,11 @@ void UServersService::CreatePlayerListDelegate(const FGetPlayersListDelegate& On
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject>* Data; ResJson.JsonObject->TryGetObjectField("data", Data))
+				if (const TSharedPtr<FJsonObject>* Data; ResJson.JsonObject->TryGetObjectField(TEXT("data"), Data))
 				{
 					UPlayerListDataObject* PlayerListDataObject;
 					
-					if (Data->Get()->HasField("players"))
+					if (Data->Get()->HasField(TEXT("players")))
 					{
 						PlayerListDataObject = UPlayerListDataObject::FromJson(Data->ToSharedRef(), "players");
 					}
@@ -389,4 +524,15 @@ bool UServersService::GetServerDetails(FGetServerDetailsDelegate& OnComplete, co
 	FHttpRequestCompleteDelegate ReqCallback;
 	CreateServerDetailsDelegate(OnComplete, ReqCallback);
 	return UNodecraftStudioApi::GetServerDetails(this, ServerId, ReqCallback)->ProcessRequest();
+}
+
+FDelegateHandle UServersService::AddSearchStartedListener(const FSimpleMulticastDelegate::FDelegate& Delegate)
+{
+	Delegate.ExecuteIfBound();
+	return OnSearchStarted.Add(Delegate);
+}
+
+bool UServersService::RemoveSearchStartedListener(const FDelegateHandle& Handle)
+{
+	return OnSearchStarted.Remove(Handle);
 }

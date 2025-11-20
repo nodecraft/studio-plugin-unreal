@@ -3,6 +3,7 @@
 
 #include "UI/Common/ConsentLabelButton.h"
 
+#include "Engine/Texture2D.h"
 #include "Subsystems/AssetStreamerSubsystem.h"
 
 void UConsentLabelButton::ShowTextDecoration(const bool bShow)

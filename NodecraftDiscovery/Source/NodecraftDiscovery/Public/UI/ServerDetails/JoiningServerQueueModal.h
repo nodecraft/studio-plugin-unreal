@@ -6,6 +6,7 @@
 #include "CommonActivatableWidget.h"
 #include "JoiningServerQueueModal.generated.h"
 
+class UServerQueueIdleCheckModal;
 class UServerSessionDataObject;
 class UServerQueueTokenDataObject;
 class UServerQueueDataObject;
@@ -22,18 +23,22 @@ public:
 	void Configure(FSimpleDelegate& OnPopupClosed);
 
 	virtual void NativeOnInitialized() override;
+	
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* QueuePositionText;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UProgressBar* ProgressBar;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* EstimatedWaitTime;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UNodecraftButtonBase* CancelButton;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Server Details")
+	TSoftClassPtr<UServerQueueIdleCheckModal> ServerQueueIdleCheckModalClass;
 
 private:
 	int32 WaitTimeInSeconds;
@@ -46,4 +51,5 @@ private:
 	void OnGetServerSession(const UServerSessionDataObject* Session);
 
 	void UpdateWaitTimeUI(float TimeLeftSeconds);
+	void ResetModal();
 };

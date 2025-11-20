@@ -6,9 +6,17 @@
 #include "API/NodecraftStudioSessionManagerSubsystem.h"
 #include "Models/PlayerServerDetails.h"
 #include "Subsystems/AssetStreamerSubsystem.h"
+#include "UI/Foundation/NodecraftButtonBase.h"
 #include "Utility/NodecraftUtility.h"
 
 #define LOCTEXT_NAMESPACE "ServerModerationConsolePlayerListItem"
+
+void UServerModerationConsolePlayerListItem::NativePreConstruct()
+{
+	UnselectedStyle.BorderStyle = bUseKeyboardAndMouseStyles ? BorderStyleDefault_MouseAndKeyboard : BorderStyleDefault_Gamepad;
+	SelectedStyle.BorderStyle = bUseKeyboardAndMouseStyles ? BorderStyleFocused_MouseAndKeyboard : BorderStyleFocused_Gamepad;
+	Super::NativePreConstruct();
+}
 
 void UServerModerationConsolePlayerListItem::OnCheckboxStateChanged(bool bIsChecked)
 {
@@ -20,7 +28,7 @@ void UServerModerationConsolePlayerListItem::StyleForCheckedStatus(bool bIsCheck
 	const FPlayerListItemSelectionStyle Style = bIsChecked ? SelectedStyle : UnselectedStyle;
 	Checkbox->SetCheckedState(bIsChecked ? ECheckBoxState::Checked : ECheckBoxState::Unchecked);
 	Hairline->SetColorAndOpacity(Style.HairlineColor);
-	Border->SetBrushColor(Style.BackgroundColor);
+	Border->SetStyle(Style.BorderStyle);
 }
 
 void UServerModerationConsolePlayerListItem::StyleOnlineStatus(EPlayerServerStatus Status)
@@ -30,7 +38,7 @@ void UServerModerationConsolePlayerListItem::StyleOnlineStatus(EPlayerServerStat
 	OnlineStatusDateTextBlock->SetColorAndOpacity(FSlateColor(Style.DateTextColor));
 	OnlineIndicator->SetBrushTintColor(FSlateColor(Style.OnlineIndicatorColor));
 	// Async load the texture
-	UAssetStreamerSubsystem::Get().LoadAssetAsync(Style.OnlineIndicatorTexture, FStreamableDelegate::CreateWeakLambda(this, [this, Style]()
+	UAssetStreamerSubsystem::Get().LoadAssetAsync(Style.OnlineIndicatorTexture.ToSoftObjectPath(), FStreamableDelegate::CreateWeakLambda(this, [this, Style]()
 	{
 		OnlineIndicator->SetBrushFromTexture(Style.OnlineIndicatorTexture.Get());
 	}));
@@ -182,19 +190,19 @@ void UServerModerationConsolePlayerListItem::NativeOnListItemObjectSet(UObject* 
 		if (ViewModel->bIsSelectable)
 		{
 			Checkbox->SetVisibility(ESlateVisibility::Visible);
-			SelectButton->SetVisibility(ESlateVisibility::Visible);
+			PrimaryActionButton->SetVisibility(ESlateVisibility::Visible);
 		}
 		else
 		{
 			Checkbox->SetVisibility(ESlateVisibility::Hidden);
-			SelectButton->SetVisibility(ESlateVisibility::Hidden);
+			PrimaryActionButton->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
 
 	Checkbox->OnCheckStateChanged.Clear();
 	Checkbox->OnCheckStateChanged.AddDynamic(this, &UServerModerationConsolePlayerListItem::OnCheckboxStateChanged);
 
-	SelectButton->OnClicked().AddWeakLambda(this, [this]()
+	PrimaryActionButton->OnClicked().AddWeakLambda(this, [this]()
 	{
 		ViewModel->OnPlayerSelectedExclusive.ExecuteIfBound(ViewModel->GetPlayerServerDetails());
 	});
@@ -206,11 +214,23 @@ void UServerModerationConsolePlayerListItem::ClearSelection()
 	StyleForCheckedStatus(false);
 }
 
+void UServerModerationConsolePlayerListItem::Deselect()
+{
+	StyleForCheckedStatus(false);
+	Checkbox->OnCheckStateChanged.Broadcast(false);
+}
+
 void UServerModerationConsolePlayerListItem::Select()
 {
 	StyleForCheckedStatus(true);
 	Checkbox->OnCheckStateChanged.Broadcast(true);
 }
+
+bool UServerModerationConsolePlayerListItem::IsSelected()
+{
+	return Checkbox->IsChecked();
+}
+
 
 void UServerModerationConsolePlayerListItem::SetSelected(const bool bSelected)
 {
@@ -222,5 +242,24 @@ void UServerModerationConsolePlayerListItem::NativeDestruct()
 	Checkbox->OnCheckStateChanged.RemoveAll(this);
 	Super::NativeDestruct();
 }
+
+FReply UServerModerationConsolePlayerListItem::NativeOnFocusReceived(const FGeometry& InGeometry,
+	const FFocusEvent& InFocusEvent)
+{
+	ViewModel->OnPlayerItemReceivedFocus.ExecuteIfBound(this);
+	return Super::NativeOnFocusReceived(InGeometry, InFocusEvent);
+}
+
+FNavigationReply UServerModerationConsolePlayerListItem::NativeOnNavigation(const FGeometry& MyGeometry,
+	const FNavigationEvent& InNavigationEvent, const FNavigationReply& InDefaultReply)
+{
+	if (OnNavDelegate.IsBound())
+	{
+		return OnNavDelegate.Execute(MyGeometry, InNavigationEvent, InDefaultReply);
+	}
+	
+	return Super::NativeOnNavigation(MyGeometry, InNavigationEvent, InDefaultReply);
+}
+
 
 #undef LOCTEXT_NAMESPACE

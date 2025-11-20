@@ -9,16 +9,16 @@ UPlayerConnectionDataObject* UPlayerConnectionDataObject::FromJson(const TShared
 {
 	UPlayerConnectionDataObject* PlayerConnectionDataObject = NewObject<UPlayerConnectionDataObject>();
 
-	PlayerConnectionDataObject->Id = Json->GetStringField("id");
-	PlayerConnectionDataObject->Url = Json->GetStringField("url");
+	PlayerConnectionDataObject->Id = Json->GetStringField(TEXT("id"));
+	PlayerConnectionDataObject->Url = Json->GetStringField(TEXT("url"));
 
-	const FString StatusString = Json->GetStringField("status");
+	const FString StatusString = Json->GetStringField(TEXT("status"));
 	PlayerConnectionDataObject->StatusRaw = StatusString;
 	PlayerConnectionDataObject->Status = EPlayerConnectionStatusHelpers::FromString(StatusString);
 	
 
 	PlayerConnectionDataObject->DateExpires = FDateTime();
-	if (FString DateExpiresString; Json->TryGetStringField("date_expires", DateExpiresString))
+	if (FString DateExpiresString; Json->TryGetStringField(TEXT("date_expires"), DateExpiresString))
 	{
 		FDateTime::ParseIso8601(*DateExpiresString, PlayerConnectionDataObject->DateExpires);
 	}

@@ -3,6 +3,7 @@
 
 #include "UI/Auth/AuthScreen.h"
 
+#include "CommonInputSubsystem.h"
 #include "NodecraftLogCategories.h"
 #include "API/NodecraftStudioApi.h"
 #include "Models/GameDataObject.h"
@@ -11,6 +12,7 @@
 #include "UI/Auth/Auth_EmailPrompt.h"
 #include "UI/Auth/Auth_TermsOfServicePrompt.h"
 #include "UI/Auth/Auth_TokenPrompt.h"
+#include "Utility/NodecraftMacros.h"
 
 void UAuthScreen::NativeConstruct()
 {
@@ -116,6 +118,11 @@ void UAuthScreen::NativeConstruct()
 	if (UTexture2D* CachedGameBG = RemoteImageSubsystem.GetCachedGameBackground())
 	{
 		LazyGameBackgroundImage->SetBrushFromTexture(CachedGameBG);
+		LazyGameBackgroundImage->SetColorAndOpacity(FLinearColor::White);
+	}
+	else
+	{
+		LazyGameBackgroundImage->SetColorAndOpacity(FLinearColor::Black);
 	}
 
 	// Actually start auth process
@@ -128,6 +135,8 @@ void UAuthScreen::NativeConstruct()
 	{
 		AttemptAutoAuth();
 	}
+
+	ON_INPUT_METHOD_CHANGED(UpdateActionBindings)
 }
 
 /* Get the game details, and then attempt to auto auth if possible,
@@ -143,6 +152,7 @@ void UAuthScreen::AttemptAutoAuth()
 		if (bSuccess)
 		{
 			LazyGameBackgroundImage->LoadImageAsync(GameDataObject->GetImageBackgroundURL(), NC_CACHED_GAME_BACKGROUND_FILENAME);
+			LazyGameBackgroundImage->SetColorAndOpacity(GameDataObject->GetImageBackgroundURL().IsEmpty() ? FLinearColor::Black : FLinearColor::White);
 
 			if (UIdentService::Get().IsAutoAuthAvailable())
 			{
@@ -191,4 +201,10 @@ void UAuthScreen::OnAuthComplete_Internal()
 void UAuthScreen::Cancel()
 {
 	WidgetSwitcher->SetActiveWidgetIndex(0);
+}
+
+void UAuthScreen::UpdateActionBindings(ECommonInputType CurrentInputType)
+{
+	ActionBarContainer->SetVisibility(CurrentInputType == ECommonInputType::MouseAndKeyboard
+		? ESlateVisibility::Collapsed : ESlateVisibility::SelfHitTestInvisible);
 }

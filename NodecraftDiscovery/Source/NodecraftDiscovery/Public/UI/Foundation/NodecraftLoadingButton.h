@@ -18,7 +18,7 @@ class NODECRAFTDISCOVERY_API UNodecraftLoadingButton : public UNodecraftButtonBa
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidgetOptional))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI", meta=(BindWidgetOptional))
 	UNodecraftLoadGuard* LoadGuard;
 
 	// If you ever need to do some kind of calculation to determine whether a button should in fact be active

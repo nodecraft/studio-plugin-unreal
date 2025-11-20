@@ -5,7 +5,9 @@
 #include "Subsystems/AsyncTaskFetchImage.h"
 #include "ImageUtils.h"
 #include "NodecraftLogCategories.h"
+#include "DataTypes/ImageBackgroundTypes.h"
 #include "Services/GameService.h"
+#include "Engine/Texture2D.h"
 
 
 void URemoteImageSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -18,7 +20,7 @@ void URemoteImageSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void URemoteImageSubsystem::FetchImage(FString CachedFileName, FString RemoteURL, FOnImageDownloadedDelegate& Complete)
+void URemoteImageSubsystem::FetchImage(FString CachedFileName, FString RemoteURL, FOnImageDownloadedDelegate& Complete, const ETransparentPixelOverrides TransparentPixelOverride)
 {
 	UTexture2D* LoadedTexture = nullptr;
 	if (CachedFileName.IsEmpty() == false)
@@ -34,9 +36,9 @@ void URemoteImageSubsystem::FetchImage(FString CachedFileName, FString RemoteURL
 	{
 		UAsyncTaskFetchImage* DownloadTask = NewObject<UAsyncTaskFetchImage>();
 
-		DownloadTask->OnSuccess.BindWeakLambda(this, [this, Complete, CachedFileName](UTexture2D* Texture, FString URL)
+		DownloadTask->OnSuccess.BindWeakLambda(this, [this, Complete, CachedFileName, TransparentPixelOverride](UTexture2D* Texture, FString URL)
 		{
-			SaveTextureToDisk(Texture, CachedFileName);
+			SaveTextureToDisk(Texture, CachedFileName, TransparentPixelOverride);
 			UTexture2D* TexToDisplay = LoadTextureFromDisk(CachedFileName);
 			// TODO: Rather than re-loading the texture, we ought to be able to simply broadcast it,
 			// but for some reason the texture is not being displayed when we do that.
@@ -52,7 +54,7 @@ void URemoteImageSubsystem::FetchImage(FString CachedFileName, FString RemoteURL
 	}
 }
 
-void URemoteImageSubsystem::SaveTextureToDisk(UTexture2D* Texture, const FString& Filename)
+void URemoteImageSubsystem::SaveTextureToDisk(UTexture2D* Texture, const FString& Filename, const ETransparentPixelOverrides TransparentPixelOverride)
 {
 	// Assuming you have a UTexture2DDynamic* called MyDynamicTexture
 
@@ -69,8 +71,27 @@ void URemoteImageSubsystem::SaveTextureToDisk(UTexture2D* Texture, const FString
 
 	// Copy mip[0] data to image raw data
 	FMemory::Memcpy(Image.RawData.GetData(), MipData, Width * Height * 4);
-
-	// // Unlock the texture to finalize the update
+	
+	switch (TransparentPixelOverride)
+	{
+	case ETransparentPixelOverrides::None:
+		break;
+	case ETransparentPixelOverrides::FillWhite:
+		// Fill in the image with white color where we have transparent pixels
+		for (int32 i = 0; i < Width * Height; i++)
+		{
+			if (Image.RawData[i * 4 + 3] == 0)
+			{
+				Image.RawData[i * 4 + 0] = 255;
+				Image.RawData[i * 4 + 1] = 255;
+				Image.RawData[i * 4 + 2] = 255;
+				Image.RawData[i * 4 + 3] = 255;
+			}
+		}
+		break;
+	}
+	
+	// Unlock the texture to finalize the update
 	Texture->GetPlatformData()->Mips[0].BulkData.Unlock();
 
 	// Define the file path and name

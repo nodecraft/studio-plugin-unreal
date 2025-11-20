@@ -3,7 +3,15 @@
 
 #include "UI/ServerDetails/ModerationConsolePlayerSelector.h"
 
+#include "CommonInputSubsystem.h"
+#include "Utility/NodecraftMacros.h"
+
 DEFINE_LOG_CATEGORY_STATIC(LogModerationConsolePlayerSelector, All, All);
+
+UWidget* UModerationConsolePlayerSelector::NativeGetDesiredFocusTarget() const
+{
+	return PlayersList->GetFirstFocusableItem();
+}
 
 void UModerationConsolePlayerSelector::SetOwner(UPlayerServerDetailsDataObject* Owner)
 {
@@ -12,27 +20,27 @@ void UModerationConsolePlayerSelector::SetOwner(UPlayerServerDetailsDataObject* 
 	{
 		OwnerArray.Add(Owner);
 	}
-	OwnerSection->SetPlayers(OwnerArray);
+	PlayersList->SetOwner(Owner);
 }
 
 void UModerationConsolePlayerSelector::SetModerators(const TArray<UPlayerServerDetailsDataObject*>& Players)
 {
-	ModeratorsSection->SetPlayers(Players);
+	PlayersList->SetModerators(Players);
 }
 
 void UModerationConsolePlayerSelector::SetOnlinePlayers(const TArray<UPlayerServerDetailsDataObject*>& Players)
 {
-	OnlinePlayersSection->SetPlayers(Players);
+	PlayersList->SetOnlinePlayers(Players);
 }
 
 void UModerationConsolePlayerSelector::SetOfflinePlayers(const TArray<UPlayerServerDetailsDataObject*>& Players)
 {
-	OfflinePlayersSection->SetPlayers(Players);
+	PlayersList->SetOfflinePlayers(Players);
 }
 
 void UModerationConsolePlayerSelector::SetBannedPlayers(const TArray<UPlayerServerDetailsDataObject*>& Players)
 {
-	BannedPlayersSection->SetPlayers(Players);
+	PlayersList->SetBannedPlayers(Players);
 }
 
 void UModerationConsolePlayerSelector::SetDisplayMode(EPlayerSelectorMode Mode)
@@ -40,11 +48,9 @@ void UModerationConsolePlayerSelector::SetDisplayMode(EPlayerSelectorMode Mode)
 	if (Mode != DisplayMode)
 	{
 		DisplayMode = Mode;
-		OwnerSection->SetVisibility(Mode == EPlayerSelectorMode::Staff || Mode == EPlayerSelectorMode::All ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-		ModeratorsSection->SetVisibility(Mode == EPlayerSelectorMode::Staff || Mode == EPlayerSelectorMode::All ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-		OnlinePlayersSection->SetVisibility(Mode == EPlayerSelectorMode::Players || Mode == EPlayerSelectorMode::All ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-		OfflinePlayersSection->SetVisibility(Mode == EPlayerSelectorMode::Players || Mode == EPlayerSelectorMode::All ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-		BannedPlayersSection->SetVisibility(Mode == EPlayerSelectorMode::Banned || Mode == EPlayerSelectorMode::All ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+
+		PlayersList->SetDisplayMode(Mode);
+		
 		SelectedPlayers.Empty();
 		HeaderCheckbox->SetIsChecked(false);
 		OnSelectedPlayersChanged.Broadcast(SelectedPlayers);
@@ -53,31 +59,40 @@ void UModerationConsolePlayerSelector::SetDisplayMode(EPlayerSelectorMode Mode)
 
 void UModerationConsolePlayerSelector::SelectAllPlayers()
 {
-	if (DisplayMode == EPlayerSelectorMode::All || DisplayMode == EPlayerSelectorMode::Staff)
-	{
-		OwnerSection->SelectAllPlayers();
-		ModeratorsSection->SelectAllPlayers();
-	}
-	if (DisplayMode == EPlayerSelectorMode::All || DisplayMode == EPlayerSelectorMode::Players)
-	{
-		OnlinePlayersSection->SelectAllPlayers();
-		OfflinePlayersSection->SelectAllPlayers();
-	}
-	if (DisplayMode == EPlayerSelectorMode::All || DisplayMode == EPlayerSelectorMode::Banned)
-	{
-		BannedPlayersSection->SelectAllPlayers();
-	}
+	PlayersList->SelectAllPlayers();
 }
 
 void UModerationConsolePlayerSelector::ClearSelection()
 {
-	OwnerSection->ClearSelection();
-	ModeratorsSection->ClearSelection();
-	OnlinePlayersSection->ClearSelection();
-	OfflinePlayersSection->ClearSelection();
-	BannedPlayersSection->ClearSelection();
 	SelectedPlayers.Empty();
 	OnSelectedPlayersChanged.Broadcast(SelectedPlayers);
+	PlayersList->ClearSelectedPlayers();
+}
+
+FReply UModerationConsolePlayerSelector::NativeOnFocusReceived(const FGeometry& InGeometry,
+	const FFocusEvent& InFocusEvent)
+{
+	FReply Reply = FReply::Handled();
+	Reply.SetUserFocus(GetFirstFocusablePlayerWidget()->TakeWidget());
+	return Reply;
+}
+
+void UModerationConsolePlayerSelector::NativeOnActivated()
+{
+	Super::NativeOnActivated();
+	ON_INPUT_METHOD_CHANGED([this](ECommonInputType InputType)
+	{
+		SetFocusOnFirstPlayer();
+	});
+}
+
+void UModerationConsolePlayerSelector::NativeOnDeactivated()
+{
+	if (ULocalPlayer* LocalPlayer = GetOwningLocalPlayer())
+	{
+		UCommonInputSubsystem::Get(LocalPlayer)->OnInputMethodChangedNative.RemoveAll(this);
+	}
+	Super::NativeOnDeactivated();
 }
 
 void UModerationConsolePlayerSelector::OnHeaderCheckboxStateChanged(bool bIsChecked)
@@ -88,14 +103,26 @@ void UModerationConsolePlayerSelector::OnHeaderCheckboxStateChanged(bool bIsChec
 	}
 	else
 	{
-		SelectedPlayers.Empty();
-		OnSelectedPlayersChanged.Broadcast(SelectedPlayers);
+		ClearSelection();
 	}
 }
 
 void UModerationConsolePlayerSelector::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
+
+	PlayersList->OnEntryWidgetGenerated().AddWeakLambda(this, [this](UWidget& EntryWidget)
+	{
+		ULocalPlayer* LocalPlayer = GetOwningLocalPlayer();
+		if (UCommonInputSubsystem::Get(LocalPlayer)->GetCurrentInputType() == ECommonInputType::Gamepad)
+		{
+			if (PlayersList->GetNumItems() > 1 && &EntryWidget == PlayersList->GetFirstFocusableItem())
+			{
+				EntryWidget.SetFocus();
+				PlayersList->OnEntryWidgetGenerated().RemoveAll(this);
+			}
+		}
+	});
 
 	auto SelectionChangedCallback = [this](UPlayerServerDetailsDataObject* Player, bool Selected)
 	{
@@ -113,28 +140,52 @@ void UModerationConsolePlayerSelector::NativeOnInitialized()
 
 	auto SelectedExclusiveCallback = [this](UPlayerServerDetailsDataObject* Player)
 	{
+		// TODO: Uncheck select all checkbox if it is checked
+		HeaderCheckbox->SetIsChecked(false);
 		SelectedPlayers.Empty();
 		SelectedPlayers.Add(Player);
 		OnSelectedPlayersChanged.Broadcast(SelectedPlayers);
 	};
+
+	auto FocusSetToPlayerCallback = [this](UWidget* PlayerWidget)
+	{
+		OnFocusSetToPlayer.ExecuteIfBound(PlayerWidget);
+	};
+
+	PlayersList->OnPlayerItemReceivedFocus.BindWeakLambda(this, FocusSetToPlayerCallback);
+	PlayersList->OnPlayerSelectionChanged.BindWeakLambda(this, SelectionChangedCallback);
+	PlayersList->OnPlayerSelectedExclusive.BindWeakLambda(this, SelectedExclusiveCallback);
+	PlayersList->ListenForSelectedPlayersChange(OnSelectedPlayersChanged);
+
+	PlayersList->AreAnyPlayersSelectedDelegate.BindWeakLambda(this, [this]() -> bool
+	{
+		return HasSelectedPlayers();
+	});
 	
-	OwnerSection->OnPlayerSelectionChanged.BindWeakLambda(this, SelectionChangedCallback);
-	ModeratorsSection->OnPlayerSelectionChanged.BindWeakLambda(this, SelectionChangedCallback);
-	OnlinePlayersSection->OnPlayerSelectionChanged.BindWeakLambda(this, SelectionChangedCallback);
-	OfflinePlayersSection->OnPlayerSelectionChanged.BindWeakLambda(this, SelectionChangedCallback);
-	BannedPlayersSection->OnPlayerSelectionChanged.BindWeakLambda(this, SelectionChangedCallback);
-
-	OwnerSection->OnPlayerSelectedExclusive.BindWeakLambda(this, SelectedExclusiveCallback);
-	ModeratorsSection->OnPlayerSelectedExclusive.BindWeakLambda(this, SelectedExclusiveCallback);
-	OnlinePlayersSection->OnPlayerSelectedExclusive.BindWeakLambda(this, SelectedExclusiveCallback);
-	OfflinePlayersSection->OnPlayerSelectedExclusive.BindWeakLambda(this, SelectedExclusiveCallback);
-	BannedPlayersSection->OnPlayerSelectedExclusive.BindWeakLambda(this, SelectedExclusiveCallback);
-
-	OwnerSection->ListenForSelectedPlayersChange(OnSelectedPlayersChanged);
-	ModeratorsSection->ListenForSelectedPlayersChange(OnSelectedPlayersChanged);
-	OnlinePlayersSection->ListenForSelectedPlayersChange(OnSelectedPlayersChanged);
-	OfflinePlayersSection->ListenForSelectedPlayersChange(OnSelectedPlayersChanged);
-	BannedPlayersSection->ListenForSelectedPlayersChange(OnSelectedPlayersChanged);
-
+	PlayersList->GetRightNavFocusDestination.BindWeakLambda(this, [this]() -> UUserWidget*
+	{
+		return this;
+	});
+	
 	HeaderCheckbox->OnCheckStateChanged.AddDynamic(this, &UModerationConsolePlayerSelector::OnHeaderCheckboxStateChanged);
+}
+
+void UModerationConsolePlayerSelector::SetFocusOnFirstPlayer()
+{
+	PlayersList->SetFocusOnFirstPlayer();
+}
+
+bool UModerationConsolePlayerSelector::HasSelectedPlayers()
+{
+	return SelectedPlayers.Num() > 0;
+}
+
+void UModerationConsolePlayerSelector::SetupNavigation(const FGetFocusDestination& Delegate)
+{
+	PlayersList->SetupNavigation(Delegate);
+}
+
+UWidget* UModerationConsolePlayerSelector::GetFirstFocusablePlayerWidget()
+{
+	return PlayersList->GetFirstFocusableItem();
 }

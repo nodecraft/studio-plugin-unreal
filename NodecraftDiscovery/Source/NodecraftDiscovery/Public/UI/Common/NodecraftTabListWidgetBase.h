@@ -1,4 +1,4 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 #pragma once
 
@@ -32,23 +32,23 @@ public:
 	, CreatedTabContentWidget(nullptr)
 	{ }
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Nodecraft UI|Tab Info")
 	FName TabId;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Nodecraft UI|Tab Info")
 	FText TabText;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Nodecraft UI|Tab Info")
 	FSlateBrush IconBrush;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Nodecraft UI|Tab Info")
 	bool bHidden;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Nodecraft UI|Tab Info")
 	TSubclassOf<UCommonButtonBase> TabButtonType;
 
 	//TODO NDarnell - This should become a TSoftClassPtr<>, the underlying common tab list needs to be able to handle lazy tab content construction.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Nodecraft UI|Tab Info")
 	TSubclassOf<UCommonUserWidget> TabContentType;
 
 	UPROPERTY(Transient)
@@ -66,7 +66,7 @@ class INodecraftTabButtonInterface
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintNativeEvent, Category = "Tab Button")
+	UFUNCTION(BlueprintNativeEvent, Category = "Nodecraft UI|Tab Button")
 	void SetTabLabelInfo(const FNodecraftTabDescriptor& TabDescriptor);
 };
 
@@ -76,29 +76,29 @@ class NODECRAFTDISCOVERY_API UNodecraftTabListWidgetBase : public UCommonTabList
 	GENERATED_BODY()
 	
 public:
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Tab List")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Nodecraft UI|Tab List")
 	bool GetPreregisteredTabInfo(const FName TabNameId, FNodecraftTabDescriptor& OutTabInfo);
 
 	/** Helper method to get at all the preregistered tab infos */
 	const TArray<FNodecraftTabDescriptor>& GetAllPreregisteredTabInfos() { return PreregisteredTabInfoArray; }
 
 	// Toggles whether or not a specified tab is hidden, can only be called before the switcher is associated
-	UFUNCTION(BlueprintCallable, Category = "Tab List")
+	UFUNCTION(BlueprintCallable, Category = "Nodecraft UI|Tab List")
 	void SetTabHiddenState(FName TabNameId, bool bHidden);
 
-	UFUNCTION(BlueprintCallable, Category = "Tab List")
+	UFUNCTION(BlueprintCallable, Category = "Nodecraft UI|Tab List")
 	bool RegisterDynamicTab(const FNodecraftTabDescriptor& TabDescriptor);
 
-	UFUNCTION(BlueprintCallable, Category = "Tab List")
+	UFUNCTION(BlueprintCallable, Category = "Nodecraft UI|Tab List")
 	bool IsFirstTabActive() const;
 
-	UFUNCTION(BlueprintCallable, Category = "Tab List")
+	UFUNCTION(BlueprintCallable, Category = "Nodecraft UI|Tab List")
 	bool IsLastTabActive() const;
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Tab List")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Nodecraft UI|Tab List")
 	bool IsTabVisible(FName TabId);
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Tab List")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Nodecraft UI|Tab List")
 	int32 GetVisibleTabCount();
 
 	/** Delegate broadcast when a new tab is created. Allows hook ups after creation. */
@@ -106,7 +106,7 @@ public:
 	DECLARE_EVENT_TwoParams(UNodecraftTabListWidgetBase, FOnTabContentCreatedNative, FName /* TabId */, UCommonUserWidget* /* TabWidget */);
 
 	/** Broadcasts when a new tab is created. */
-	UPROPERTY(BlueprintAssignable, Category = "Tab List")
+	UPROPERTY(BlueprintAssignable, Category = "Nodecraft UI|Tab List")
 	FOnTabContentCreated OnTabContentCreated;
 	FOnTabContentCreatedNative OnTabContentCreatedNative;
 
@@ -125,7 +125,7 @@ protected:
 private:
 	void SetupTabs();
 
-	UPROPERTY(EditAnywhere, meta=(TitleProperty="TabId"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Nodecraft UI|Tab List", meta=(TitleProperty="TabId", AllowPrivateAccess))
 	TArray<FNodecraftTabDescriptor> PreregisteredTabInfoArray;
 	
 	/**

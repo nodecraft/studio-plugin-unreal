@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
+#include "Engine/World.h"
 #include "FriendsStore.generated.h"
 
 class UFriendDataObject;
@@ -38,6 +39,9 @@ public:
 	bool RemoveFriendsUpdatedListener(const FDelegateHandle& Handle);
 
 private:
+	// the default value is used only if we fail to get the API settings
+	float PollingFrequency = 30.f;
+	
 	FTimerHandle PollingTimerHandle;
 
 	FOnFriendsUpdated OnFriendsUpdated;

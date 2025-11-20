@@ -23,16 +23,21 @@ public:
 	void SetEmail(FString InEmail);
 
 protected:
+	virtual void NativeOnActivated() override;
+	virtual void NativeOnDeactivated() override;
+	virtual void NativeOnInitialized() override;
+	virtual UWidget* NativeGetDesiredFocusTarget() const override;
+	virtual void SubmitRequest() override;
+	
 	UPROPERTY(meta=(BindWidget))
 	UEditableText* TokenEditText;
 
 	UPROPERTY(meta=(BindWidget))
 	UTextBlock* EmailTextBlock;
 
-protected:
-	virtual void SubmitRequest() override;
-
 private:
+	UFUNCTION()
+	void OnTextCommitted(const FText& InText, ETextCommit::Type CommitMethod);
 	void SendToken();
 
 };

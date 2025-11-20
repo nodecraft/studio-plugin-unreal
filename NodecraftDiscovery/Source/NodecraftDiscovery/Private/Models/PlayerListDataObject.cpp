@@ -8,11 +8,11 @@ UPlayerListDataObject* UPlayerListDataObject::FromJson(const TSharedRef<FJsonObj
 {
 	UPlayerListDataObject* PlayerListDataObject = NewObject<UPlayerListDataObject>();
 	
-	Json->TryGetNumberField("players_count", PlayerListDataObject->PlayersCount);
-    Json->TryGetNumberField("players_max", PlayerListDataObject->PlayersMax);
+	Json->TryGetNumberField(TEXT("players_count"), PlayerListDataObject->PlayersCount);
+    Json->TryGetNumberField(TEXT("players_max"), PlayerListDataObject->PlayersMax);
 	
 	const TArray<TSharedPtr<FJsonValue>> Players = Json->GetArrayField(PlayersKeyToCheck);
-	for (const TSharedPtr<FJsonValue> Player : Players)
+	for (const TSharedPtr<FJsonValue>& Player : Players)
 	{
 		UPlayerDataObject* PDO = UPlayerDataObject::FromJson(Player->AsObject().ToSharedRef());
 		PlayerListDataObject->PlayerDataObjects.Add(PDO);

@@ -4,11 +4,15 @@
 #include "UI/Redirects/RedirectModal.h"
 
 #include "CommonBorder.h"
+#include "CommonInputSubsystem.h"
 #include "CommonTextBlock.h"
+#include "DataTypes/ImageBackgroundTypes.h"
 #include "DataTypes/LinkTypes.h"
+#include "Input/CommonUIInputTypes.h"
 #include "Services/LinksService.h"
 #include "UI/Common/AsyncImage.h"
 #include "UI/Foundation/NodecraftButtonBase.h"
+#include "Utility/NodecraftMacros.h"
 #include "Utility/NodecraftUtility.h"
 
 void URedirectModal::Configure(FSimpleDelegate OnClosed, FString URL, ELinkType LinkType)
@@ -31,7 +35,7 @@ void URedirectModal::Configure(FSimpleDelegate OnClosed, FString URL, ELinkType 
 	// Tie the cached QR code to a URL. Clean up the filename so it doesn't contain characters that are not allowed.
 	FString FilenameForCache = URL.Replace(TEXT("/"), TEXT("_"));
 	FilenameForCache = FilenameForCache.Replace(TEXT(":"), TEXT("-"));
-	QRCode->LoadImageAsync(UNodecraftUtility::GetQrCodeUrl(URL, LinkType), FilenameForCache+"qrcode");
+	QRCode->LoadImageAsyncSkipCache(UNodecraftUtility::GetQrCodeUrl(URL, LinkType), ETransparentPixelOverrides::FillWhite);
 
 	OpenInBrowserButton->OnClicked().Clear();
 	OpenInBrowserButton->OnClicked().AddWeakLambda(this, [this, LinkType, URL]
@@ -50,4 +54,44 @@ void URedirectModal::Configure(FSimpleDelegate OnClosed, FString URL, ELinkType 
 	{
 		OnClosed.ExecuteIfBound();
 	});
+}
+
+void URedirectModal::NativeOnInitialized()
+{
+	Super::NativeOnInitialized();
+
+	ON_INPUT_METHOD_CHANGED(UpdateActionBindings)
+}
+
+bool URedirectModal::NativeOnHandleBackAction()
+{
+	CloseButtonBottom->OnClicked().Broadcast();
+	return Super::NativeOnHandleBackAction();
+}
+
+void URedirectModal::UpdateActionBindings(ECommonInputType CurrentInputType)
+{
+	if (CurrentInputType == ECommonInputType::Gamepad)
+	{
+		if (OpenInBrowserActionData.IsNull() == false)
+		{
+			FBindUIActionArgs Args = FBindUIActionArgs(OpenInBrowserActionData, bDisplayInActionBar,
+				FSimpleDelegate::CreateWeakLambda(this, [this]
+				{
+					OpenInBrowserButton->OnClicked().Broadcast();
+				}));
+			if (OpenInBrowserButton->GetInputActionNameOverride().IsEmptyOrWhitespace() == false)
+			{
+				Args.OverrideDisplayName = OpenInBrowserButton->GetInputActionNameOverride();
+			}
+			OpenInBrowserActionHandle = RegisterUIActionBinding(Args);
+		}
+	}
+	else
+	{
+		if (OpenInBrowserActionHandle.IsValid())
+		{
+			OpenInBrowserActionHandle.Unregister();
+		}
+	}
 }

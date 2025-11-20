@@ -28,10 +28,12 @@ class NODECRAFTDISCOVERY_API UInternalRedirectModal : public UCommonActivatableW
 public:
 	void Configure(FSimpleDelegate OnClosed, EPlayerConnectionSubject Subject, TOptional<FString> ServerId);
 
+protected:
+	virtual void NativeOnInitialized() override;
 	virtual void NativeOnActivated() override;
 	virtual void NativeOnDeactivated() override;
+	virtual bool NativeOnHandleBackAction() override;
 
-protected:
 	UPROPERTY(meta=(BindWidget))
 	UCommonTextBlock* InternalLinkHeader;
 
@@ -61,10 +63,20 @@ protected:
 	
 	UPROPERTY(meta=(BindWidget))
 	UAlertMessage* AlertMessage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Input", meta=(RowType="/Script/CommonUI.CommonInputActionDataBase"))
+	FDataTableRowHandle OpenInBrowserActionData;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Input", meta=(RowType="/Script/CommonUI.CommonInputActionDataBase"))
+	FDataTableRowHandle SubmitActionData;
 	
 	bool bHasLoadedQrCode;
 
 private:
 	void RefreshUI(EPlayerConnectionStatus Status);
 	void ShowErrorUI(const FText& ErrorMsg);
+	void UpdateActionBindings(ECommonInputType CurrentInputType);
+
+	FUIActionBindingHandle OpenInBrowserActionHandle;
+	FUIActionBindingHandle SubmitActionHandle;
 };

@@ -4,8 +4,10 @@
 #include "Subsystems/NodecraftUIManagerSubsystem.h"
 
 #include "NodecraftLogCategories.h"
-#include "Api/NodecraftStudioSessionManagerSubsystem.h"
+#include "API/NodecraftStudioSessionManagerSubsystem.h"
 #include "DeveloperSettings/NodecraftStudioWidgetSettings.h"
+#include "UI/NodecraftMenuNavInputProcessor.h"
+#include "Framework/Application/SlateApplication.h"
 
 void UNodecraftUIManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -32,12 +34,61 @@ void UNodecraftUIManagerSubsystem::Initialize(FSubsystemCollectionBase& Collecti
 			OpenNodecraftUI(false);
 		}
 	});
+
+#if !UE_SERVER 
+	if (ensure(FSlateApplication::IsInitialized()))
+	{
+		MenuNavInputProcessor = FNodecraftMenuNavInputProcessor::CreateMenuNavInputProcessor();
+		FSlateApplication::Get().RegisterInputPreProcessor(MenuNavInputProcessor, 0);	
+	}
+#endif
+	
+}
+
+int32 UNodecraftUIManagerSubsystem::GetNumTilesInServerList()
+{
+	return 4;
+	// TODO: In future we will implement this logic to determine the number of tiles to show based on the viewport size. It's not quite ready
+	// if (ViewportSize.X > 1920)
+	// {
+	// 	return 6;
+	// }
+	// else if (ViewportSize.X > 1280)
+	// {
+	// 	return 4;
+	// }
+	// else if (ViewportSize.X > 640)
+	// {
+	// 	return 3;
+	// }
+	// else
+	// {
+	// 	return 2;
+	// }
 }
 
 void UNodecraftUIManagerSubsystem::Deinitialize()
 {
-	Super::Deinitialize();
 	ShowNodecraftUI.RemoveAll(this);
+	FViewport::ViewportResizedEvent.RemoveAll(this);
+	Super::Deinitialize();
+
+}
+
+void UNodecraftUIManagerSubsystem::Tick(float DeltaTime)
+{
+	if (MenuNavInputProcessor)
+	{
+		float PrimaryVal = MenuNavInputProcessor->GetAnalogValues(EAnalogStick::Left).Y;
+		float SecondaryVal = MenuNavInputProcessor->GetAnalogValues(EAnalogStick::Right).Y;
+		OnRequestScrollPrimaryMenu.Broadcast(PrimaryVal);
+		OnRequestScrollSecondaryMenu.Broadcast(SecondaryVal);
+	}
+}
+
+TStatId UNodecraftUIManagerSubsystem::GetStatId() const
+{
+	RETURN_QUICK_DECLARE_CYCLE_STAT(UNodecraftUIManagerSubsystem, STATGROUP_Tickables);
 }
 
 void UNodecraftUIManagerSubsystem::OpenNodecraftUI(bool bAnimate = true)

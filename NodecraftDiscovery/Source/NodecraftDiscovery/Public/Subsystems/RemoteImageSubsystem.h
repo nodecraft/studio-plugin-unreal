@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DataTypes/ImageBackgroundTypes.h"
+#include "Engine/Engine.h"
 #include "RemoteImageSubsystem.generated.h"
 
 #define NC_CACHED_GAME_BACKGROUND_FILENAME "game_background"
@@ -29,8 +31,8 @@ public:
 public:
 	
 	// Will immediately return image from cache if available, otherwise will fetch it from remote
-	void FetchImage(FString CachedFileName, FString RemoteURL, FOnImageDownloadedDelegate& Complete);
-	void SaveTextureToDisk(UTexture2D* Texture, const FString& FilePath);
+	void FetchImage(FString CachedFileName, FString RemoteURL, FOnImageDownloadedDelegate& Complete, const ETransparentPixelOverrides TransparentPixelOverride = ETransparentPixelOverrides::None);
+	void SaveTextureToDisk(UTexture2D* Texture, const FString& FilePath, const ETransparentPixelOverrides TransparentPixelOverride = ETransparentPixelOverrides::None);
 	UTexture2D* LoadTextureFromDisk(const FString& Filename);
 	UTexture2D* GetCachedGameBackground();
 	void CacheGameBackgroundImage(bool bForce);

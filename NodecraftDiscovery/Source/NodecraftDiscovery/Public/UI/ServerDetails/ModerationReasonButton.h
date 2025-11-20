@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "CommonTextBlock.h"
-#include "Blueprint/IUserListEntry.h"
 #include "Blueprint/IUserObjectListEntry.h"
+#include "Models/ModerationReasonDataObject.h"
 #include "UI/Foundation/NodecraftButtonBase.h"
 #include "ModerationReasonButton.generated.h"
 
@@ -22,10 +22,18 @@ public:
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
 	// IUserObjectListEntry
 
+	void SetUseSelectedStyle(bool bUseSelectedStyle);
+	
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* Label;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* Description;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Server Details|Styles")
+	TSoftClassPtr<UCommonButtonStyle> NormalButtonStyle;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Server Details|Styles")
+	TSoftClassPtr<UCommonButtonStyle> SelectedButtonStyle;
 };

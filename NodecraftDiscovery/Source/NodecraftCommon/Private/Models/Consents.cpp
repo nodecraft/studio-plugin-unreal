@@ -6,11 +6,11 @@
 FConsentPageDetails FConsentPageDetails::FromJson(const TSharedPtr<FJsonObject>& Json)
 {
 	FConsentPageDetails Details = FConsentPageDetails();
-	Json.Get()->TryGetStringField("page_id", Details.PageId);
-	Json.Get()->TryGetStringField("page_content_id", Details.PageContentId);
-	Json.Get()->TryGetStringField("entity", Details.Entity);
-	Json.Get()->TryGetStringField("type", Details.Type);
-	Json.Get()->TryGetStringField("entity_id", Details.EntityId);
+	Json.Get()->TryGetStringField(TEXT("page_id"), Details.PageId);
+	Json.Get()->TryGetStringField(TEXT("page_content_id"), Details.PageContentId);
+	Json.Get()->TryGetStringField(TEXT("entity"), Details.Entity);
+	Json.Get()->TryGetStringField(TEXT("type"), Details.Type);
+	Json.Get()->TryGetStringField(TEXT("entity_id"), Details.EntityId);
 	if (Details.EntityId.Equals("null", ESearchCase::IgnoreCase))
 	{
 		Details.EntityId = "";
@@ -86,9 +86,9 @@ FGameConsents FGameConsents::FromDataJson(const TSharedPtr<FJsonObject>& Json)
 	FGameConsents GameConsents = FGameConsents();
 	
 	const TArray<TSharedPtr<FJsonValue>>* ConsentPages;
-	if (Json->TryGetArrayField("consents", ConsentPages))
+	if (Json->TryGetArrayField(TEXT("consents"), ConsentPages))
 	{
-		if (Json->TryGetStringField("content", GameConsents.Content))
+		if (Json->TryGetStringField(TEXT("content"), GameConsents.Content))
 		{
 			// GameConsents.Content = Content;
 			for (TSharedPtr<FJsonValue> JsonValue : *ConsentPages)
@@ -117,9 +117,9 @@ FPlayerConsents FPlayerConsents::FromJson(const TSharedPtr<FJsonObject>& Json)
 {
 	FPlayerConsents PlayerConsents = FPlayerConsents();
 
-	PlayerConsents.Content = Json->GetStringField("content");
+	PlayerConsents.Content = Json->GetStringField(TEXT("content"));
 
-	FString Status = Json->GetStringField("status_all");
+	FString Status = Json->GetStringField(TEXT("status_all"));
 	if (Status.Equals("missing", ESearchCase::IgnoreCase))
 	{
 		PlayerConsents.ConsentsStatusAll = EConsentsStatus::Missing;
@@ -133,7 +133,7 @@ FPlayerConsents FPlayerConsents::FromJson(const TSharedPtr<FJsonObject>& Json)
 		PlayerConsents.ConsentsStatusAll = EConsentsStatus::Signed;
 	}
 	
-	if (FString DateString; Json.Get()->TryGetStringField("date_all_signed", DateString))
+	if (FString DateString; Json.Get()->TryGetStringField(TEXT("date_all_signed"), DateString))
 	{
 		FDateTime::ParseIso8601(*DateString, PlayerConsents.DateAllSigned);
 	}

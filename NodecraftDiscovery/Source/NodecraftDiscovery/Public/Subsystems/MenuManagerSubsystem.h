@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "DataTypes/PlayerConnectionSubjects.h"
 #include "Subsystems/EngineSubsystem.h"
+#include "Engine/Engine.h"
 #include "MenuManagerSubsystem.generated.h"
 
 
@@ -17,10 +18,12 @@ struct FPlayerConsents;
 class UNodecraftStudioMainMenu;
 class UServerDataObject;
 
-DECLARE_DELEGATE_TwoParams(FOnRequestShowServerDetailsModal, UServerDataObject*/* Server*/, TOptional<FText>/* RulesError */);
+typedef TMap<FString, FText> FServerDetailsArgument;
+
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnRequestShowServerDetailsModal, UServerDataObject* /* Server*/, TOptional<FServerDetailsArgument> /* Argument */);
 DECLARE_DELEGATE_TwoParams(FOnPushConsentsPopupDelegate, TSubclassOf<UCommonActivatableWidget> /*ModalClass*/, FPlayerConsents /*Consents*/);
 DECLARE_DELEGATE_ThreeParams(FOnPushServerInvitesPopupDelegate, TSubclassOf<UCommonActivatableWidget> /*ModalClass*/, TArray<UServerDataObject*> /*Servers*/, const UFriendDataObject* /*Invitee*/);
-DECLARE_DELEGATE(FOnPushJoiningServerQueuePopupDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnPushJoiningServerQueuePopupDelegate);
 DECLARE_DELEGATE_OneParam(FOnPushServerPasswordPopupDelegate, UServerDataObject* /*Server*/);
 DECLARE_DELEGATE_OneParam(FServerQueueErrorDelegate, const FText& /*ErrorText*/);
 DECLARE_DELEGATE_OneParam(FOnPushSimpleModalDelegate, TSubclassOf<UCommonActivatableWidget> /*Modal*/);
@@ -39,7 +42,8 @@ protected:
 
 public:
 	static UMenuManagerSubsystem& Get() { return *GEngine->GetEngineSubsystem<UMenuManagerSubsystem>(); }
-	void ShowServerDetails(UServerDataObject* ServerDataObject, TOptional<FText> RulesError = TOptional<FText>());
+	
+	void ShowServerDetails(UServerDataObject* ServerDataObject, TOptional<FServerDetailsArgument> Argument = TOptional<FServerDetailsArgument>());
 	void ShowPlayerConsents(TSubclassOf<UCommonActivatableWidget> Modal, const FPlayerConsents& Consents);
 	void ShowServerInvites(TSubclassOf<UCommonActivatableWidget> Modal, const TArray<UServerDataObject*>& Servers, const UFriendDataObject* Invitee);
 	void ShowJoiningServerQueue();
@@ -48,6 +52,9 @@ public:
 	void ShowRedirectModal(FString QrCodeUrl, ELinkType LinkType);
 	void ShowInternalRedirectModal(EPlayerConnectionSubject Subject);
 	void ShowServerSettingsRedirectModal(const FString& ServerId);
+	void ShowIdleCheckModal(TSoftClassPtr<UCommonActivatableWidget> ModalClass);
+
+	void ClearPopupStack();
 
 	FOnRequestShowServerDetailsModal OnRequestShowServerDetailsModal;
 	FOnPushConsentsPopupDelegate OnPushConsentsPopupDelegate;
@@ -56,6 +63,9 @@ public:
 	FOnPushServerPasswordPopupDelegate OnPushServerPasswordPopupDelegate;
 	FServerQueueErrorDelegate OnServerQueueError;
 	FOnPushSimpleModalDelegate OnPushCreateServerPopupDelegate;
+	FOnPushSimpleModalDelegate OnPushIdleCheckPopupDelegate;
 	FOnPushInternalRedirectModalDelegate OnPushInternalRedirectPopupDelegate;
 	FOnPushExternalRedirectModalDelegate OnPushExternalRedirectModalDelegate;
+
+	FSimpleDelegate OnClearPopupStack;
 };

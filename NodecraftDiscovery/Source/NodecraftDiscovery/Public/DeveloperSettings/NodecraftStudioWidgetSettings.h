@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DeveloperSettings.h"
+#include "Blueprint/UserWidget.h"
 #include "NodecraftStudioWidgetSettings.generated.h"
 
 class UCommonActivatableWidget;
@@ -32,21 +33,21 @@ public:
 
 protected:
 	// TODO: move queue and password modals to the main menu
-	UPROPERTY(EditAnywhere, Config)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft Settings", Config)
 	TSoftClassPtr<UCommonActivatableWidget> JoiningServerQueueModal;
 
-	UPROPERTY(EditAnywhere, Config)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft Settings", Config)
 	TSoftClassPtr<UCommonActivatableWidget> ServerPasswordModal;
 
-	UPROPERTY(EditAnywhere, Config)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft Settings", Config)
 	TSoftClassPtr<UUserWidget> MainMenuWidget;
 
-	UPROPERTY(EditAnywhere, Config)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft Settings", Config)
 	TSoftClassPtr<UUserWidget> LoginScreenWidget;
 
-	UPROPERTY(EditAnywhere, Config)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft Settings", Config)
 	TSoftClassPtr<UUserWidget> InternalRedirectModal;
 
-	UPROPERTY(EditAnywhere, Config)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft Settings", Config)
 	TSoftClassPtr<UUserWidget> ExternalRedirectModal;
 };

@@ -9,11 +9,8 @@
 #include "PlayerPlatformIcon.h"
 #include "SelectedPlayerDetails.h"
 #include "Components/ScrollBox.h"
-#include "Components/TextBlock.h"
-#include "Models/PlayerDataObject.h"
 #include "Models/PlayerServerDetails.h"
-#include "UI/Common/NodecraftLoadGuard.h"
-#include "ViewModels\ModerationConsolePlayerDetailsPanelViewModel.h"
+#include "ViewModels/ModerationConsolePlayerDetailsPanelViewModel.h"
 #include "ModerationConsolePlayerDetailsPanel.generated.h"
 
 /**
@@ -25,28 +22,28 @@ class NODECRAFTDISCOVERY_API UModerationConsolePlayerDetailsPanel : public UComm
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UPanelWidget* NoPlayerSelectedContent;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UPanelWidget* PlayerSelectedContent;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	USelectedPlayerDetails* PlayerDetails;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UScrollBox* ScrollBox;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UModerationActionsSection* ModerationActionsSection;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UModerationReasonsSection* ModerationReasonsSection;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* UsernameLabel;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UPlayerPlatformIcon* PlatformIcon;
 
 	UPROPERTY()
@@ -68,6 +65,11 @@ public:
 	void SetServerId(const FString& InServerId);
 
 	virtual void NativeOnInitialized() override;
+	void SetPlayerRole(EPlayerRole Role);
 
 	FSimpleMulticastDelegate OnCompletedModerationActionDelegate;
+
+	FGetFocusDestination GetPlayerListDelegate;
+
+	virtual UWidget* NativeGetDesiredFocusTarget() const override;
 };

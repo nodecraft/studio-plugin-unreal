@@ -9,8 +9,9 @@
 #include "ServerDetailsHeaderCard.generated.h"
 
 
-
-
+class UCommonButtonStyle;
+class UTagButton;
+class UHorizontalBox;
 class UCommonBorder;
 class UServerDataObject;
 class UCommonTextStyle;
@@ -26,10 +27,10 @@ struct FServerTypeStyle
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Styles")
 	TSoftClassPtr<UCommonBorderStyle> BorderStyle;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Styles")
 	TSoftClassPtr<UCommonTextStyle> TextStyle;
 };
 
@@ -42,35 +43,37 @@ class NODECRAFTDISCOVERY_API UServerDetailsHeaderCard : public UCommonUserWidget
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UNodecraftLoadGuard* LoadGuard;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UAsyncImage* ServerImage;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonBorder* ServerTypeBorder;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* ServerTypeTextBlock;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* ServerNameTextBlock;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* ServerOwnerInfoTextBlock;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* ServerRegionTextBlock;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* GameVersionTextBlock;
 
-	// TODO: Instead of this being one single block of text, this should be a list of tags that can be clicked on to filter the server list`
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UCommonTextBlock* TagsTextBlock;
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
+	UHorizontalBox* TagsBox;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Server Details|Moderation Console")
+	TSoftClassPtr<UTagButton> ServerTagButtonClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Server Details|Moderation Console")
 	TMap<EServerType, FServerTypeStyle> ServerTypeStyle;
 	
 public:

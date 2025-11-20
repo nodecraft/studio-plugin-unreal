@@ -9,6 +9,7 @@
 #include "Components/Image.h"
 #include "Services/ServersService.h"
 #include "Models/ModerationLogEntryDataObject.h"
+#include "Stores/ServersStore.h"
 #include "UI/Common/NodecraftLoadGuard.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogServerModerationSection, All, All);
@@ -36,13 +37,16 @@ void UServerDetailsModerationHistorySection::LoadData()
  	FListPublicServerModerationDelegate OnComplete;
  	OnComplete.BindWeakLambda(this, [this](TArray<UModerationLogEntryDataObject*> ModerationLogEntryDataObjects, bool bSuccess, TOptional<FText> Error)
  	{
- 		// todo: use custom load guard 
- 		NoModerationLogImage->SetVisibility(ModerationLogEntryDataObjects.Num() > 0 ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
-      	NoModerationLogText->SetVisibility(ModerationLogEntryDataObjects.Num() > 0 ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
- 		ListTitle->SetVisibility(ModerationLogEntryDataObjects.Num() > 0 ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
- 		ListView->SetListItems(ModerationLogEntryDataObjects);
+	    if (UServersStore::Get().GetCurrentServerId() == ServerId)
+	    {
+		    // todo: use custom load guard 
+			NoModerationLogImage->SetVisibility(ModerationLogEntryDataObjects.Num() > 0 ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+	    	NoModerationLogText->SetVisibility(ModerationLogEntryDataObjects.Num() > 0 ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+			ListTitle->SetVisibility(ModerationLogEntryDataObjects.Num() > 0 ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+			ListView->SetListItems(ModerationLogEntryDataObjects);
  
- 		LoadGuard->SetIsLoading(false);
+			LoadGuard->SetIsLoading(false);
+	    }
  		
  		if (bSuccess == false)
  		{

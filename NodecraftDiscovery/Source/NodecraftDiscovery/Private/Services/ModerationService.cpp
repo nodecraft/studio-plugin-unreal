@@ -6,7 +6,7 @@
 
 #include "JsonObjectWrapper.h"
 #include "NodecraftLogCategories.h"
-#include "Api/NodecraftStudioApi.h"
+#include "API/NodecraftStudioApi.h"
 #include "Stores/ModerationStore.h"
 #include "Subsystems/MessageRouterSubsystem.h"
 #include "Utility/NodecraftUtility.h"
@@ -22,7 +22,7 @@ void UModerationService::CreatePlayersListModerationDelegate(const FGetPlayerSer
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TArray<TSharedPtr<FJsonValue>>& Data = ResJson.JsonObject->GetArrayField("data"); Data.Num() > 0)
+				if (const TArray<TSharedPtr<FJsonValue>>& Data = ResJson.JsonObject->GetArrayField(TEXT("data")); Data.Num() > 0)
 				{
 					TArray<UPlayerServerDetailsDataObject*> Players;
 					for (TSharedPtr<FJsonValue> JsonValue : Data)
@@ -42,7 +42,7 @@ void UModerationService::CreatePlayersListModerationDelegate(const FGetPlayerSer
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const FString Message = ResJson.JsonObject->GetStringField("message"); Message.IsEmpty() == false)
+				if (const FString Message = ResJson.JsonObject->GetStringField(TEXT("message")); Message.IsEmpty() == false)
 				{
 					const FString ErrorText = FString::Printf(TEXT("UModerationService::CreatePlayersListModerationDelegate: Error code: %d. Message: %ls"), Res.Get()->GetResponseCode(), *Message);
 					OnComplete.ExecuteIfBound({}, false, TOptional<FText>(FText::FromString(ErrorText)));
@@ -76,7 +76,7 @@ void UModerationService::CreateServerPlayersDetailDelegate(const FGetPlayerServe
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
 					PlayerServerDetailsDataObject = UPlayerServerDetailsDataObject::FromJson(Data.ToSharedRef());
 					OnComplete.ExecuteIfBound(PlayerServerDetailsDataObject, true, FText());
@@ -91,7 +91,7 @@ void UModerationService::CreateServerPlayersDetailDelegate(const FGetPlayerServe
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const FString Message = ResJson.JsonObject->GetStringField("message"); Message.IsEmpty() == false)
+				if (const FString Message = ResJson.JsonObject->GetStringField(TEXT("message")); Message.IsEmpty() == false)
 				{
 					const FString ErrorText = FString::Printf(TEXT("UModerationService::CreateServerPlayersDetailDelegate: Error code: %d. Message: %ls"), Res.Get()->GetResponseCode(), *Message);
 					OnComplete.ExecuteIfBound(PlayerServerDetailsDataObject, false, TOptional<FText>(FText::FromString(ErrorText)));
@@ -276,9 +276,9 @@ bool UModerationService::GetModerationActionReasons(UWorld* World, FGetModAction
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TArray<TSharedPtr<FJsonValue>> Data = ResJson.JsonObject->GetArrayField("data"); Data.Num() > 0)
+				if (const TArray<TSharedPtr<FJsonValue>> Data = ResJson.JsonObject->GetArrayField(TEXT("data")); Data.Num() > 0)
 				{
-					for (const TSharedPtr<FJsonValue> JsonValue : Data)
+					for (const TSharedPtr<FJsonValue>& JsonValue : Data)
 					{
 						UModerationReasonDataObject* Reason = UModerationReasonDataObject::FromJson(JsonValue->AsObject().ToSharedRef());
 						Reasons.Add(Reason);
@@ -325,9 +325,9 @@ bool UModerationService::KickPlayers(const TArray<FString> PlayerIds, const FStr
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TArray<TSharedPtr<FJsonValue>> Data = ResJson.JsonObject->GetArrayField("data"); Data.Num() > 0)
+				if (const TArray<TSharedPtr<FJsonValue>> Data = ResJson.JsonObject->GetArrayField(TEXT("data")); Data.Num() > 0)
 				{
-					for (const TSharedPtr<FJsonValue> JsonValue : Data)
+					for (const TSharedPtr<FJsonValue>& JsonValue : Data)
 					{
 						FPlayerKickDataObject Kick = FPlayerKickDataObject::FromJson(JsonValue->AsObject().ToSharedRef());
 						Kicks.Add(Kick);
@@ -373,9 +373,9 @@ bool UModerationService::BanPlayers(TArray<FString> PlayerIds, const FString& Se
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TArray<TSharedPtr<FJsonValue>> Data = ResJson.JsonObject->GetArrayField("data"); Data.Num() > 0)
+				if (const TArray<TSharedPtr<FJsonValue>> Data = ResJson.JsonObject->GetArrayField(TEXT("data")); Data.Num() > 0)
 				{
-					for (const TSharedPtr<FJsonValue> JsonValue : Data)
+					for (const TSharedPtr<FJsonValue>& JsonValue : Data)
 					{
 						UBanDataObject* Ban = UBanDataObject::FromJson(JsonValue->AsObject().ToSharedRef());
 						Bans.Add(Ban);
@@ -417,9 +417,9 @@ bool UModerationService::UnbanPlayers(TArray<FString> BanIds, FPlayersBannedDele
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TArray<TSharedPtr<FJsonValue>> Data = ResJson.JsonObject->GetArrayField("data"); Data.Num() > 0)
+				if (const TArray<TSharedPtr<FJsonValue>> Data = ResJson.JsonObject->GetArrayField(TEXT("data")); Data.Num() > 0)
 				{
-					for (const TSharedPtr<FJsonValue> JsonValue : Data)
+					for (const TSharedPtr<FJsonValue>& JsonValue : Data)
 					{
 						UBanDataObject* Ban = UBanDataObject::FromJson(JsonValue->AsObject().ToSharedRef());
 						Bans.Add(Ban);

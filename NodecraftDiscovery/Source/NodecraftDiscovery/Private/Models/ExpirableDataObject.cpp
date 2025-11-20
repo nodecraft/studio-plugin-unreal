@@ -22,9 +22,9 @@ FExpirableDataObject FExpirableDataObject::FromJson(const TSharedRef<FJsonObject
 {
 	FExpirableDataObject ServerAllowDataObject;
 
-	ServerAllowDataObject.Id = Json->GetStringField("id");
+	ServerAllowDataObject.Id = Json->GetStringField(TEXT("id"));
 
-	if (FString DateExpiresString; Json->TryGetStringField("date_expires", DateExpiresString))
+	if (FString DateExpiresString; Json->TryGetStringField(TEXT("date_expires"), DateExpiresString))
 	{
 		FDateTime::ParseIso8601(*DateExpiresString, ServerAllowDataObject.DateExpires);
 		ServerAllowDataObject.bExpires = true;

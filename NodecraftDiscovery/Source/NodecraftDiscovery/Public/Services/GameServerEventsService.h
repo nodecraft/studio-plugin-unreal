@@ -8,6 +8,7 @@
 #include "Models/Server/PlayerJoinDataObjects.h"
 #include "Models/Server/PlayerLeaveDataObjects.h"
 #include "Subsystems/EngineSubsystem.h"
+#include "Engine/Engine.h"
 #include "GameServerEventsService.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FHeartbeatDelegate, FHeartbeatResponseDataObject, HeartbeatResponse, bool, bSuccess, FText, Error);
@@ -51,6 +52,6 @@ public:
 
 protected:
 	// Use this to listen for heartbeat responses
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Category = "Nodecraft Services")
 	FHeartbeatDelegate OnHeartbeatResponse;
 };

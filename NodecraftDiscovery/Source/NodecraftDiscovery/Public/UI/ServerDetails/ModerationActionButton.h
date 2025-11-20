@@ -3,35 +3,26 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "CommonTextBlock.h"
-#include "CommonUserWidget.h"
 #include "Components/Image.h"
 #include "UI/Foundation/NodecraftButtonBase.h"
 #include "ModerationActionButton.generated.h"
 
-UENUM()
-enum class EModerationAction : uint8
-{
-	Undefined,
-	Kick,
-	Ban,
-	Unban,
-	PromoteToModerator,
-	DemoteModerator
-};
+enum class EModerationAction : uint8;
 
 USTRUCT()
 struct FModerationActionButtonStyle
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Styles")
 	TSoftObjectPtr<UTexture2D> Icon;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Styles")
 	FText Label;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft UI|Styles")
 	FText Description;
 };
 
@@ -44,24 +35,24 @@ class NODECRAFTDISCOVERY_API UModerationActionButton : public UNodecraftButtonBa
 	GENERATED_BODY()
 
 private:
-	UPROPERTY(EditInstanceOnly)
+	UPROPERTY(EditInstanceOnly, Category = "Nodecraft UI|Server Details")
 	EModerationAction Action;
 
 	void ConfigureForAction(EModerationAction InAction);
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UImage* ActionIcon;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* ActionLabel;
 	
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCommonTextBlock* ActionDescription;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Server Details")
 	TMap<EModerationAction, FModerationActionButtonStyle> ActionStyles;
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Nodecraft UI|Server Details")
 	void Refresh();
 };

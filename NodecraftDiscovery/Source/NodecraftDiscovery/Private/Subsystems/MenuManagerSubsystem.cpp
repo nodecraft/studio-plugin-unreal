@@ -4,15 +4,15 @@
 #include "Subsystems/MenuManagerSubsystem.h"
 
 #include "DeveloperSettings/NodecraftStudioWidgetSettings.h"
-#include "Models/ServerQueueTokenDataObject.h"
-#include "Services/ServerQueueService.h"
+#include "Stores/ServersStore.h"
 #include "Subsystems/AssetStreamerSubsystem.h"
 #include "UI/ServerDetails/ServerDetailsModal.h"
 #include "UI/ServerDetails/ServerPasswordModal.h"
 
-void UMenuManagerSubsystem::ShowServerDetails(UServerDataObject* ServerDataObject, TOptional<FText> RulesError)
+void UMenuManagerSubsystem::ShowServerDetails(UServerDataObject* ServerDataObject, TOptional<FServerDetailsArgument> Argument)
 {
-	OnRequestShowServerDetailsModal.ExecuteIfBound(ServerDataObject, RulesError);
+	UServersStore::Get().SetCurrentServerId(ServerDataObject->GetId());
+	OnRequestShowServerDetailsModal.Broadcast(ServerDataObject, Argument);
 }
 
 void UMenuManagerSubsystem::ShowPlayerConsents(TSubclassOf<UCommonActivatableWidget> Modal, const FPlayerConsents& Consents)
@@ -27,7 +27,7 @@ void UMenuManagerSubsystem::ShowServerInvites(TSubclassOf<UCommonActivatableWidg
 
 void UMenuManagerSubsystem::ShowJoiningServerQueue()
 {
-	OnPushJoiningServerQueuePopupDelegate.ExecuteIfBound();
+	OnPushJoiningServerQueuePopupDelegate.Broadcast();
 }
 
 void UMenuManagerSubsystem::ShowServerPasswordModal(UServerDataObject* ServerDataObject)
@@ -85,6 +85,24 @@ void UMenuManagerSubsystem::ShowServerSettingsRedirectModal(const FString& Serve
 			OnPushInternalRedirectPopupDelegate.ExecuteIfBound(UNodecraftStudioWidgetSettings::Get().GetInternalRedirectModal().Get(), EPlayerConnectionSubject::ServerSettings, ServerId);
 		});
 		UAssetStreamerSubsystem::Get().LoadAssetAsync(UNodecraftStudioWidgetSettings::Get().GetInternalRedirectModal().ToSoftObjectPath(), OnLoaded);
+	}
+}
+
+void UMenuManagerSubsystem::ClearPopupStack()
+{
+	OnClearPopupStack.ExecuteIfBound();
+}
+
+void UMenuManagerSubsystem::ShowIdleCheckModal(TSoftClassPtr<UCommonActivatableWidget> ModalClass)
+{
+	if (ModalClass.IsNull() == false)
+	{
+		FStreamableDelegate OnLoaded;
+		OnLoaded.BindWeakLambda(this, [this, ModalClass]
+		{
+			OnPushIdleCheckPopupDelegate.ExecuteIfBound(ModalClass.Get());
+		});
+		UAssetStreamerSubsystem::Get().LoadAssetAsync(ModalClass.ToSoftObjectPath(), OnLoaded);
 	}
 }
 

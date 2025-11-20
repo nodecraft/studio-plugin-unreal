@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "CommonActivatableWidget.h"
+#include "UI/Common/NodecraftScrollBox.h"
 #include "TermsOfServiceModal.generated.h"
 
 struct FPlayerConsents;
@@ -22,24 +23,24 @@ public:
 	void Configure(const FPlayerConsents& Consents, FSimpleDelegate ClosePopupDelegate);
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Terms of Service", meta = (BindWidget))
 	UNodecraftButtonBase* CloseButton;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Terms of Service", meta = (BindWidget))
 	UCommonTextBlock* AgreedToTermsDateText;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Terms of Service", meta = (BindWidget))
 	UCommonTextBlock* SystemLegalText;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Terms of Service", meta = (BindWidget))
 	UCommonTextBlock* GameLegalText;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Terms of Service", meta = (BindWidget))
 	UCommonTextBlock* EmailAgreementText;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Terms of Service", meta = (BindWidget))
 	UNodecraftButtonBase* CancelButton;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UNodecraftButtonBase* SubmitButton;
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Terms of Service", meta = (BindWidget))
+	UNodecraftScrollBox* ScrollBox;
 };

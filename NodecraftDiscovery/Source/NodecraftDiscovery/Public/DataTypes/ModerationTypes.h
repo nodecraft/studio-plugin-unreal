@@ -1,4 +1,6 @@
-﻿#pragma once
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
+
+#pragma once
 
 UENUM()
 enum class EModerationDuration : uint8
@@ -17,4 +19,15 @@ enum class EModerationScope : uint8
 	Community,
 	Game,
 	Global
+};
+
+UENUM()
+enum class EModerationAction : uint8
+{
+	Undefined,
+	Kick,
+	Ban,
+	Unban,
+	PromoteToModerator,
+	DemoteModerator
 };

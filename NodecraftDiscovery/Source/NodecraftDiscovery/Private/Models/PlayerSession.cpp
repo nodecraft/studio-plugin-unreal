@@ -11,15 +11,15 @@ bool FPlayerSession::IsValid() const
 FPlayerSession FPlayerSession::FromJson(const TSharedPtr<FJsonObject>& Json)
 {
 	FPlayerSession Session = FPlayerSession();
-	Json.Get()->TryGetStringField("token", Session.Token);
-	Json.Get()->TryGetStringField("server_region_id", Session.ServerRegionId);
+	Json.Get()->TryGetStringField(TEXT("token"), Session.Token);
+	Json.Get()->TryGetStringField(TEXT("server_region_id"), Session.ServerRegionId);
 
-	if (FString ExpiresStr; Json.Get()->TryGetStringField("date_expires", ExpiresStr))
+	if (FString ExpiresStr; Json.Get()->TryGetStringField(TEXT("date_expires"), ExpiresStr))
 	{
 		FDateTime::ParseIso8601(*ExpiresStr, Session.DateExpires);
 	}
 	
-	if (const TSharedPtr<FJsonObject>& PlayerData = Json.Get()->GetObjectField("player"); PlayerData.IsValid())
+	if (const TSharedPtr<FJsonObject>& PlayerData = Json.Get()->GetObjectField(TEXT("player")); PlayerData.IsValid())
 	{
 		Session.PlayerData = UPlayerDataObject::FromJson(PlayerData.ToSharedRef());
 	}

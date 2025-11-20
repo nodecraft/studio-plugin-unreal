@@ -1,4 +1,6 @@
-﻿#pragma once
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
+
+#pragma once
 
 #include "CoreMinimal.h"
 // #include "ServiceDelegates.generated.h"

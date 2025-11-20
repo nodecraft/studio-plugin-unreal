@@ -12,7 +12,7 @@ class NODECRAFTSTEAMAUTH_API USteamAuthDeveloperSettings : public UDeveloperSett
 	GENERATED_BODY()
 
 private:
-	UPROPERTY(Config, EditAnywhere)
+	UPROPERTY(Config, EditAnywhere, Category="Nodecraft Settings")
 	FString AppId;
 
 public:

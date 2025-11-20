@@ -36,7 +36,7 @@ bool UGameServerEventsService::SendHeartbeat(const FHeartbeatRequestDataObject& 
 		{
 			FJsonObjectWrapper ResJson;
 			ResJson.JsonObjectFromString(Response.Get()->GetContentAsString());
-			if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+			if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 			{
 				// Log success along with payload
 				UE_LOG(LogGameServerEventsService, Log, TEXT("Heartbeat response data: %s"), *UNodecraftUtility::JsonObjToString(ResJson.JsonObject));
@@ -110,7 +110,7 @@ bool UGameServerEventsService::ValidatePlayerOnJoin(const FPlayerJoinRequestData
 		{
 			FJsonObjectWrapper ResJson;
 			ResJson.JsonObjectFromString(Response.Get()->GetContentAsString());
-			if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+			if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 			{
 				// Log success along with payload
 				UE_LOG(LogGameServerEventsService, Log, TEXT("Validate player on join response data: %s"), *UNodecraftUtility::JsonObjToString(ResJson.JsonObject));

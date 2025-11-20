@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CommonActivatableWidget.h"
+#include "CommonUserWidget.h"
 #include "NodecraftBackButton.generated.h"
 
 class UCommonTextStyle;
@@ -18,20 +18,20 @@ struct FBackButtonStyle
 
 	FBackButtonStyle() : Material(nullptr), Tint(FLinearColor::White) {  }
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI")
 	TSoftClassPtr<UCommonTextStyle> TextStyle;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI")
 	UMaterialInterface* Material;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI")
 	FLinearColor Tint;
 };
 /**
  * 
  */
 UCLASS()
-class NODECRAFTDISCOVERY_API UNodecraftBackButton : public UCommonActivatableWidget
+class NODECRAFTDISCOVERY_API UNodecraftBackButton : public UCommonUserWidget
 {
 	GENERATED_BODY()
 
@@ -50,9 +50,9 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	UCommonTextBlock* Text;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI")
 	FBackButtonStyle NormalStyle;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI")
 	FBackButtonStyle HoveredStyle;
 };

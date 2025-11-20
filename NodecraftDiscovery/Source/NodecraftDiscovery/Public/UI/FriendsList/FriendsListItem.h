@@ -3,14 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CommonActivatableWidget.h"
-#include "Blueprint/IUserObjectListEntry.h"
+#include "UI/Common/NodecraftListItemBase.h"
 #include "FriendsListItem.generated.h"
 
 class UCommonBorder;
 class UServerInvitesModal;
 class UCommonTextStyle;
-class UNodecraftButtonBase;
 class UImage;
 class UCommonTextBlock;
 class UAsyncImage;
@@ -18,7 +16,7 @@ class UAsyncImage;
  * 
  */
 UCLASS()
-class NODECRAFTDISCOVERY_API UFriendsListItem : public UCommonActivatableWidget, public IUserObjectListEntry
+class NODECRAFTDISCOVERY_API UFriendsListItem : public UNodecraftListItemBase
 {
 	GENERATED_BODY()
 
@@ -27,33 +25,30 @@ protected:
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
 	// IUserObjectListEntry
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	virtual FReply NativeOnFocusReceived(const FGeometry& InGeometry, const FFocusEvent& InFocusEvent) override;
+	virtual void NativeOnFocusLost(const FFocusEvent& InFocusEvent) override;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Friends List Item", meta=(BindWidget))
 	UAsyncImage* FriendProfileImage;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Friends List Item", meta=(BindWidget))
 	UCommonTextBlock* FriendNameTextBlock;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Friends List Item", meta=(BindWidget))
 	UCommonTextBlock* FriendStatusTextBlock;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-	UNodecraftButtonBase* InviteToPlayButton;
-
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Friends List Item", meta=(BindWidget))
 	UCommonBorder* JoinServerCardContainer;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Friends List Item", meta=(BindWidget))
 	UCommonTextBlock* ServerName;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Friends List Item", meta=(BindWidget))
 	UCommonTextBlock* PlayersOnlineText;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-	UNodecraftButtonBase* JoinButton;
-
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Nodecraft UI|Friends List Item|Styles")
 	TMap<FString, TSoftClassPtr<UCommonTextStyle>> StatusStyle;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Nodecraft UI|Friends List Item")
 	TSoftClassPtr<UServerInvitesModal> ServerInvitesModalClass;
 };

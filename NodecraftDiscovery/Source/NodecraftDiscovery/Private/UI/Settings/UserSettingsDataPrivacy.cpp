@@ -3,32 +3,32 @@
 
 #include "UI/Settings/UserSettingsDataPrivacy.h"
 
-#include "CommonTextBlock.h"
+#include "CommonInputSubsystem.h"
+#include "Input/CommonUIInputTypes.h"
 #include "Models/PlayerSettings.h"
 #include "Services/PlayerSettingsService.h"
-#include "Subsystems/AssetStreamerSubsystem.h"
 #include "UI/Alerts/AlertMessage.h"
 #include "UI/Common/NodecraftLoadGuard.h"
 #include "UI/Common/NodecraftRadioButton.h"
+#include "UI/Common/NodecraftRadioButtonGroup.h"
 #include "UI/Foundation/NodecraftButtonBase.h"
+#include "Utility/NodecraftMacros.h"
 
 
 #define LOCTEXT_NAMESPACE "UserSettingsDataPrivacy"
+#define OPT_IN_ID "opt-in"
+#define OPT_OUT_ID "opt-out"
+
+void UUserSettingsDataPrivacy::NativeOnInitialized()
+{
+	Super::NativeOnInitialized();
+
+	ON_INPUT_METHOD_CHANGED(UpdateActionBindings)
+}
 
 void UUserSettingsDataPrivacy::NativeConstruct()
 {
 	Super::NativeConstruct();
-
-	AnalyticsOptIn->OnNodecraftRadioButtonClicked.BindWeakLambda(this, [this]()
-	{
-		AnalyticsOptOut->SetIsChecked(false);
-		UpdateStyles();
-	});
-	AnalyticsOptOut->OnNodecraftRadioButtonClicked.BindWeakLambda(this, [this]()
-	{
-		AnalyticsOptIn->SetIsChecked(false);
-		UpdateStyles();
-	});
 
 	SaveSettingsButton->OnClicked().AddWeakLambda(this, [this]
 	{
@@ -39,15 +39,14 @@ void UUserSettingsDataPrivacy::NativeConstruct()
 			{
 				FText Message = LOCTEXT("SuccessUpdatingSettings", "Successfully updated settings.");
 				AlertMessage->Show(Message, EAlertType::Success);
-				AnalyticsOptIn->SetIsChecked(Settings->GetAnalyticsOptOut() == false);
-				AnalyticsOptOut->SetIsChecked(Settings->GetAnalyticsOptOut());
+				RadioButtonGroup->SetSelectedId(Settings->GetAnalyticsOptOut() ? OPT_OUT_ID : OPT_IN_ID);
 			}
 			else
 			{
 				AlertMessage->Show(Error, EAlertType::Error);
 			}
 		});
-		UPlayerSettingsService::Get().UpdatePlayerAnalyticsOptOut(AnalyticsOptOut->GetIsChecked(), OnUpdatePlayerSettings);
+		UPlayerSettingsService::Get().UpdatePlayerAnalyticsOptOut(RadioButtonGroup->GetSelectedId() == OPT_OUT_ID, OnUpdatePlayerSettings);
 	});
 }
 
@@ -63,51 +62,37 @@ void UUserSettingsDataPrivacy::NativeOnActivated()
 	{
 		if (bSuccess)
 		{
-			AnalyticsOptIn->SetIsChecked(PlayerSettings->GetAnalyticsOptOut() == false);
-			AnalyticsOptOut->SetIsChecked(PlayerSettings->GetAnalyticsOptOut());
-
-			UpdateStyles();
+			RadioButtonGroup->SetSelectedId(PlayerSettings->GetAnalyticsOptOut() ? OPT_OUT_ID : OPT_IN_ID);
 		}
 		LoadGuard->SetIsLoading(false);
 	});
 	UPlayerSettingsService::Get().GetPlayerSettings(OnGetPlayerSettings);
 }
 
-void UUserSettingsDataPrivacy::UpdateStyles()
+UWidget* UUserSettingsDataPrivacy::NativeGetDesiredFocusTarget() const
 {
-	if (SelectedTextStyle.IsNull() == false)
-	{
-		FStreamableDelegate OnLoaded;
-		OnLoaded.BindWeakLambda(this, [this]
-		{
-			if (AnalyticsOptIn->GetIsChecked())
-			{
-				OptInText->SetStyle(SelectedTextStyle.Get());
-			}
-			else
-			{
-				OptOutText->SetStyle(SelectedTextStyle.Get());
-			}
-		});
-		UAssetStreamerSubsystem::Get().LoadAssetAsync(SelectedTextStyle.ToSoftObjectPath(), OnLoaded);
-	}
+	return RadioButtonGroup ? RadioButtonGroup : Super::NativeGetDesiredFocusTarget();
+}
 
-	if (NormalTextStyle.IsNull() == false)
+void UUserSettingsDataPrivacy::UpdateActionBindings(ECommonInputType CurrentInputType)
+{
+	SaveSettingsButton->SetVisibility(CurrentInputType == ECommonInputType::MouseAndKeyboard ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+
+	if (SaveUIActionHandle.IsValid() && CurrentInputType == ECommonInputType::MouseAndKeyboard)
 	{
-		FStreamableDelegate OnLoaded;
-		OnLoaded.BindWeakLambda(this, [this]
-		{
-			if (AnalyticsOptIn->GetIsChecked())
+		SaveUIActionHandle.Unregister();
+	}
+	else if (SaveInputActionData.IsNull() == false && SaveUIActionHandle.IsValid() == false && CurrentInputType != ECommonInputType::MouseAndKeyboard)
+	{
+		SaveUIActionHandle = RegisterUIActionBinding(
+			FBindUIActionArgs(SaveInputActionData, bDisplayInActionBar,
+				FSimpleDelegate::CreateWeakLambda(this, [this]
 			{
-				OptOutText->SetStyle(NormalTextStyle.Get());
-			}
-			else
-			{
-				OptInText->SetStyle(NormalTextStyle.Get());
-			}
-		});
-		UAssetStreamerSubsystem::Get().LoadAssetAsync(NormalTextStyle.ToSoftObjectPath(), OnLoaded);
+				SaveSettingsButton->OnClicked().Broadcast();
+			})));
 	}
 }
 
 #undef LOCTEXT_NAMESPACE
+#undef OPT_IN_ID
+#undef OPT_OUT_ID

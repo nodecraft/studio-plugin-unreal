@@ -19,7 +19,7 @@ void UFriendsService::CreateFriendsListDelegate(const FGetFriendsListDelegate& O
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TArray<TSharedPtr<FJsonValue>>& Data = ResJson.JsonObject->GetArrayField("data"); Data.Num() > 0)
+				if (const TArray<TSharedPtr<FJsonValue>>& Data = ResJson.JsonObject->GetArrayField(TEXT("data")); Data.Num() > 0)
 				{
 					TArray<UFriendDataObject*> Friends;
 					for (TSharedPtr<FJsonValue, ESPMode::ThreadSafe> JsonValue : Data)
@@ -38,7 +38,7 @@ void UFriendsService::CreateFriendsListDelegate(const FGetFriendsListDelegate& O
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const FString Message = ResJson.JsonObject->GetStringField("message"); Message.IsEmpty() == false)
+				if (const FString Message = ResJson.JsonObject->GetStringField(TEXT("message")); Message.IsEmpty() == false)
 				{
 					const FString ErrorText = FString::Printf(TEXT("UFriendsService::CreateFriendsListDelegate: Error code: %d. Message: %ls"), Res.Get()->GetResponseCode(), *Message);
 					OnComplete.ExecuteIfBound({}, false, TOptional<FText>(FText::FromString(ErrorText)));

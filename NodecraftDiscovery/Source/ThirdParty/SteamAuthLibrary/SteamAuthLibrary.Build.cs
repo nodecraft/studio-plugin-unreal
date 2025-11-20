@@ -13,12 +13,16 @@ public class SteamAuthLibrary : ModuleRules
         {
             string SdkEncryptedAppTicketFolder = Path.Combine(ModuleDirectory, "sdk", "public", "steam", "lib", "win64");
             string RedistributableBinFolder = Path.Combine(ModuleDirectory, "sdk", "redistributable_bin", "win64");
-
+            
             PublicAdditionalLibraries.Add(Path.Combine(SdkEncryptedAppTicketFolder, "sdkencryptedappticket64.lib"));
             PublicAdditionalLibraries.Add(Path.Combine(RedistributableBinFolder, "steam_api64.lib"));
 
             RuntimeDependencies.Add(Path.Combine(SdkEncryptedAppTicketFolder, "sdkencryptedappticket64.dll"), StagedFileType.UFS);
             RuntimeDependencies.Add(Path.Combine(RedistributableBinFolder, "steam_api64.dll"), StagedFileType.UFS);
+            
+            // We seem to need to add the steam_api64.dll as a runtime dependency in the binary output dir for packaged builds to work
+            RuntimeDependencies.Add("$(BinaryOutputDir)/steam_api64.dll", Path.Combine(RedistributableBinFolder, "steam_api64.dll"), StagedFileType.NonUFS);
+
         }
         else if (Target.Platform == UnrealTargetPlatform.Linux)
         {
@@ -42,8 +46,5 @@ public class SteamAuthLibrary : ModuleRules
             RuntimeDependencies.Add(Path.Combine(SdkEncryptedAppTicketFolder, "libsdkencryptedappticket.dylib"), StagedFileType.UFS);
             RuntimeDependencies.Add(Path.Combine(RedistributableBinFolder, "libsteam_api.dylib"), StagedFileType.UFS);
         }
-
-        // PublicDefinitions.Add("WITH_STEAMWORKSSDK=1");
-        PublicIncludePaths.Add("$(ModuleDir)/steamheaders");
     }
 }

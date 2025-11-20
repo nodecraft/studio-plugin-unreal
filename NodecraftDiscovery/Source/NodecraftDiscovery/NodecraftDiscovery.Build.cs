@@ -1,6 +1,7 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 using UnrealBuildTool;
+using System.IO;
 
 public class NodecraftDiscovery : ModuleRules
 {
@@ -19,20 +20,18 @@ public class NodecraftDiscovery : ModuleRules
 				"DeveloperSettings",
 				"UMG", 
 				"CommonUI",
+				"CommonInput",
+				"GameplayTags",
+				"InputCore",
 				"Json",
 				"JsonUtilities",
 				"HTTP",
 				"NodecraftCommon", 
 				"NodecraftAuthCommon",
+				"NodecraftSteamAuth"
 				// ... add other public dependencies that you statically link with here ...
 			}
 		);
-
-		if (bIsSteamAuthEnabled)
-		{
-			PublicDependencyModuleNames.Add("NodecraftSteamAuth");
-		}
-
 
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
@@ -47,6 +46,7 @@ public class NodecraftDiscovery : ModuleRules
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
+				Path.Combine(ModuleDirectory, "Public"),
 			}
 		);
 				

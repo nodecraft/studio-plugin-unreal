@@ -4,12 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "CommonActivatableWidget.h"
+#include "ModerationConsolePlayerList.h"
 #include "ServerModerationConsolePlayerListSection.h"
 #include "Components/CheckBox.h"
 #include "ModerationConsolePlayerSelector.generated.h"
 
 UENUM()
-enum class EPlayerSelectorMode : uint8
+enum class EPlayerSelectorMode_DEP : uint8
 {
 	All,
 	Players,
@@ -25,24 +26,14 @@ class NODECRAFTDISCOVERY_API UModerationConsolePlayerSelector : public UCommonAc
 {
 	GENERATED_BODY()
 
+	virtual UWidget* NativeGetDesiredFocusTarget() const override;
+
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UServerModerationConsolePlayerListSection* OwnerSection;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UServerModerationConsolePlayerListSection* ModeratorsSection;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UServerModerationConsolePlayerListSection* OnlinePlayersSection;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UServerModerationConsolePlayerListSection* OfflinePlayersSection;
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UServerModerationConsolePlayerListSection* BannedPlayersSection;
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
+	UModerationConsolePlayerList* PlayersList;
 
 	// Header section
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server Details", meta = (BindWidget))
 	UCheckBox* HeaderCheckbox;
 	// END Header section
 	
@@ -51,6 +42,7 @@ protected:
 
 	EPlayerSelectorMode DisplayMode;
 
+	DECLARE_DELEGATE_OneParam(FOnFocusedPlayerChanged, UWidget* /*PlayerWidget*/);
 
 public:
 	void SetOwner(UPlayerServerDetailsDataObject* Owner);
@@ -62,9 +54,22 @@ public:
 	void SelectAllPlayers();
 	void ClearSelection();
 
+	virtual FReply NativeOnFocusReceived(const FGeometry& InGeometry, const FFocusEvent& InFocusEvent) override;
+
+	virtual void NativeOnActivated() override;
+
+	virtual void NativeOnDeactivated() override;
+
 	UFUNCTION()
 	void OnHeaderCheckboxStateChanged(bool bIsChecked);
 	virtual void NativeOnInitialized() override;
+	void SetFocusOnFirstPlayer();
+	bool HasSelectedPlayers();
+	void SetupNavigation(const FGetFocusDestination& Delegate);
+
+	UWidget* GetFirstFocusablePlayerWidget();
 
 	FOnSelectedPlayersChanged OnSelectedPlayersChanged;
+	FOnFocusedPlayerChanged OnFocusSetToPlayer;
+
 };

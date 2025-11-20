@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "CommonActivatableWidget.h"
+#include "CommonInputTypeEnum.h"
 #include "RedirectModal.generated.h"
 
 class UCommonBorder;
@@ -23,6 +24,9 @@ public:
 	void Configure(FSimpleDelegate OnClosed, FString URL, ELinkType LinkType);
 
 protected:
+	virtual void NativeOnInitialized() override;
+	virtual bool NativeOnHandleBackAction() override;
+	
 	UPROPERTY(meta=(BindWidget))
 	UCommonBorder* ExternalLinkHeader;
 
@@ -43,4 +47,12 @@ protected:
 
 	UPROPERTY(meta=(BindWidget))
 	UNodecraftButtonBase* OpenInBrowserButton;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Nodecraft UI|Input", meta=(RowType="/Script/CommonUI.CommonInputActionDataBase"))
+	FDataTableRowHandle OpenInBrowserActionData;
+
+private:
+	void UpdateActionBindings(ECommonInputType CurrentInputType);
+
+	FUIActionBindingHandle OpenInBrowserActionHandle;
 };

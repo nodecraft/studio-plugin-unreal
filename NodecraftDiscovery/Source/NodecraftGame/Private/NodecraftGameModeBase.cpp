@@ -6,6 +6,7 @@
 #include "Interfaces/NodecraftPlayer.h"
 #include "Kismet/GameplayStatics.h"
 #include "Subsystems/NodecraftGameServerManager.h"
+#include "Engine/NetConnection.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogNodecraftGame, Log, All);
 
@@ -96,6 +97,35 @@ void ANodecraftGameModeBase::StartToLeaveMap()
 		// If we aren't doing seamless travel i.e. are actually leaving the map
 		// we need to set a flag so that our player leave events mark players as awaiting reconnection
 		UNodecraftGameServerManager::Get().SetIsTransitioningToNewLevel(true);
+	}
+}
+
+void ANodecraftGameModeBase::SwapPlayerControllers(APlayerController* OldPC, APlayerController* NewPC)
+{
+	Super::SwapPlayerControllers(OldPC, NewPC);
+	
+	if (NewPC->GetClass()->ImplementsInterface(UNodecraftPlayer::StaticClass()))
+	{
+		INodecraftPlayer* Old = Cast<INodecraftPlayer>(OldPC);
+		INodecraftPlayer* New = Cast<INodecraftPlayer>(NewPC);
+		if (Old)
+		{
+			New->SetJoinToken(Old->GetJoinToken());
+			New->SetSessionId(Old->GetSessionId());
+			New->SetAnalyticsSessionId(Old->GetAnalyticsSessionId());
+			New->SetIpAddress(Old->GetIpAddress());
+			New->SetPlayerID(Old->GetPlayerID());
+		}
+		else
+		{
+			UE_LOG(LogNodecraftGame, Error, TEXT("Failed to cast old player controller to INodecraftPlayer when swapping player controllers."));
+			FGenericPlatformMisc::RequestExit(false);
+		}
+	}
+	else
+	{
+		UE_LOG(LogNodecraftGame, Error, TEXT("Failed to cast new player controller to INodecraftPlayer when swapping player controllers."));
+		FGenericPlatformMisc::RequestExit(false);
 	}
 }
 

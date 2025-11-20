@@ -8,6 +8,9 @@
 #include "GameFramework/GameSession.h"
 #include "GameFramework/GameModeBase.h"
 #include "Interfaces/NodecraftPlayer.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+#include "Engine/NetConnection.h"
 #include "Services/GameServerEventsService.h"
 
 void UNodecraftGameServerManager::StartHeartbeats(UWorld* World)
@@ -81,6 +84,7 @@ void UNodecraftGameServerManager::SavePlayerVerificationData(UWorld* InWorld)
 				FVerifiedPlayerData VerifiedPlayerData = FVerifiedPlayerData();
 				VerifiedPlayerData.SessionId = Cast<INodecraftPlayer>(Player)->GetSessionId();
 				VerifiedPlayerData.AnalyticsSessionId = Cast<INodecraftPlayer>(Player)->GetAnalyticsSessionId();
+				VerifiedPlayerData.PlayerID = Cast<INodecraftPlayer>(Player)->GetPlayerID();
 				VerifiedSessionsMap.Add(Player->GetNetConnection()->LowLevelGetRemoteAddress(), VerifiedPlayerData);
 				UE_LOG(LogNodecraftGameServerEvents, Verbose, TEXT("Placed player in verified sessions map: %s"), *Player->GetNetConnection()->LowLevelGetRemoteAddress());
 			}
@@ -236,6 +240,7 @@ void UNodecraftGameServerManager::OnPlayerJoinedServer(APlayerController* Player
 		// Player is verified
 		FVerifiedPlayerData PlayerData = VerifiedSessionsMap[PlayerJoinRequestData.Ip];
 		INodecraftPlayer* NodecraftPlayerController = Cast<INodecraftPlayer>(PlayerController);
+		NodecraftPlayerController->SetPlayerID(PlayerData.PlayerID);
 		NodecraftPlayerController->SetSessionId(PlayerData.SessionId);
 		NodecraftPlayerController->SetAnalyticsSessionId(PlayerData.AnalyticsSessionId);
 		VerifiedPlayers.Add(PlayerController);
@@ -275,7 +280,7 @@ void UNodecraftGameServerManager::OnPlayerJoinedServer(APlayerController* Player
 				INodecraftPlayer* NodecraftPlayerController = Cast<INodecraftPlayer>(PlayerController);
 				NodecraftPlayerController->SetPlayerID(PlayerJoinResponse.PlayerData->GetId());
 				NodecraftPlayerController->SetSessionId(PlayerJoinResponse.SessionId);
-				NodecraftPlayerController->SetAnalyticsSessionId(PlayerJoinResponse.AnalyticsSessionId.Get(""));
+				NodecraftPlayerController->SetAnalyticsSessionId(PlayerJoinResponse.AnalyticsSessionId.Get(TEXT("")));
 				VerifiedPlayers.Add(PlayerController);
 				UnverifiedPlayers.Remove(PlayerController);
 				UE_LOG(LogNodecraftGameServerEvents, Log, TEXT("Player verified successfully."));
@@ -329,8 +334,10 @@ void UNodecraftGameServerManager::OnHeartbeatResponseReceived(FHeartbeatResponse
 				UE_LOG(LogNodecraftGameServerEvents, Log, TEXT("Comparing player's id: %s to kicked player's session id: %s"), *NodecraftPlayer->GetPlayerID(), *Kick.GetKickedPlayerId());
 				if (Kick.GetKickedPlayerId() == NodecraftPlayer->GetPlayerID())
 				{
+					UE_LOG(LogNodecraftGameServerEvents, Log, TEXT("Found match for player id. Checking if Kick has valid player"));
 					if (Kick.Player)
 					{
+						UE_LOG(LogNodecraftGameServerEvents, Log, TEXT("Player is valid. Kicking player."));
 						KickPlayer(Player, Kick.Reason);
 						UE_LOG(LogNodecraftGameServerEvents, Log, TEXT("Kicked player %s with reason: %s\nGoing to track player kicked with session ID %s"), *NodecraftPlayer->GetPlayerID(), *Kick.Reason.ToString(), *PlayerSessionId);
 						UGameServerEventsService::Get().TrackPlayerKicked(PlayerSessionId, Kick.Id,
@@ -345,6 +352,10 @@ void UNodecraftGameServerManager::OnHeartbeatResponseReceived(FHeartbeatResponse
 								UE_LOG(LogNodecraftGameServerEvents, Error, TEXT("Failed to track player kicked: %s"), *Error.Get(FText::GetEmpty()).ToString());
 							}
 						}));
+					}
+					else
+					{
+						UE_LOG(LogNodecraftGameServerEvents, Error, TEXT("Kick's Player is null. Cannot kick player."));
 					}
 					break;
 				}

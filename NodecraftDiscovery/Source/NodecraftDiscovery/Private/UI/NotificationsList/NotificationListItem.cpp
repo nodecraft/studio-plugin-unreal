@@ -9,6 +9,7 @@
 #include "Stores/NotificationsStore.h"
 #include "Subsystems/AssetStreamerSubsystem.h"
 #include "Subsystems/MenuManagerSubsystem.h"
+#include "UI/Foundation/NodecraftButtonBase.h"
 #include "UI/NotificationsList/NotificationList.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogNotificationListItem, Log, All);
@@ -59,20 +60,18 @@ void UNotificationListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 	if (NotificationDataObject->GetListType() == ENotificationListType::Active)
 	{
 		PrimaryActionButton->SetVisibility(ESlateVisibility::Visible);
-		DismissActionButton->SetVisibility(ESlateVisibility::Visible);
+		SecondaryActionButton->SetVisibility(ESlateVisibility::Visible);
 	}
 	else
 	{
 		PrimaryActionButton->SetVisibility(ESlateVisibility::Collapsed);
-		DismissActionButton->SetVisibility(ESlateVisibility::Collapsed);
+		SecondaryActionButton->SetVisibility(ESlateVisibility::Collapsed);
 	}
 
 	PrimaryActionButton->OnClicked().Clear();
-	DismissActionButton->OnClicked().Clear();
+	SecondaryActionButton->OnClicked().Clear();
 
 	UWorld* World = GetWorld();
-
-
 	if (NotificationDataObject->GetListType() == ENotificationListType::Active)
 	{
 		PrimaryActionButton->OnClicked().AddWeakLambda(this, [this, NotificationDataObject, World]() mutable
@@ -90,7 +89,16 @@ void UNotificationListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 						if (UNotificationsStore* Store = UNotificationsStore::Get(GetWorld()))
 						{
 							Store->RemoveLiveNotification(NotificationDataObject);
-							UMenuManagerSubsystem::Get().ShowServerDetails(NotificationDataObject->GetServer());
+							FGetServerDetailsDelegate ResponseDelegate = FGetServerDetailsDelegate::CreateWeakLambda(
+								this, [this](UServerDataObject* Server, bool bSuccess,
+								             TOptional<FText> Error)
+								{
+								if (bSuccess)
+								{
+									UMenuManagerSubsystem::Get().ShowServerDetails(Server);
+								}
+							});
+							UServersService::Get().GetServerDetails(ResponseDelegate, NotificationDataObject->GetServer()->GetId());
 						}
 					}
 				}
@@ -98,7 +106,7 @@ void UNotificationListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 			NotificationDataObject->PrimaryAction(Callback);
 		});
 		
-		DismissActionButton->OnClicked().AddWeakLambda(this, [this, NotificationDataObject, World]()
+		SecondaryActionButton->OnClicked().AddWeakLambda(this, [this, NotificationDataObject, World]()
 		{
 			SetIsLoading(true);
 			FSimpleServiceResponseDelegate ResponseDelegate = FSimpleServiceResponseDelegate::CreateWeakLambda(this, [this, NotificationDataObject, World](bool Success, TOptional<FText> Error)
@@ -131,7 +139,7 @@ void UNotificationListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 
 	// If this is something the player can accept, set Dismiss button text to "Decline" otherwise set it to "Dismiss"
 	const bool bHasAcceptButton = NotificationDataObject->GetListType() == ENotificationListType::Active && (NotificationDataObject->GetType() == ENotificationType::Allow || NotificationDataObject->GetType() == ENotificationType::Invite);
-	DismissActionButton->SetButtonText(bHasAcceptButton ? LOCTEXT("DeclineNotification", "Decline") : LOCTEXT("DismissNotification", "Dismiss"));
+	SecondaryActionButton->SetButtonText(bHasAcceptButton ? LOCTEXT("DeclineNotification", "Decline") : LOCTEXT("DismissNotification", "Dismiss"));
 	PrimaryActionButton->SetVisibility(bHasAcceptButton ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 
 	switch (NotificationDataObject->GetType())
@@ -171,7 +179,7 @@ void UNotificationListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 	// Set notif icon if appropriate
 	if (ListItemConfig.NotifIcon.IsNull() == false)
 	{
-		UAssetStreamerSubsystem::Get().LoadAssetAsync(ListItemConfig.NotifIcon, FStreamableDelegate::CreateWeakLambda(this, [this, ListItemConfig]
+		UAssetStreamerSubsystem::Get().LoadAssetAsync(ListItemConfig.NotifIcon.ToSoftObjectPath(), FStreamableDelegate::CreateWeakLambda(this, [this, ListItemConfig]
 		{
 			NotifImage->SetBrushFromTexture(ListItemConfig.NotifIcon.Get());
 		}));
@@ -181,19 +189,44 @@ void UNotificationListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 	EventIcon->SetVisibility(ListItemConfig.EventTextIcon.IsNull() ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
 	if (ListItemConfig.EventTextIcon.IsNull() == false)
 	{
-		UAssetStreamerSubsystem::Get().LoadAssetAsync(ListItemConfig.EventTextIcon, FStreamableDelegate::CreateWeakLambda(this, [this, ListItemConfig]
+		UAssetStreamerSubsystem::Get().LoadAssetAsync(ListItemConfig.EventTextIcon.ToSoftObjectPath(), FStreamableDelegate::CreateWeakLambda(this, [this, ListItemConfig]
 		{
 			EventIcon->SetBrushFromTexture(ListItemConfig.EventTextIcon.Get());
 			EventIcon->SetColorAndOpacity(ListItemConfig.EventTextIconColor);
 		}));
 	}
 
-	// Set colors
-	BorderMaterialInstance->SetVectorParameterValue("Shape color", ListItemConfig.BackgroundColor);
-	BorderMaterialInstance->SetVectorParameterValue("Stroke color", ListItemConfig.BorderColor);
+	// Set styles and colors
+	if (Border)
+	{
+		Border->SetStyle(ListItemConfig.BorderStyleDefault);
+	}
 	ContentBorder->SetBrushColor(ListItemConfig.ContentAreaBackgroundColor);
 	EventTextBlock->SetDefaultColorAndOpacity(FSlateColor(ListItemConfig.EventTextColor));
 	
+}
+
+FReply UNotificationListItem::NativeOnFocusReceived(const FGeometry& InGeometry, const FFocusEvent& InFocusEvent)
+{
+	if (PrimaryActionButton->IsVisible())
+	{
+		RegisterActionBinding(EUIActionBindingType::Primary);
+	}
+	if (SecondaryActionButton->IsVisible())
+	{
+		RegisterActionBinding(EUIActionBindingType::Secondary);
+	}
+	UpdateBorderStyles();
+	
+	return Super::NativeOnFocusReceived(InGeometry, InFocusEvent);
+}
+
+void UNotificationListItem::NativeOnFocusLost(const FFocusEvent& InFocusEvent)
+{
+	UnregisterUIActionBindings();
+	UpdateBorderStyles();
+	
+	Super::NativeOnFocusLost(InFocusEvent);
 }
 
 void UNotificationListItem::SetIsLoading(const bool bLoading)
@@ -201,16 +234,15 @@ void UNotificationListItem::SetIsLoading(const bool bLoading)
 	LoadGuard->SetIsLoading(bLoading);
 }
 
-void UNotificationListItem::NativeConstruct()
+void UNotificationListItem::UpdateBorderStyles()
 {
-	Super::NativeConstruct();
-
-	// Create dynamic material instance for border
-	BorderMaterialInstance = NotifBorder->GetDynamicMaterial();
-
-	if (BorderMaterialInstance)
+	if (const UNotificationDataObject* NotificationDataObject = GetListItem<UNotificationDataObject>())
 	{
-		NotifBorder->SetBrushFromMaterial(BorderMaterialInstance);
+		FNotificationListItemConfig ListItemConfig = *NotificationTypeConfigs.Find(NotificationDataObject->GetType());
+		BorderStyleDefault_Gamepad = ListItemConfig.BorderStyleDefault;
+		BorderStyleFocused_Gamepad = ListItemConfig.BorderStyleFocused;
+		BorderStyleDefault_MouseAndKeyboard = ListItemConfig.BorderStyleDefault;
+		BorderStyleFocused_MouseAndKeyboard = ListItemConfig.BorderStyleFocused;
 	}
 }
 

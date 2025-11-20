@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Json/Public/Dom/JsonObject.h"
-#include "Core/Public/Templates/SharedPointer.h"
+#include "Dom/JsonObject.h"
+#include "Templates/SharedPointer.h"
 #include "Consents.generated.h"
 
 UENUM()

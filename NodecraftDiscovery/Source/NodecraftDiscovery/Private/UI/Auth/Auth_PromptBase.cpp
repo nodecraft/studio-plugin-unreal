@@ -4,9 +4,12 @@
 #include "UI/Auth/Auth_PromptBase.h"
 
 #include "CommonButtonBase.h"
+#include "CommonInputSubsystem.h"
 #include "API/NodecraftMessageCodes.h"
+#include "Input/CommonUIInputTypes.h"
 #include "Subsystems/MessageRouterSubsystem.h"
 #include "UI/Alerts/AlertMessage.h"
+#include "UI/Foundation/NodecraftButtonBase.h"
 
 void UAuth_PromptBase::DisplayError(const FText& InErrorText)
 {
@@ -79,4 +82,25 @@ void UAuth_PromptBase::SubmitButtonPressed()
 void UAuth_PromptBase::SubmitRequest()
 {
 	OnCallBegan.ExecuteIfBound();
+}
+
+void UAuth_PromptBase::RefreshActions(ECommonInputType InputType)
+{
+	if (InputType == ECommonInputType::Gamepad && SubmitButtonActionData.IsNull() == false && SubmitButtonActionHandle.IsValid() == false)
+	{
+		FBindUIActionArgs Args = FBindUIActionArgs(SubmitButtonActionData, bDisplayInActionBar,
+					FSimpleDelegate::CreateWeakLambda(this, [this]
+					{
+						SubmitRequest();
+					}));
+		if (SubmitButton->GetInputActionNameOverride().IsEmptyOrWhitespace() == false)
+		{
+			Args.OverrideDisplayName = SubmitButton->GetInputActionNameOverride();
+		}
+		SubmitButtonActionHandle = RegisterUIActionBinding(Args);
+	}
+	else if (SubmitButtonActionHandle.IsValid())
+	{
+		SubmitButtonActionHandle.Unregister();
+	}
 }

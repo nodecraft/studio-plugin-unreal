@@ -22,9 +22,9 @@ UModerationReasonDataObject* UModerationReasonDataObject::FromJson(const TShared
 {
 	UModerationReasonDataObject* ModerationReasonDataObject = NewObject<UModerationReasonDataObject>();
 
-	ModerationReasonDataObject->Id = Json->GetStringField("id");
-	ModerationReasonDataObject->Title = FText::FromString(Json->GetStringField("title"));
-	ModerationReasonDataObject->Description = FText::FromString(Json->GetStringField("description"));
+	ModerationReasonDataObject->Id = Json->GetStringField(TEXT("id"));
+	ModerationReasonDataObject->Title = FText::FromString(Json->GetStringField(TEXT("title")));
+	ModerationReasonDataObject->Description = FText::FromString(Json->GetStringField(TEXT("description")));
 
 	return ModerationReasonDataObject;
 }

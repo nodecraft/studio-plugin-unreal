@@ -30,10 +30,6 @@ void UTermsOfServiceModal::Configure(const FPlayerConsents& Consents, FSimpleDel
 	{
 		ClosePopupDelegate.ExecuteIfBound();
 	});
-	SubmitButton->OnClicked().AddWeakLambda(this, [this, ClosePopupDelegate]
-	{
-		// TODO: implement submitting consents once consents refactor is done
-	});
 }
 
 #undef LOCTEXT_NAMESPACE

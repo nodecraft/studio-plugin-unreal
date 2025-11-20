@@ -19,20 +19,17 @@ class NODECRAFTDISCOVERY_API UServerList : public UCommonActivatableWidget
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	virtual void NativeConstruct() override;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server List", meta=(BindWidget))
 	UCommonTextBlock* ServerListTitleTextBlock;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server List", meta=(BindWidget))
 	UCommonTileView* ServerListView;
 
-	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Server List", meta=(BindWidget))
 	UCommonTileView* LoadingServersListView;
 
-	UPROPERTY(BlueprintReadOnly, EditInstanceOnly)
+	UPROPERTY(BlueprintReadOnly, EditInstanceOnly, Category = "Nodecraft UI|Server List")
 	EServerListType ServerListType;
-
-public:
-	// void PopulateWithServerJson(const TArray<TSharedPtr<FJsonObject>> Json);
-
-	virtual void NativeConstruct() override;
 };

@@ -3,8 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/Texture2D.h"
+#include "Engine/DeveloperSettings.h"
 #include "DataTypes/IdentityType.h"
 #include "UObject/Object.h"
+
 #include "NodecraftStudioIdentitySettings.generated.h"
 
 USTRUCT()
@@ -12,7 +15,7 @@ struct FIconMapWrapper
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft Settings")
 	TMap<EIdentityType, UTexture2D*> IconMap;
 
 };
@@ -28,7 +31,7 @@ public:
 		return *GetDefault<UNodecraftStudioIdentitySettings>();
 	}
 	
-	UPROPERTY(EditAnywhere, Config)
+	UPROPERTY(EditAnywhere, Category = "Nodecraft Settings", Config)
 	FIconMapWrapper IconMapWrapper;
 
 	UTexture2D* GetIconForType(EIdentityType Type) const;

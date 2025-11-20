@@ -3,36 +3,37 @@
 
 #include "UI/Common/AsyncImage.h"
 
+#include "DataTypes/ImageBackgroundTypes.h"
 #include "DeveloperSettings/NodecraftStudioStyleSettings.h"
 #include "Services/ServiceDelegates.h"
 #include "Subsystems/AssetStreamerSubsystem.h"
 #include "Subsystems/RemoteImageSubsystem.h"
 
-void UAsyncImage::LoadImageAsync(const FString& URI, const FString& FilenameForCache)
+void UAsyncImage::LoadImageAsync(const FString& URI, const FString& FilenameForCache, const ETransparentPixelOverrides TransparentPixelOverride)
 {
 	SetLoading(true);
 	URemoteImageSubsystem& RemoteImageSubsystem = URemoteImageSubsystem::Get();
 	FOnImageDownloadedDelegate Delegate;
-	Delegate.AddLambda([this](UTexture* Texture)
+	Delegate.AddWeakLambda(this, [this](UTexture* Texture)
 	{
 		SetBrushFromTexture(Cast<UTexture2D>(Texture));
 		SetLoading(false);
 	});
-	RemoteImageSubsystem.FetchImage(FilenameForCache, URI, Delegate);
+	RemoteImageSubsystem.FetchImage(FilenameForCache, URI, Delegate, TransparentPixelOverride);
 }
 
-void UAsyncImage::LoadImageAsyncSkipCache(const FString& URI)
+void UAsyncImage::LoadImageAsyncSkipCache(const FString& URI, const ETransparentPixelOverrides TransparentPixelOverride)
 {
 	FSimpleServiceResponseDelegate OnComplete;
-	LoadImageAsyncSkipCache(URI, OnComplete);
+	LoadImageAsyncSkipCache(URI, OnComplete, TransparentPixelOverride);
 }
 
-void UAsyncImage::LoadImageAsyncSkipCache(const FString& URI, FSimpleServiceResponseDelegate OnComplete)
+void UAsyncImage::LoadImageAsyncSkipCache(const FString& URI, FSimpleServiceResponseDelegate OnComplete, const ETransparentPixelOverrides TransparentPixelOverride)
 {
 	SetLoading(true);
 	URemoteImageSubsystem& RemoteImageSubsystem = URemoteImageSubsystem::Get();
 	FOnImageDownloadedDelegate Delegate;
-	Delegate.AddLambda([this, OnComplete](UTexture* Texture)
+	Delegate.AddWeakLambda(this, [this, OnComplete](UTexture* Texture)
 	{
 		SetBrushFromTexture(Cast<UTexture2D>(Texture));
 		SetLoading(false);
@@ -40,7 +41,7 @@ void UAsyncImage::LoadImageAsyncSkipCache(const FString& URI, FSimpleServiceResp
 		const FText Error = bSuccess ? FText::FromString("Failed to load image from given url") : FText::GetEmpty();
 		OnComplete.ExecuteIfBound(bSuccess, Error);
 	});
-	RemoteImageSubsystem.FetchImage("", URI, Delegate);
+	RemoteImageSubsystem.FetchImage("", URI, Delegate, TransparentPixelOverride);
 }
 
 void UAsyncImage::LoadPlayerAvatarAsync(const UPlayerDataObject* PlayerDataObject)
@@ -58,11 +59,17 @@ void UAsyncImage::LoadPlayerAvatarAsync(const UPlayerDataObject* PlayerDataObjec
 	}
 	else
 	{
-		LoadImageAsync(PlayerDataObject->GetImageAvatarUrl(), PlayerDataObject->GetImageAvatarFilenameForCache());
+		LoadImageAsync(PlayerDataObject->GetImageAvatarUrl(), PlayerDataObject->GetImageAvatarFilenameForCache(), ETransparentPixelOverrides::FillWhite);
 	}
 }
 
 void UAsyncImage::SetLoading(bool bIsLoading)
 {
+	const bool bLoadingStateChanged = bIsCurrentlyLoading != bIsLoading;
 	SetIsLoading(bIsLoading);
+	bIsCurrentlyLoading = bIsLoading;
+	if (bLoadingStateChanged)
+	{
+		OnLoadingStateChanged().Broadcast(bIsLoading);
+	}
 }

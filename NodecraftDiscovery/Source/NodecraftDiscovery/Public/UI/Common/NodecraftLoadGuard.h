@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "CommonUserWidget.h"
-#include "UMG/Public/Components/NamedSlot.h"
+#include "Components/NamedSlot.h"
 #include "NodecraftLoadGuard.generated.h"
 
 /**
@@ -16,10 +16,10 @@ class NODECRAFTDISCOVERY_API UNodecraftLoadGuard : public UCommonUserWidget
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI", meta = (BindWidget))
 	UNamedSlot* ContentSlot;
 
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI", meta = (BindWidget))
 	UNamedSlot* LoadingSlot;
 
 public:

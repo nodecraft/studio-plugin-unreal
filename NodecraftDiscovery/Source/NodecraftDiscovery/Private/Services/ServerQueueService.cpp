@@ -4,13 +4,12 @@
 #include "Services/ServerQueueService.h"
 
 #include "JsonObjectWrapper.h"
-#include "Api/NodecraftStudioApi.h"
+#include "API/NodecraftStudioApi.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Models/ServerDataObject.h"
 #include "Models/ServerSessionDataObject.h"
 #include "Models/ServerQueueDataObject.h"
 #include "Models/ServerQueueTokenDataObject.h"
-#include "Subsystems/MenuManagerSubsystem.h"
 #include "Subsystems/MessageRouterSubsystem.h"
 #include "Utility/NodecraftUtility.h"
 
@@ -27,7 +26,7 @@ void UServerQueueService::CreateJoinServerDelegate(FHttpRequestCompleteDelegate&
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject> Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject> Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
 					const UServerQueueTokenDataObject* ServerQueueToken = UServerQueueTokenDataObject::FromJson(Data.ToSharedRef());
 					// Once we have the server queue token, we can start polling the server queue
@@ -49,9 +48,9 @@ void UServerQueueService::CreateJoinServerDelegate(FHttpRequestCompleteDelegate&
 					FJsonObjectWrapper ResJson;
 					ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
 					
-					if (FString Code; ResJson.JsonObject->TryGetStringField("code", Code))
+					if (FString Code; ResJson.JsonObject->TryGetStringField(TEXT("code"), Code))
 					{
-						if (Code == "server_password_required" || Code == "discovery.server.invalid_password")
+						if (Code == "discovery.server.password_required" || Code == "discovery.server.invalid_password")
 						{
 							OnPasswordIncorrect.Broadcast();
 						}
@@ -85,11 +84,11 @@ void UServerQueueService::CreateGetServerQueueDelegate(const FGetServerQueueDele
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
-					UServerQueueDataObject* ServerQueueDataObject = UServerQueueDataObject::FromJson(Data.ToSharedRef());
-					OnGetServerQueue.ExecuteIfBound(ServerQueueDataObject, true, TOptional<FText>());
-					OnComplete.ExecuteIfBound(ServerQueueDataObject, true, TOptional<FText>());
+					UServerQueueDataObject* QueueDataObject = UServerQueueDataObject::FromJson(Data.ToSharedRef());					
+					OnGetServerQueue.ExecuteIfBound(QueueDataObject, true, TOptional<FText>());
+					OnComplete.ExecuteIfBound(QueueDataObject, true, TOptional<FText>());
 				}
 				else
 				{
@@ -122,10 +121,11 @@ void UServerQueueService::CreateRenewServerQueueDelegate(FHttpRequestCompleteDel
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
-					const UServerQueueTokenDataObject* TokenDataObject = UServerQueueTokenDataObject::FromJson(Data.ToSharedRef());
+					UServerQueueTokenDataObject* TokenDataObject = UServerQueueTokenDataObject::FromJson(Data.ToSharedRef());
 					ServerQueueTokenDataObject = TokenDataObject;
+					OnRenewServerQueue.ExecuteIfBound(TokenDataObject);
 				}
 				else
 				{
@@ -160,7 +160,7 @@ void UServerQueueService::CreateCancelServerQueueDelegate(const FSimpleServiceRe
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
 					OnComplete.ExecuteIfBound(true, TOptional<FText>());
 				}
@@ -228,6 +228,7 @@ bool UServerQueueService::CancelServerQueue(FSimpleServiceResponseDelegate& OnCo
 	if (ServerQueueTokenDataObject == nullptr)
 	{
 		OnComplete.ExecuteIfBound(false, FText::FromString("UServerQueueService::CancelServerQueue: ServerQueueTokenDataObject is null"));
+		OnServerQueueCancelled.Broadcast();
 		return false;
 	}
 	
@@ -267,11 +268,16 @@ void UServerQueueService::PollServerQueue()
 					OnGetServerQueue.ExecuteIfBound(ServerQueueDataObject, true, TOptional<FText>());
 				}
 				
-				// renew queue if the queue token expires in <60 seconds
-				if ((ServerQueueTokenDataObject->GetQueueExpires() - FDateTime::UtcNow()).GetTotalSeconds() < 60)
+				if (ServerQueueTokenDataObject->GetQueueRenews() <= FDateTime::UtcNow())
 				{
-					RenewServerQueue();
+					OnIdleCheckinRequired.Broadcast();
 				}
+			}
+			else
+			{
+				// If we failed to get the server queue, we should cancel the queue and stop polling
+				CancelServerQueue();
+				OnServerQueueError.ExecuteIfBound(Error.GetValue());
 			}
 		});
 		GetServerQueue(OnGetServerQueueComplete);
@@ -286,6 +292,13 @@ void UServerQueueService::StartPollingServerQueue()
 	const float PollingInterval = UNodecraftStudioApiSettings::Get().GetServerJoinPollingInterval();
 	GetWorld()->GetTimerManager().SetTimer(ServerQueuePollTimerHandle, ServerQueuePollTimerDelegate, PollingInterval, true);
 	OnStartedPollingServerQueue.Broadcast();
+	
+	CancelQueueTimerDelegate.BindWeakLambda(this, [this]()
+	{
+		CancelServerQueue();
+	});
+	const float QueueExpiresIn = (ServerQueueTokenDataObject->GetQueueExpires() - FDateTime::UtcNow()).GetTotalSeconds();
+	GetWorld()->GetTimerManager().SetTimer(CancelQueueTimerHandle, CancelQueueTimerDelegate, QueueExpiresIn, false);
 }
 
 void UServerQueueService::StopPollingServerQueue()
@@ -294,6 +307,12 @@ void UServerQueueService::StopPollingServerQueue()
 	if (ServerQueuePollTimerHandle.IsValid())
 	{
 		GetWorld()->GetTimerManager().ClearTimer(ServerQueuePollTimerHandle);
+	}
+
+	CancelQueueTimerDelegate.Unbind();
+	if (CancelQueueTimerHandle.IsValid())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(CancelQueueTimerHandle);
 	}
 }
 
@@ -304,4 +323,9 @@ void UServerQueueService::AddGetServerQueueDelegate(FGetServerQueueDelegate Dele
 	{
 		Delegate.ExecuteIfBound(ServerQueue, bSuccess, Error);
 	});
+}
+
+void UServerQueueService::RemoveGetServerQueueDelegate()
+{
+	OnGetServerQueue.Unbind();
 }

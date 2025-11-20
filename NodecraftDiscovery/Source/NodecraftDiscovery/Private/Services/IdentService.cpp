@@ -4,7 +4,7 @@
 #include "Services/IdentService.h"
 
 #include "NodecraftLogCategories.h"
-#include "Api/NodecraftStudioApi.h"
+#include "API/NodecraftStudioApi.h"
 #include "Models/PlayerSession.h"
 #include "Models/Consents.h"
 #include "DataTypes/IdentityType.h"
@@ -183,7 +183,7 @@ bool UIdentService::VerifyPlayerSession(FPlayerSessionResponseDelegate OnComplet
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
 					Session = FPlayerSession::FromJson(Data);
 					UNodecraftStudioSessionManager::Get().SetPlayerSession(Session);

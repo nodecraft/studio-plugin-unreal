@@ -20,16 +20,15 @@ void UNodecraftLoadingButton::SetIsLoading(const bool bInIsLoading)
 	{
 		LoadGuard->SetIsLoading(bIsLoading);
 	}
-
-	// TODO: Reintroduce this code once we use a different method for setting button color than by using selection status
-	// if (bInIsLoading)
-	// {
-	// 	SetIsEnabled(!ShouldDeactivateWhileLoading());
-	// }
-	// else
-	// {
-	// 	SetIsEnabled(ShouldActivateWhenFinishedLoading());
-	// }
+	
+	if (bInIsLoading)
+	{
+		SetIsEnabled(!ShouldDeactivateWhileLoading());
+	}
+	else
+	{
+		SetIsEnabled(ShouldActivateWhenFinishedLoading());
+	}
 }
 
 bool UNodecraftLoadingButton::GetIsLoading()

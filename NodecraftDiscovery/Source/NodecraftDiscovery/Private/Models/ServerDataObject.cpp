@@ -110,12 +110,12 @@ UServerDataObject* UServerDataObject::FromJson(const TSharedRef<FJsonObject> Jso
 {
 	// Generate a new ServerDataObject from Json
 	UServerDataObject* ServerDataObject = NewObject<UServerDataObject>();
-	ServerDataObject->Id = Json->GetStringField("id");
+	ServerDataObject->Id = Json->GetStringField(TEXT("id"));
 	FString ServerType;
 	FString OwnerType;
 
 	ServerDataObject->Type = EServerType::Unknown; // default
-	if (Json->TryGetStringField("type", ServerType))
+	if (Json->TryGetStringField(TEXT("type"), ServerType))
 	{
 		if (ServerType == "community")
 		{
@@ -128,7 +128,7 @@ UServerDataObject* UServerDataObject::FromJson(const TSharedRef<FJsonObject> Jso
 	}
 
 	ServerDataObject->Role = EPlayerRole::Unknown; // default
-	if (Json->TryGetStringField("role", OwnerType))
+	if (Json->TryGetStringField(TEXT("role"), OwnerType))
 	{
 		if (OwnerType == "owner")
 		{
@@ -144,54 +144,54 @@ UServerDataObject* UServerDataObject::FromJson(const TSharedRef<FJsonObject> Jso
 		}
 	}
 	
-	ServerDataObject->Title = Json->GetStringField("title");
-	Json->TryGetStringField("summary", ServerDataObject->Summary);
-	Json->TryGetStringField("image_tile", ServerDataObject->ImageUrl);
+	ServerDataObject->Title = Json->GetStringField(TEXT("title"));
+	Json->TryGetStringField(TEXT("summary"), ServerDataObject->Summary);
+	Json->TryGetStringField(TEXT("image_tile"), ServerDataObject->ImageUrl);
 	if (ServerDataObject->ImageUrl.IsEmpty())
 	{
 		ServerDataObject->ImageUrl = UNodecraftUtility::GetDefaultServerImageUrl(ServerDataObject->Id);
 	}
-	Json->TryGetNumberField("players_count", ServerDataObject->PlayersCount);
-	Json->TryGetNumberField("players_max", ServerDataObject->PlayersMax);
-	Json->TryGetBoolField("is_favorite", ServerDataObject->bIsFavorite);
-	Json->TryGetBoolField("has_password", ServerDataObject->bHasPassword);
+	Json->TryGetNumberField(TEXT("players_count"), ServerDataObject->PlayersCount);
+	Json->TryGetNumberField(TEXT("players_max"), ServerDataObject->PlayersMax);
+	Json->TryGetBoolField(TEXT("is_favorite"), ServerDataObject->bIsFavorite);
+	Json->TryGetBoolField(TEXT("has_password"), ServerDataObject->bHasPassword);
 	
 	FString Version;
-	Json->TryGetStringField("game_version", Version);
+	Json->TryGetStringField(TEXT("game_version"), Version);
 	ServerDataObject->GameVersion = FText::FromString(Version);
 
 	const TSharedPtr<FJsonObject>* RegionData;
-	if(Json->TryGetObjectField("server_region", RegionData))
+	if(Json->TryGetObjectField(TEXT("server_region"), RegionData))
 	{
 		FString RegionTitle;
-		if (RegionData->Get()->TryGetStringField("title", RegionTitle))
+		if (RegionData->Get()->TryGetStringField(TEXT("title"), RegionTitle))
 		{
 			ServerDataObject->RegionTitle = FText::FromString(RegionTitle);
 		}
 	}
 
-	Json->TryGetNumberField("friend_playing", ServerDataObject->NumFriendsPlaying);
-	Json->TryGetNumberField("friend_recently_played", ServerDataObject->NumFriendsRecentlyPlayed);
+	Json->TryGetNumberField(TEXT("friend_playing"), ServerDataObject->NumFriendsPlaying);
+	Json->TryGetNumberField(TEXT("friend_recently_played"), ServerDataObject->NumFriendsRecentlyPlayed);
 
 
 	// parse community data
 	const TSharedPtr<FJsonObject>* CommunityJson;
-	if (Json->TryGetObjectField("community", CommunityJson))
+	if (Json->TryGetObjectField(TEXT("community"), CommunityJson))
 	{
 		ServerDataObject->Community = UCommunityDataObject::FromJson(CommunityJson->ToSharedRef());
 	}
 	
 	const TSharedPtr<FJsonObject>* PlayerData;
-	if (Json->TryGetObjectField("player", PlayerData))
+	if (Json->TryGetObjectField(TEXT("player"), PlayerData))
 	{
 		ServerDataObject->PlayerDataObject = UPlayerDataObject::FromJson(PlayerData->ToSharedRef());
 	}
 
 
 	const TArray<TSharedPtr<FJsonValue>>* TagList;
-	if (Json->TryGetArrayField("tags", TagList))
+	if (Json->TryGetArrayField(TEXT("tags"), TagList))
 	{
-		for (const TSharedPtr<FJsonValue> Tag : *TagList)
+		for (const TSharedPtr<FJsonValue>& Tag : *TagList)
 		{
 			ServerDataObject->Tags.Add(Tag->AsString());
 		}
@@ -224,9 +224,9 @@ UServerDataObject* UServerDataObject::FromJson(const TSharedRef<FJsonObject> Jso
 	}
 
 	const TArray<TSharedPtr<FJsonValue>>* SocialCustom;
-	if (Json->TryGetArrayField("social_custom", SocialCustom))
+	if (Json->TryGetArrayField(TEXT("social_custom"), SocialCustom))
 	{
-		for (const TSharedPtr<FJsonValue> Value : *SocialCustom)
+		for (const TSharedPtr<FJsonValue>& Value : *SocialCustom)
 		{
 			USocialLinkDataObject* Link = USocialLinkDataObject::Create(ESocialLinkType::Custom, Value->AsString());
 			ServerDataObject->SocialLinks.Add(Link);

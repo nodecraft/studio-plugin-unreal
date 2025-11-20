@@ -28,32 +28,32 @@ class NODECRAFTSTUDIOEDITOR_API USessionManagerUtilityWidget : public UEditorUti
 
 protected:
 	// Player Token
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UCommonTextBlock* CurrentPlayerTokenTextBlock;
 	
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UEditableTextBox* NewPlayerTokenTextBox;
 
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UButton* SetNewPlayerTokenButton;
 	
 	// Auth / Ident
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UEditableTextBox* EmailAddressTextBox;
 
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UEditableTextBox* TokenTextBox;
 	
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UButton* ManualChallengeButton;
 
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UButton* SendTokenButton;
 
 	// JSON Response readouts
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UCommonTextBlock* ResponseTextBlock;
 
-	UPROPERTY(meta=(BindWidget), BlueprintReadOnly)
+	UPROPERTY(meta=(BindWidget), BlueprintReadOnly, Category = "Nodecraft UI|Dev")
 	UCommonTextBlock* ResponseStatusTextBlock;
 };

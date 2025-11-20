@@ -21,13 +21,18 @@ public:
 	FString GetEmail() const;
 
 protected:
+	virtual UWidget* NativeGetDesiredFocusTarget() const override;
+	virtual void NativeOnInitialized() override;
+	virtual void NativeOnActivated() override;
+	virtual void NativeOnDeactivated() override;
+	
 	UPROPERTY(meta=(BindWidget))
 	UEditableText* EmailEditText;
 
-protected:
 	virtual void SubmitRequest() override;
 
 private:
+	UFUNCTION()
+	void OnTextCommitted(const FText& InText, ETextCommit::Type CommitMethod);
 	void StartManualChallenge();
-
 };

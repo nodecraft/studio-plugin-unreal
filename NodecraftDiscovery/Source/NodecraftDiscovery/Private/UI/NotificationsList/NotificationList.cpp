@@ -54,9 +54,14 @@ void UNotificationList::LoadData(ENotificationListType NotifListType, FSimpleDel
 
 void UNotificationList::SetListItems(const TArray<UNotificationDataObject*>& Notifs)
 {
+	NotifsListView->OnEntryWidgetGenerated().AddWeakLambda(this, [this](UUserWidget& EntryWidget)
+	{
+		EntryWidget.SetFocus();
+		NotifsListView->OnEntryWidgetGenerated().RemoveAll(this);
+	});
 	NotifsListView->SetListItems(Notifs);
-	NotifsListView->SetVisibility(Notifs.Num() > 0 ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
-	NoNotificationsSlot->SetVisibility(Notifs.Num() > 0 ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
+	NotifsListView->SetVisibility(Notifs.Num() > 0 ? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Hidden);
+	NoNotificationsSlot->SetVisibility(Notifs.Num() > 0 ? ESlateVisibility::Collapsed : ESlateVisibility::SelfHitTestInvisible);
 }
 
 void UNotificationList::NativeConstruct()

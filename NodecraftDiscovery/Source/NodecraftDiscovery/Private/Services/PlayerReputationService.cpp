@@ -4,7 +4,7 @@
 #include "Services/PlayerReputationService.h"
 
 #include "JsonObjectWrapper.h"
-#include "Api/NodecraftStudioApi.h"
+#include "API/NodecraftStudioApi.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Models/AccountReputationEntryDataObject.h"
@@ -22,10 +22,10 @@ bool UPlayerReputationService::GetPlayerReputation(FGetPlayerReputationDelegate&
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TArray<TSharedPtr<FJsonValue>> Data = ResJson.JsonObject->GetArrayField("data"); Data.Num() > 0)
+				if (const TArray<TSharedPtr<FJsonValue>> Data = ResJson.JsonObject->GetArrayField(TEXT("data")); Data.Num() > 0)
 				{
 					TArray<UAccountReputationEntryDataObject*> ReputationEntries;
-					for (const TSharedPtr<FJsonValue> JsonValue : Data)
+					for (const TSharedPtr<FJsonValue>& JsonValue : Data)
 					{
 						UAccountReputationEntryDataObject* ReputationEntry = UAccountReputationEntryDataObject::FromJson(JsonValue->AsObject().ToSharedRef());
 						ReputationEntries.Add(ReputationEntry);

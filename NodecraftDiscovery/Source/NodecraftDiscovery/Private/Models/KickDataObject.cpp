@@ -13,25 +13,25 @@ FPlayerKickDataObject FPlayerKickDataObject::FromJson(const TSharedRef<FJsonObje
 	FPlayerKickDataObject KickDataObject = FPlayerKickDataObject();
 
 	// parse id
-	KickDataObject.Id = Json->GetStringField("id");
+	KickDataObject.Id = Json->GetStringField(TEXT("id"));
 
 	// parse date created
 	FString DateString;
-	if (Json->TryGetStringField("date_created", DateString))
+	if (Json->TryGetStringField(TEXT("date_created"), DateString))
 	{
 		FDateTime::ParseIso8601(*DateString, KickDataObject.DateCreated);
 	}
 
 	// parse reason
 	FString ReasonStr;
-	Json->TryGetStringField("reason", ReasonStr);
+	Json->TryGetStringField(TEXT("reason"), ReasonStr);
 	if (ReasonStr.IsEmpty() == false)
 	{
 		KickDataObject.Reason = FText::FromString(ReasonStr);
 	}
 	
 	// parse player
-	if (const TSharedPtr<FJsonObject>* PlayerObject; Json->TryGetObjectField("player", PlayerObject))
+	if (const TSharedPtr<FJsonObject>* PlayerObject; Json->TryGetObjectField(TEXT("player"), PlayerObject))
 	{
 		KickDataObject.Player = UPlayerDataObject::FromJson(PlayerObject->ToSharedRef());
 	}

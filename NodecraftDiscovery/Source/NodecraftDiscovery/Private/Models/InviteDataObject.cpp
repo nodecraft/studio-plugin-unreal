@@ -10,20 +10,20 @@ UInviteDataObject* UInviteDataObject::FromJson(const TSharedRef<FJsonObject>& Js
 {
 	UInviteDataObject* InviteDataObject = NewObject<UInviteDataObject>();
 
-	InviteDataObject->ID = Json->GetStringField("id");
+	InviteDataObject->ID = Json->GetStringField(TEXT("id"));
 
 	FString DateCreatedString;
-	if (Json->TryGetStringField("date_created", DateCreatedString))
+	if (Json->TryGetStringField(TEXT("date_created"), DateCreatedString))
 	{
 		FDateTime::ParseIso8601(*DateCreatedString, InviteDataObject->DateCreated);
 	}
 	
 	FString DateExpiresString;
-	Json->TryGetStringField("date_expires", DateExpiresString);
+	Json->TryGetStringField(TEXT("date_expires"), DateExpiresString);
 	FDateTime::ParseIso8601(*DateExpiresString, InviteDataObject->DateExpires);
 
 	FString StatusString;
-	if (Json->TryGetStringField("status", StatusString))
+	if (Json->TryGetStringField(TEXT("status"), StatusString))
 	{
 		if (StatusString.Equals("pending", ESearchCase::IgnoreCase))
 		{
@@ -43,11 +43,11 @@ UInviteDataObject* UInviteDataObject::FromJson(const TSharedRef<FJsonObject>& Js
 		}
 	}
 
-	if (const TSharedPtr<FJsonObject>* ServerObject; Json->TryGetObjectField("server", ServerObject))
+	if (const TSharedPtr<FJsonObject>* ServerObject; Json->TryGetObjectField(TEXT("server"), ServerObject))
 	{
 		InviteDataObject->Server = UServerDataObject::FromJson(ServerObject->ToSharedRef());
 	}
-	if (const TSharedPtr<FJsonObject>* PlayerObject; Json->TryGetObjectField("player", PlayerObject))
+	if (const TSharedPtr<FJsonObject>* PlayerObject; Json->TryGetObjectField(TEXT("player"), PlayerObject))
 	{
 		InviteDataObject->Player = UPlayerDataObject::FromJson(PlayerObject->ToSharedRef());
 	}

@@ -5,6 +5,7 @@
 
 #include "Models/PlayerServerDetails.h"
 #include "Services/ModerationService.h"
+#include "Stores/ServersStore.h"
 
 #define LOCTEXT_NAMESPACE "ModerationConsolePlayerDetailsPanel"
 
@@ -60,7 +61,7 @@ void UModerationConsolePlayerDetailsPanel::RefreshUI()
 		{
 			ModerationReasonsSection->SetVisibility(ESlateVisibility::Collapsed);
 			ModerationActionsSection->SetVisibility(ESlateVisibility::Visible);
-			ModerationActionsSection->ConfigureForPlayerServerDetails(ViewModel->SelectedPlayers);
+			ModerationActionsSection->ConfigureForPlayerServerDetails(ViewModel->SelectedPlayers, ViewModel->PlayerRole);
 		}
 	}
 	else
@@ -81,7 +82,7 @@ void UModerationConsolePlayerDetailsPanel::PerformKickAction()
 	UModerationService::Get().KickPlayers(PlayerIds, ServerId, ViewModel->SelectedReason, ViewModel->PrivateNotes.ToString(),
 		FPlayersKickedDelegate::CreateWeakLambda(this, [this](TArray<FPlayerKickDataObject>, bool bSuccess, TOptional<FText> Error)
 		{
-			if (bSuccess)
+			if (bSuccess && UServersStore::Get().GetCurrentServerId() == ServerId)
 			{
 				ModerationReasonsSection->ClearPrivateNotes();
 				OnCompletedModerationActionDelegate.Broadcast();
@@ -108,7 +109,7 @@ void UModerationConsolePlayerDetailsPanel::PerformBanAction()
 	UModerationService::Get().BanPlayers(PlayerIds, ServerId, BanExpirationDate, ViewModel->SelectedReason, ViewModel->PrivateNotes.ToString(),
 		FPlayersBannedDelegate::CreateWeakLambda(this, [this](TArray<UBanDataObject*> Bans, bool bSuccess, TOptional<FText> Error)
 		{
-			if (bSuccess)
+			if (bSuccess && UServersStore::Get().GetCurrentServerId() == ServerId)
 			{
 				OnCompletedModerationActionDelegate.Broadcast();
 			}
@@ -128,7 +129,7 @@ void UModerationConsolePlayerDetailsPanel::PerformUnbanAction()
 	}
 	UModerationService::Get().UnbanPlayers(BanIds, FPlayersBannedDelegate::CreateWeakLambda(this, [this](TArray<UBanDataObject*> Bans, bool bSuccess, TOptional<FText> Error)
 		{
-			if (bSuccess)
+			if (bSuccess && UServersStore::Get().GetCurrentServerId() == ServerId)
 			{
 				OnCompletedModerationActionDelegate.Broadcast();
 			}
@@ -149,7 +150,7 @@ void UModerationConsolePlayerDetailsPanel::PerformUpdateModStatusAction(const EM
 	UModerationService::Get().UpdatePlayerModStatus(GetWorld(), ViewModel->SelectedPlayers, ServerId, bIsMod,
 FSimpleServiceResponseDelegate::CreateWeakLambda(this, [this](bool bSuccess, TOptional<FText> Error)
 		{
-			if (bSuccess)
+			if (bSuccess && UServersStore::Get().GetCurrentServerId() == ServerId)
 			{
 				OnCompletedModerationActionDelegate.Broadcast();
 			}
@@ -175,6 +176,26 @@ void UModerationConsolePlayerDetailsPanel::NativeOnInitialized()
 		RefreshUI();
 	});
 
+	ModerationReasonsSection->NavToPlayerListDelegate.BindWeakLambda(this, [this]()
+	{
+		return GetPlayerListDelegate.Execute();
+	});
+
+	ModerationActionsSection->NavToPlayerListDelegate.BindWeakLambda(this, [this]()
+	{
+		return GetPlayerListDelegate.Execute();
+	});
+
+	ModerationActionsSection->OnScrollToTopDelegate.BindWeakLambda(this, [this]()
+	{
+		ScrollBox->ScrollToStart();
+	});
+	
+	ModerationReasonsSection->OnScrollToTopDelegate.BindWeakLambda(this, [this]()
+	{
+		ScrollBox->ScrollToStart();
+	});
+
 	ModerationReasonsSection->OnCancelDelegate.BindWeakLambda(ViewModel, [this]()
 	{
 		ViewModel->SelectedAction = EModerationAction::Undefined;
@@ -182,6 +203,7 @@ void UModerationConsolePlayerDetailsPanel::NativeOnInitialized()
 		ModerationReasonsSection->ClearPrivateNotes();
 		ScrollBox->ScrollToStart();
 		RefreshUI();
+		ModerationActionsSection->GetInitialFocusTarget()->SetFocus();
 	});
 
 	ModerationReasonsSection->OnConfirmActionDelegate.BindWeakLambda(ViewModel, [this]()
@@ -230,8 +252,37 @@ void UModerationConsolePlayerDetailsPanel::NativeOnInitialized()
 		ViewModel->PrivateNotes = Notes;
 		RefreshUI();
 	});
+
+	ModerationActionsSection->OnWidgetReceivedFocus.BindWeakLambda(this, [this](UWidget* Widget)
+	{
+		ScrollBox->ScrollWidgetIntoView(Widget);
+	});
+
+	ModerationReasonsSection->OnWidgetReceivedFocus.BindWeakLambda(this, [this](UWidget* Widget)
+	{
+		ScrollBox->ScrollWidgetIntoView(Widget);
+	});
 	
 	RefreshUI();
+}
+
+void UModerationConsolePlayerDetailsPanel::SetPlayerRole(EPlayerRole Role)
+{
+	ViewModel->PlayerRole = Role;
+}
+
+UWidget* UModerationConsolePlayerDetailsPanel::NativeGetDesiredFocusTarget() const
+{
+	if (ModerationActionsSection->GetVisibility() == ESlateVisibility::Visible)
+	{
+		return ModerationActionsSection->GetInitialFocusTarget();
+	}
+
+	if (ModerationReasonsSection->GetVisibility() == ESlateVisibility::Visible)
+	{
+		return ModerationReasonsSection->GetFirstReasonWidget();
+	}
+	return Super::NativeGetDesiredFocusTarget();
 }
 
 #undef LOCTEXT_NAMESPACE

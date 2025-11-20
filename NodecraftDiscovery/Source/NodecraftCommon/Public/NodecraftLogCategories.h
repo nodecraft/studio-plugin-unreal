@@ -1,10 +1,15 @@
-﻿#pragma once
+﻿// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
+
+#pragma once
 #include "CoreMinimal.h"
 #include "Logging/LogMacros.h"
 
 // Logs related to the Nodecraft authentication system.
 // Turn on Verbose logging for more info.
 DEFINE_LOG_CATEGORY_STATIC(LogNodecraftAuth, Log, All);
+
+// Logs related to HTTP requests and responses
+DEFINE_LOG_CATEGORY_STATIC(LogNodecraftHTTP, NoLogging, All);
 
 // Logs related to the events specific to game server events.
 // Turn on Verbose logging for more info.

@@ -1,6 +1,7 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Nodecraft, Inc. © 2012-2024, All Rights Reserved.
 
 using UnrealBuildTool;
+using System.IO;
 
 public class NodecraftAuthCommon : ModuleRules
 {
@@ -11,6 +12,7 @@ public class NodecraftAuthCommon : ModuleRules
 		PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...
+				Path.Combine(ModuleDirectory, "Public"),
 			}
 			);
 				

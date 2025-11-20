@@ -50,15 +50,15 @@ void UFriendsListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 		PlayersOnlineText->SetText(PlayersOnline);
 		ServerName->SetText(Server->GetTitle());
 
-		JoinButton->OnClicked().Clear();
-		JoinButton->OnClicked().AddWeakLambda(this, [this, Server]
+		SecondaryActionButton->OnClicked().Clear();
+		SecondaryActionButton->OnClicked().AddWeakLambda(this, [this, Server]
 		{
 			UServersService::Get().JoinServer(Server, GetWorld());
 		});
 	}
 	
-	InviteToPlayButton->OnClicked().Clear();
-	InviteToPlayButton->OnClicked().AddWeakLambda(this, [this, FriendDataObject]
+	PrimaryActionButton->OnClicked().Clear();
+	PrimaryActionButton->OnClicked().AddWeakLambda(this, [this, FriendDataObject]
 	{
 		if (ServerInvitesModalClass.IsNull() == false)
 		{
@@ -76,6 +76,24 @@ void UFriendsListItem::NativeOnListItemObjectSet(UObject* ListItemObject)
 			}));
 		}
 	});
+}
+
+FReply UFriendsListItem::NativeOnFocusReceived(const FGeometry& InGeometry, const FFocusEvent& InFocusEvent)
+{
+	const UFriendDataObject* FriendDataObject = GetListItem<UFriendDataObject>();
+	if (FriendDataObject->GetServer())
+	{
+		RegisterActionBinding(EUIActionBindingType::Secondary);
+	}
+	RegisterActionBinding(EUIActionBindingType::Primary);
+	
+	return Super::NativeOnFocusReceived(InGeometry, InFocusEvent);
+}
+
+void UFriendsListItem::NativeOnFocusLost(const FFocusEvent& InFocusEvent)
+{
+	UnregisterUIActionBindings();
+	Super::NativeOnFocusLost(InFocusEvent);
 }
 
 #undef LOCTEXT_NAMESPACE

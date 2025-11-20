@@ -4,14 +4,32 @@
 #include "Stores/FriendsStore.h"
 
 #include "NodecraftLogCategories.h"
-#include "Api/NodecraftStudioSessionManagerSubsystem.h"
+#include "API/NodecraftStudioSessionManagerSubsystem.h"
 #include "DeveloperSettings/NodecraftStudioApiSettings.h"
 #include "Services/FriendsService.h"
+#include "Services/GameService.h"
+#include "TimerManager.h"
 
 void UFriendsStore::OnWorldBeginPlay(UWorld& InWorld)
 {
 	Super::OnWorldBeginPlay(InWorld);
-	StartPollingForFriends();
+
+	// the current in-game state of the player is broadcasted by the game service when we subscribe to it
+	FDelegateHandle OnPlayerInGameStateChanged = UGameService::Get().AddPlayerInGameStateListener(FOnPlayerInGameStateChanged::FDelegate::CreateWeakLambda(
+		this, [this](bool bIsInGame)
+		{
+			if (const UNodecraftStudioApiSettings* DiscoveryAPISettings = GetDefault<UNodecraftStudioApiSettings>())
+			{
+				PollingFrequency = bIsInGame ? DiscoveryAPISettings->GetFriendsPollingIntervalInGame() : DiscoveryAPISettings->GetFriendsPollingIntervalOutOfGame();
+			}
+			else
+			{
+				UE_LOG(LogNodecraft_Friends, Error, TEXT("UFriendsStore::OnWorldBeginPlay: Failed to get discovery api settings. Will poll every %f seconds."), PollingFrequency);
+			}
+			
+			StopPollingForFriends();
+			StartPollingForFriends();
+		}));
 }
 
 void UFriendsStore::StartPollingForFriends()
@@ -41,16 +59,7 @@ void UFriendsStore::StartPollingForFriends()
 
 	if (const UWorld* World = GetWorld())
 	{
-		if (const UNodecraftStudioApiSettings* DiscoveryAPISettings = GetDefault<UNodecraftStudioApiSettings>())
-		{
-			// todo: polling interval should be different for in game vs out of game state
-			World->GetTimerManager().SetTimer(PollingTimerHandle, TimerDelegate, DiscoveryAPISettings->GetFriendsPollingIntervalOutOfGame(), true, 0.0f);
-		}
-		else
-		{
-			UE_LOG(LogNodecraft_Friends, Error, TEXT("UFriendsStore::StartPollingForFriends: Failed to get discovery api settings. Will poll every 30 seconds."));
-			World->GetTimerManager().SetTimer(PollingTimerHandle, TimerDelegate, 30.0f, true, 0.0f);
-		}
+		World->GetTimerManager().SetTimer(PollingTimerHandle, TimerDelegate, PollingFrequency, true, 0.0f);
 	}
 	else
 	{

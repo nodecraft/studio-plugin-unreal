@@ -5,6 +5,7 @@
 
 #include "SteamAuthDeveloperSettings.h"
 #include "ThirdParty/SteamAuthLibrary/sdk/public/steam/steam_api.h"
+#include "Misc/FileHelper.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogSteamAuth, Log, All);
 

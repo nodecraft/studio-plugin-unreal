@@ -3,9 +3,12 @@
 
 #include "UI/Common/IconTextLoadingButton.h"
 
+#include "Engine/Texture2D.h"
 #include "CommonTextBlock.h"
+#include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
+#include "Components/OverlaySlot.h"
 #include "Engine/StreamableManager.h"
 #include "Subsystems/AssetStreamerSubsystem.h"
 
@@ -16,6 +19,30 @@ void UIconTextLoadingButton::NativePreConstruct()
 
 	if (bShowIcon)
 	{
+		if (bIconOnRight)
+		{
+			// swap the 2 widgets inside IconTextContainer box
+			IconTextContainer->ClearChildren();
+			IconTextContainer->AddChild(Text);
+			IconTextContainer->AddChild(Icon);
+			if (UHorizontalBoxSlot* IconSlot = Cast<UHorizontalBoxSlot>(Icon->Slot))
+			{
+				// swap left and right padding
+				IconSlot->SetPadding(FMargin(IconPadding.Right, IconPadding.Top, IconPadding.Left, IconPadding.Bottom));
+			}
+		}
+		else
+		{
+			// default order
+			IconTextContainer->ClearChildren();
+			IconTextContainer->AddChild(Icon);
+			IconTextContainer->AddChild(Text);
+			if (UHorizontalBoxSlot* IconSlot = Cast<UHorizontalBoxSlot>(Icon->Slot))
+			{
+				IconSlot->SetPadding(IconPadding);
+			}
+		}
+		
 		if (IconImage.IsNull() == false)
 		{
 			FStreamableDelegate OnLoaded;
@@ -42,4 +69,21 @@ void UIconTextLoadingButton::NativePreConstruct()
 		Icon->SetVisibility(ESlateVisibility::Collapsed);
 	}
 	Text->SetText(GetButtonText());
+
+	// setup alignments
+	if (UHorizontalBoxSlot* IconSlot = Cast<UHorizontalBoxSlot>(Icon->Slot); IconSlot && Icon->IsVisible())
+	{
+		IconSlot->SetHorizontalAlignment(IconHorizontalAlignment);
+		IconSlot->SetVerticalAlignment(IconVerticalAlignment);
+	}
+	if (UHorizontalBoxSlot* TextSlot = Cast<UHorizontalBoxSlot>(Text->Slot))
+	{
+		TextSlot->SetHorizontalAlignment(TextHorizontalAlignment);
+		TextSlot->SetVerticalAlignment(TextVerticalAlignment);
+	}
+	if (UOverlaySlot* ContainerSlot = Cast<UOverlaySlot>(IconTextContainer->Slot))
+	{
+		ContainerSlot->SetHorizontalAlignment(ContainerHorizontalAlignment);
+		ContainerSlot->SetVerticalAlignment(ContainerVerticalAlignment);
+	}
 }

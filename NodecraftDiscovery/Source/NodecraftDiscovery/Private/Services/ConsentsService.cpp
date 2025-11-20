@@ -2,8 +2,8 @@
 
 
 #include "Services/ConsentsService.h"
-#include "Json/Public/Dom/JsonValue.h"
-#include "Json/Public/Dom/JsonObject.h"
+#include "Dom/JsonValue.h"
+#include "Dom/JsonObject.h"
 #include "API/NodecraftStudioApi.h"
 #include "Models/RulesDataObject.h"
 #include "Subsystems/MessageRouterSubsystem.h"
@@ -20,15 +20,15 @@ bool UConsentsService::GetGameLegalConsents(const FString& IdentType, FConsentsR
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
 					FGameConsents GameConsents = FGameConsents();
 
 					const TArray<TSharedPtr<FJsonValue>>* Consents;
-					if (Data->TryGetArrayField("consents", Consents))
+					if (Data->TryGetArrayField(TEXT("consents"), Consents))
 					{
 						FString Content;
-						if (Data->TryGetStringField("content", Content))
+						if (Data->TryGetStringField(TEXT("content"), Content))
 						{
 							GameConsents.Content = Content;
 							for (TSharedPtr<FJsonValue> JsonValue : *Consents)
@@ -75,7 +75,7 @@ bool UConsentsService::SignGameRulesConsents(const FGameConsents& Consents, FSig
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
 
 				
-				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
 					URulesDataObject* Rules = URulesDataObject::FromJson(Data.ToSharedRef());
 					// FGameConsents GameConsents = FGameConsents::FromDataJson(Data);
@@ -113,7 +113,7 @@ bool UConsentsService::GetPlayerLegalConsents(FGetPlayerConsentsResponseDelegate
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
 					const FPlayerConsents PlayerConsents = FPlayerConsents::FromJson(Data);
 					OnComplete.ExecuteIfBound(PlayerConsents, true, TOptional<FText>());
@@ -151,7 +151,7 @@ bool UConsentsService::GetPlayerRulesConsents(FGetPlayerConsentsResponseDelegate
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField("data"); Data.IsValid())
+				if (const TSharedPtr<FJsonObject>& Data = ResJson.JsonObject->GetObjectField(TEXT("data")); Data.IsValid())
 				{
 					const FPlayerConsents PlayerConsents = FPlayerConsents::FromJson(Data);
 					OnComplete.ExecuteIfBound(PlayerConsents, true, TOptional<FText>());

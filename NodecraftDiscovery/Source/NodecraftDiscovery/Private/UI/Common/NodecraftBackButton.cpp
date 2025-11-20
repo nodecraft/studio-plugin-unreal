@@ -6,11 +6,17 @@
 #include "CommonTextBlock.h"
 #include "Components/Image.h"
 #include "Subsystems/AssetStreamerSubsystem.h"
+#include "Subsystems/NodecraftUIManagerSubsystem.h"
 #include "UI/Foundation/NodecraftButtonBase.h"
 
 void UNodecraftBackButton::NativeConstruct()
 {
 	Super::NativeConstruct();
+
+	Button->OnClicked().AddWeakLambda(this, [this]
+	{
+		UNodecraftUIManagerSubsystem::Get(GetGameInstance())->CloseNodecraftUI(true);
+	});
 	
 	Button->OnHovered().AddWeakLambda(this, [this]
 	{

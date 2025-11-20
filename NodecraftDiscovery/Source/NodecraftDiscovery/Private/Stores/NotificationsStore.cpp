@@ -2,9 +2,10 @@
 
 #include "Stores/NotificationsStore.h"
 
-#include "Api/NodecraftStudioSessionManagerSubsystem.h"
+#include "API/NodecraftStudioSessionManagerSubsystem.h"
 #include "DeveloperSettings/NodecraftStudioApiSettings.h"
 #include "Services/NotificationsService.h"
+#include "TimerManager.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogNotificationsStore, Log, All);
 

@@ -3,7 +3,12 @@
 
 #include "Utility/NodecraftUtility.h"
 
+#include "CommonInputSubsystem.h"
 #include "JsonObjectWrapper.h"
+#include "Policies/CondensedJsonPrintPolicy.h"
+#include "Serialization/JsonWriter.h"
+#include "Serialization/JsonSerializer.h"
+#include "Engine/World.h"
 #include "DataTypes/LinkTypes.h"
 #include "DeveloperSettings/NodecraftStudioApiSettings.h"
 #include "GenericPlatform/GenericPlatformHttp.h"
@@ -21,7 +26,7 @@ FText UNodecraftUtility::ParseMessage(FHttpResponsePtr Response, FString Functio
 		
 		// Default error message will get used if we don't find 'message' in response
 		ResJson.JsonObjectFromString(Response.Get()->GetContentAsString());
-		ResJson.JsonObject->TryGetStringField("message", ErrorMsg);
+		ResJson.JsonObject->TryGetStringField(TEXT("message"), ErrorMsg);
 	}
 
 #if UE_BUILD_SHIPPING
@@ -41,7 +46,7 @@ FString UNodecraftUtility::ParseMessageResultCode(FHttpResponsePtr Response)
 		
 		// Default error message will get used if we don't find 'message' in response
 		ResJson.JsonObjectFromString(Response.Get()->GetContentAsString());
-		ResJson.JsonObject->TryGetStringField("code", ErrorCode);
+		ResJson.JsonObject->TryGetStringField(TEXT("code"), ErrorCode);
 	}
 
 	return ErrorCode;
@@ -120,6 +125,19 @@ FString UNodecraftUtility::JsonObjToString(TSharedPtr<FJsonObject> JsonObj)
 	TSharedRef<TJsonWriter<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>> JsonWriter = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&JsonStr, 0);
 	FJsonSerializer::Serialize(MakeShared<FJsonValueObject>(JsonObj), FString(), JsonWriter);
 	return JsonStr;
+}
+
+ECommonInputType UNodecraftUtility::GetCurrentInputType(const UWorld* World)
+{
+	ECommonInputType CurrentInputType = ECommonInputType::MouseAndKeyboard;
+	if (World && World->GetGameInstance())
+	{
+		if (const ULocalPlayer* LocalPlayer = World->GetGameInstance()->GetFirstGamePlayer())
+		{
+			CurrentInputType = UCommonInputSubsystem::Get(LocalPlayer)->GetCurrentInputType();
+		}
+	}
+	return CurrentInputType;
 }
 
 #undef LOCTEXT_NAMESPACE

@@ -19,16 +19,16 @@ class NODECRAFTDISCOVERY_API UPlayerPlatformIcon : public UUserWidget
 public:
 	virtual void NativeOnInitialized() override;
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="Nodecraft UI|Platform Icon")
 	void SetIdentity(EIdentityType Ident);
 	
 protected:	
-	UPROPERTY(BlueprintReadWrite, meta=(BindWidget))
+	UPROPERTY(BlueprintReadWrite, Category = "Nodecraft UI|Platform Icon", meta=(BindWidget))
 	UImage* IconImage;
 	
-	UPROPERTY(BlueprintReadWrite, meta=(BindWidget))
+	UPROPERTY(BlueprintReadWrite, Category = "Nodecraft UI|Platform Icon", meta=(BindWidget))
 	UOverlay* Container;
 
-	UPROPERTY(BlueprintReadOnly, EditInstanceOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Nodecraft UI|Platform Icon", EditInstanceOnly)
 	EIdentityType Identity;
 };

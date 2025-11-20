@@ -3,7 +3,7 @@
 
 #include "Services/NotificationsService.h"
 
-#include "Api/NodecraftStudioApi.h"
+#include "API/NodecraftStudioApi.h"
 #include "Stores/NotificationsStore.h"
 #include "Subsystems/MessageRouterSubsystem.h"
 
@@ -20,7 +20,7 @@ bool UNotificationsService::GetNotifications(FGetNotificationsResponseDelegate& 
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TArray<TSharedPtr<FJsonValue>>& Data = ResJson.JsonObject->GetArrayField("data"); Data.Num() > 0)
+				if (const TArray<TSharedPtr<FJsonValue>>& Data = ResJson.JsonObject->GetArrayField(TEXT("data")); Data.Num() > 0)
 				{
 					for (TSharedPtr<FJsonValue> JsonValue : Data)
 					{
@@ -40,7 +40,7 @@ bool UNotificationsService::GetNotifications(FGetNotificationsResponseDelegate& 
 				//Pull error from JSON and pass it to the delegate
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				FString Error = ResJson.JsonObject->GetStringField("error");
+				FString Error = ResJson.JsonObject->GetStringField(TEXT("error"));
 				OnComplete.ExecuteIfBound(Notifications, false, FText::FromString(Error));
 			}
 			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
@@ -68,7 +68,7 @@ bool UNotificationsService::GetNotificationsHistory(FGetNotificationsResponseDel
 			{
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				if (const TArray<TSharedPtr<FJsonValue>>& Data = ResJson.JsonObject->GetArrayField("data"); Data.Num() > 0)
+				if (const TArray<TSharedPtr<FJsonValue>>& Data = ResJson.JsonObject->GetArrayField(TEXT("data")); Data.Num() > 0)
 				{
 					for (TSharedPtr<FJsonValue> JsonValue : Data)
 					{
@@ -88,7 +88,7 @@ bool UNotificationsService::GetNotificationsHistory(FGetNotificationsResponseDel
 				//Pull error from JSON and pass it to the delegate
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				const FString Error = ResJson.JsonObject->GetStringField("error");
+				const FString Error = ResJson.JsonObject->GetStringField(TEXT("error"));
 				OnComplete.ExecuteIfBound(Notifications, false, FText::FromString(Error));
 			}
 			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
@@ -128,7 +128,7 @@ bool UNotificationsService::DismissNotification(const UWorld* World, const FStri
 				//Pull error from JSON and pass it to the delegate
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				const FString Error = ResJson.JsonObject->GetStringField("error");
+				const FString Error = ResJson.JsonObject->GetStringField(TEXT("error"));
 				OnComplete.ExecuteIfBound(false, FText::FromString(Error));
 			}
 			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
@@ -163,7 +163,7 @@ bool UNotificationsService::DismissAllNotifications(UWorld* World, FSimpleServic
 				//Pull error from JSON and pass it to the delegate
 				FJsonObjectWrapper ResJson;
 				ResJson.JsonObjectFromString(Res.Get()->GetContentAsString());
-				const FString Error = ResJson.JsonObject->GetStringField("error");
+				const FString Error = ResJson.JsonObject->GetStringField(TEXT("error"));
 				OnComplete.ExecuteIfBound(false, FText::FromString(Error));
 			}
 			UMessageRouterSubsystem::Get().RouteHTTPResult(Res, __FUNCTION__);
